@@ -631,12 +631,14 @@ export const prepareNNInputs = (state: State, curGrid: Grid, CELL_TYPES: any): n
     const rows = curGrid.length;
     const cols = curGrid[0].length;
 
-    const isLowBattery = (battery / DEFAULT_MAX_BATTERY) * 100 < 20;
+    const maxBat = state.maxBattery || DEFAULT_MAX_BATTERY;
+    const isLowBattery = (battery / maxBat) * 100 < 20;
     const target = (isReturningForCharge || isLowBattery)
         ? (dockPos || pos)
         : (getClosestGrass(pos, curGrid, CELL_TYPES) || pos);
 
     const distToDock = (Math.abs(pos.x - dockPos.x) + Math.abs(pos.y - dockPos.y)) / (rows + cols);
+    const distToTarget = (Math.abs(pos.x - target.x) + Math.abs(pos.y - target.y)) / (rows + cols);
 
     const rayUp = castRay(pos.x, pos.y, 0, -1, curGrid, CELL_TYPES);
     const rayDown = castRay(pos.x, pos.y, 0, 1, curGrid, CELL_TYPES);
@@ -646,14 +648,19 @@ export const prepareNNInputs = (state: State, curGrid: Grid, CELL_TYPES: any): n
     const inputs = [
         pos.x / cols,
         pos.y / rows,
-        battery / 100,
+        battery / maxBat,
         isCharging ? 1 : 0,
         isReturningForCharge || isLowBattery ? 1 : 0,
-        (target.x - pos.x) / cols,
-        (target.y - pos.y) / rows,
+        
+        // Sustiprintas tikslo vektorius (Target Vector)
+        Math.sign(target.x - pos.x),
+        Math.sign(target.y - pos.y),
+        
+        // Sustiprinta ankstesnė kryptis (Inercija)
         prevDir.dx,
         prevDir.dy,
-        distToDock, // 10
+        distToDock,
+        distToTarget, // 11
 
         // Cell values: [Current, Up, Down, Left, Right]
         getCellValue(pos.x, pos.y, curGrid, CELL_TYPES),
@@ -669,9 +676,24 @@ export const prepareNNInputs = (state: State, curGrid: Grid, CELL_TYPES: any): n
         Math.min((visitCounts?.[`${pos.x - 1},${pos.y}`] || 0) / 5, 1.0),
         Math.min((visitCounts?.[`${pos.x + 1},${pos.y}`] || 0) / 5, 1.0), // 20
 
-        // Raycasting: [DistToGrass (Up, Down, Left, Right), DistToObstacle (Up, Down, Left, Right)]
+        // Raycasting (8 directions now: 4 straight + 4 diagonal)
         rayUp.grass, rayDown.grass, rayLeft.grass, rayRight.grass,
-        rayUp.obstacle, rayDown.obstacle, rayLeft.obstacle, rayRight.obstacle // 28
+        rayUp.obstacle, rayDown.obstacle, rayLeft.obstacle, rayRight.obstacle,
+        
+        // Diagonals (New)
+        castRay(pos.x, pos.y, 1, 1, curGrid, CELL_TYPES).grass,
+        castRay(pos.x, pos.y, 1, -1, curGrid, CELL_TYPES).grass,
+        castRay(pos.x, pos.y, -1, 1, curGrid, CELL_TYPES).grass,
+        castRay(pos.x, pos.y, -1, -1, curGrid, CELL_TYPES).grass,
+        
+        castRay(pos.x, pos.y, 1, 1, curGrid, CELL_TYPES).obstacle,
+        castRay(pos.x, pos.y, 1, -1, curGrid, CELL_TYPES).obstacle,
+        castRay(pos.x, pos.y, -1, 1, curGrid, CELL_TYPES).obstacle,
+        castRay(pos.x, pos.y, -1, -1, curGrid, CELL_TYPES).obstacle, // 36
+        
+        // ORIENTACIJA (Pageidaujamas pjovimo būdas)
+        state.orientation === 'horizontal' ? 1.0 : 0.0, // 37
+        state.orientation === 'vertical' ? 1.0 : 0.0    // 38
     ];
     return inputs;
 };

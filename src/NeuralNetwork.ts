@@ -18,8 +18,8 @@ export class NeuralNetwork {
             const inputNodes = layers[i];
             const outputNodes = layers[i + 1];
             
-            // Xavier/Glorot Initialization
-            const variance = 2.0 / (inputNodes + outputNodes);
+            // Xavier/Glorot Initialization (Increased for better initial signal)
+            const variance = 4.0 / (inputNodes + outputNodes);
             const stdDev = Math.sqrt(variance);
 
             const layerWeights: number[][] = [];
@@ -48,19 +48,16 @@ export class NeuralNetwork {
         return mean + z * stdDev;
     }
 
-    // ReLU for hidden layers, Sigmoid for output
-    private activate(x: number, isOutput: boolean): number {
-        if (isOutput) {
-            return 1 / (1 + Math.exp(-x));
-        }
-        return Math.max(0.01 * x, x); // Leaky ReLU
+    // Leaky ReLU for hidden layers
+    private activate(x: number): number {
+        return Math.max(0.01 * x, x);
     }
 
-    private activateDeriv(x: number, isOutput: boolean): number {
-        if (isOutput) {
-            return x * (1 - x); // Sigmoid derivative
-        }
-        return x > 0 ? 1 : 0.01; // Leaky ReLU derivative
+    private softmax(arr: number[]): number[] {
+        const maxLogit = Math.max(...arr);
+        const exps = arr.map(x => Math.exp(x - maxLogit));
+        const sumExps = exps.reduce((a, b) => a + b, 0);
+        return exps.map(x => x / sumExps);
     }
 
     feedForward(inputs: number[]): number[][] {
@@ -76,12 +73,19 @@ export class NeuralNetwork {
                 for (let k = 0; k < this.weights[i][j].length; k++) {
                     sum += current[k] * this.weights[i][j][k];
                 }
-                next.push(this.activate(sum, isOutput));
+                next.push(isOutput ? sum : this.activate(sum));
             }
-            current = next;
+            
+            // Apply softmax with temperature scaling (2.0) to make decisions sharper
+            const layerOutput = isOutput ? this.softmax(next.map(x => x * 2.0)) : next;
+            current = layerOutput;
             activations.push(current);
         }
         return activations;
+    }
+
+    private activateDeriv(x: number): number {
+        return x > 0 ? 1 : 0.01; // Leaky ReLU derivative
     }
 
     train(inputs: number[], targets: number[]): number {
@@ -98,7 +102,8 @@ export class NeuralNetwork {
             const prevActivations = activations[i];
 
             for (let j = 0; j < this.weights[i].length; j++) {
-                const delta = errors[j] * this.activateDeriv(currentActivations[j], isOutput);
+                // For output layer with softmax, we simplify the delta for training
+                const delta = errors[j] * (isOutput ? 1 : this.activateDeriv(currentActivations[j]));
                 
                 for (let k = 0; k < this.weights[i][j].length; k++) {
                     nextErrors[k] += this.weights[i][j][k] * delta;
@@ -150,7 +155,16 @@ export class NeuralNetwork {
             for (let j = 0; j < this.weights[i].length; j++) {
                 for (let k = 0; k < this.weights[i][j].length; k++) {
                     if (Math.random() < rate) {
-                        this.weights[i][j][k] += this.gaussianRandom(0, amount);
+                        if (Math.random() < 0.02) {
+                            // Reset weight entirely (2% of mutations)
+                            const inputNodes = this.layers[i];
+                            const outputNodes = this.layers[i + 1];
+                            const variance = 2.0 / (inputNodes + outputNodes);
+                            this.weights[i][j][k] = this.gaussianRandom(0, Math.sqrt(variance));
+                        } else {
+                            // Additive mutation
+                            this.weights[i][j][k] += this.gaussianRandom(0, amount);
+                        }
                     }
                 }
             }

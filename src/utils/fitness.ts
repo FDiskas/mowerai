@@ -15,7 +15,8 @@ export class FitnessEvaluator {
         nn: NeuralNetwork, 
         initialGrid: Grid, 
         dockPos: Point, 
-        maxSteps: number
+        maxSteps: number,
+        orientation: 'horizontal' | 'vertical' = 'horizontal'
     ): Promise<number> {
         const state: State = {
             pos: { ...dockPos },
@@ -29,7 +30,9 @@ export class FitnessEvaluator {
             dockPos: { ...dockPos },
             isCharging: false,
             isReturningForCharge: false,
-            visitCounts: {}
+            visitCounts: {},
+            orientation: orientation,
+            maxBattery: DEFAULT_MAX_BATTERY
         };
 
         let mowed = 0;
@@ -40,6 +43,7 @@ export class FitnessEvaluator {
         let penaltyPoints = 0;
         let discoveryReward = 0;
         let straightLineSteps = 0;
+        let orientationBonus = 0;
         
         const totalGrass = initialGrid.flat().filter(c => c.type === CELL_TYPES.GRASS || c.type === CELL_TYPES.MOWED).length;
         const posHistory: string[] = [];
@@ -75,7 +79,7 @@ export class FitnessEvaluator {
             state.visitCounts[posKey] = (state.visitCounts[posKey] || 0) + 1;
 
             if (isFirstVisit) {
-                discoveryReward += 50; 
+                discoveryReward += 500; // Didesnis apdovanojimas už naujo langelio radimą
             }
 
             const cell = state.grid[move.y][move.x];
@@ -88,11 +92,23 @@ export class FitnessEvaluator {
                 const damageImpact = stepDamage * (1 + currentDamage * 200); 
                 totalDamage += damageImpact;
                 cell.damage = currentDamage + stepDamage;
-                penaltyPoints += 20.0; 
+                
+                // Subalansuota bauda už važiavimą per nupjautą žolę
+                penaltyPoints += 50.0; 
             }
 
             state.pos = move;
             state.prevDir = { dx, dy };
+
+            // APDOVANOJIMAS UŽ TIESIĄ LINIJĄ PAGAL ORIENTACIJĄ
+            const isCorrectOrientation = 
+                (orientation === 'horizontal' && dy === 0 && dx !== 0) ||
+                (orientation === 'vertical' && dx === 0 && dy !== 0);
+            
+            if (isCorrectOrientation && !isTurn) {
+                orientationBonus += 100; // Milžiniškas paskatinimas laikytis krypties
+            }
+
             state.battery -= (DEFAULT_DRAIN_MOVE + (isTurn ? DEFAULT_DRAIN_TURN : 0));
 
             posHistory.push(posKey);
@@ -100,12 +116,12 @@ export class FitnessEvaluator {
                 posHistory.shift();
                 const unique = new Set(posHistory);
                 if (unique.size <= 4) {
-                    penaltyPoints += 100.0; 
+                    penaltyPoints += 1000.0; // Bauda už „malimąsi“ (atitinka ~100% padengimo vertę)
                 }
             }
 
             if (state.visitCounts[posKey] > 2) {
-                penaltyPoints += state.visitCounts[posKey] * 50;
+                penaltyPoints += state.visitCounts[posKey] * 50; // Bauda už lankymąsi 3+ kartą
             }
 
             if (state.battery <= 0) {
@@ -113,7 +129,7 @@ export class FitnessEvaluator {
                     state.battery = DEFAULT_MAX_BATTERY;
                     chargeCycles++;
                 } else {
-                    penaltyPoints += 5000; 
+                    penaltyPoints += 2000; // Bauda už išsikrovimą ne stotelėje
                     break;
                 }
             }
@@ -129,12 +145,12 @@ export class FitnessEvaluator {
         const coverageScore = (mowed / totalGrass) * 100000;
         const efficiencyScore = (mowed > 0) ? (mowed / distance) * 20000 : 0;
         const straightLineBonus = straightLineSteps * 5; 
-        const totalPenalty = (turns * 500) + (totalDamage * 5000) + (chargeCycles * 5000) + (penaltyPoints * 1000);
+        const totalPenalty = (turns * 500) + (totalDamage * 5000) + (chargeCycles * 20000) + (penaltyPoints * 100);
 
         const distToDock = Math.abs(state.pos.x - state.dockPos.x) + Math.abs(state.pos.y - state.dockPos.y);
         const dockBonus = distToDock === 0 ? 10000 : (1 / (distToDock + 1)) * 2000;
 
-        const fitness = coverageScore + efficiencyScore + dockBonus + discoveryReward + straightLineBonus - totalPenalty;
+        const fitness = coverageScore + efficiencyScore + dockBonus + discoveryReward + straightLineBonus + orientationBonus - totalPenalty;
         return isNaN(fitness) ? -10000000 : fitness;
     }
 }

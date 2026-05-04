@@ -77,7 +77,7 @@ const App = () => {
         stopTraining,
         downloadModel,
         uploadModel
-    } = useNeuralNetwork(grid, dockPos, showToast);
+    } = useNeuralNetwork(grid, dockPos, showToast, orientation);
 
 
     const currentSessionMoves = useRef([]);
@@ -93,7 +93,9 @@ const App = () => {
         isCharging: false,
         isReturningForCharge: false,
         visitCounts: {},
-        hasNotifiedFinished: false
+        hasNotifiedFinished: false,
+        orientation: orientation as 'horizontal' | 'vertical',
+        maxBattery: DEFAULT_MAX_BATTERY
     });
 
 
@@ -129,10 +131,12 @@ const App = () => {
             dockPos: { ...dockPos },
             isCharging: false,
             isReturningForCharge: false,
-            hasNotifiedFinished: false
+            hasNotifiedFinished: false,
+            orientation: orientation as 'horizontal' | 'vertical',
+            maxBattery: maxBattery
         };
         return cleanGrid;
-    }, [dockPos, maxBattery]);
+    }, [dockPos, maxBattery, orientation]);
 
     const initGrid = useCallback(() => {
         const newGrid = Array(20).fill(null).map((_, r) =>
@@ -163,9 +167,32 @@ const App = () => {
         setIsAnalysisOpen(true);
     };
 
-    const stopSimulation = useCallback(() => {
+    const startNextInQueue = useCallback(() => {
+        if (pendingAlgosRef.current.length === 0) {
+            isTestingAllRef.current = false;
+            setIsTesting(false);
+            setStatusMessage("Visų algoritmų testavimas baigtas!");
+            return;
+        }
+
+        setAlgo(pendingAlgosRef.current.shift());
+        prepareSimulationState(simState.current.grid, false);
+        setTimeout(() => runSimulationRef.current?.(), 500);
+    }, [prepareSimulationState]);
+
+    const stopSimulation = useCallback((isManual = false) => {
         setIsRunning(false);
         if (simulationRef.current) clearInterval(simulationRef.current);
+
+        if (isManual) {
+            setStats(prev => ({ ...prev, startTime: null }));
+            if (isTestingAllRef.current) {
+                isTestingAllRef.current = false;
+                setIsTesting(false);
+            }
+            return;
+        }
+
         setStats(prev => {
             if (!prev.startTime) return prev;
             const currentSessionDuration = Date.now() - prev.startTime;
@@ -175,21 +202,26 @@ const App = () => {
             const startStats = sessionStartStats.current || prev;
             const startDamaged = startStats.damagedGrassSnapshot || 0;
 
+            const dist = prev.distance - (startStats.distance || 0);
+            const trns = prev.turns - (startStats.turns || 0);
+            const mowed = prev.mowedCount - (startStats.mowedCount || 0);
+            const chg = prev.chargeCycles - (startStats.chargeCycles || 0);
+            const dmg = damagedGrassCount - startDamaged;
+
             const newRecord = {
                 id: Date.now(),
                 algo: algo,
-                distance: prev.distance - (startStats.distance || 0),
-                turns: prev.turns - (startStats.turns || 0),
-                mowedCount: prev.mowedCount - (startStats.mowedCount || 0),
+                distance: dist,
+                turns: trns,
+                mowedCount: mowed,
                 duration: Math.round(currentSessionDuration / 1000),
-                damagedGrass: damagedGrassCount - startDamaged,
-                chargeCycles: prev.chargeCycles - (startStats.chargeCycles || 0)
+                damagedGrass: dmg,
+                chargeCycles: chg,
+                penalty: (dmg * 100) + (chg * 5000) + (trns * 10)
             };
 
-            // Hybrid Learning: Only train from HIGH QUALITY algorithms (avoid learning from itself if it's failing)
-            if (currentSessionMoves.current.length > 0 && algo !== 'neural_network') {
-                trainOnData(currentSessionMoves.current);
-            }
+            // Išjungtas „Hybrid Learning“: AI dabar mokosi tik per evoliuciją (Genetinį algoritmą), 
+            // nenaudodamas esamų algoritmų pavyzdžių. Tai leidžia jam atrasti unikalias strategijas.
 
             return {
                 ...prev,
@@ -206,10 +238,10 @@ const App = () => {
                 startNextInQueue();
             }, 1500);
         }
-    }, [algo]);
+    }, [algo, trainOnData, startNextInQueue]);
 
     const testAllAlgorithms = () => {
-        if (isRunning) stopSimulation();
+        if (isRunning) stopSimulation(true);
         setIsTesting(true);
         prepareSimulationState(grid, true);
         pendingAlgosRef.current = [...ALGORITHMS_LIST];
@@ -217,18 +249,6 @@ const App = () => {
         setTimeout(() => startNextInQueue(), 500);
     };
 
-    const startNextInQueue = useCallback(() => {
-        if (pendingAlgosRef.current.length === 0) {
-            isTestingAllRef.current = false;
-            setIsTesting(false);
-            setStatusMessage("Visų algoritmų testavimas baigtas!");
-            return;
-        }
-
-        setAlgo(pendingAlgosRef.current.shift());
-        prepareSimulationState(simState.current.grid, false);
-        setTimeout(() => runSimulationRef.current?.(), 500);
-    }, [prepareSimulationState]);
 
     const getNextStep = (state) => {
         const { pos, grid: curGrid, prevDir, dockPos: currentDock, battery, isReturningForCharge } = state;
@@ -299,7 +319,7 @@ const App = () => {
     };
 
     const runSimulation = () => {
-        if (isRunning) { stopSimulation(); return; }
+        if (isRunning) { stopSimulation(true); return; }
         simState.current.grid = grid;
         simState.current.dockPos = { ...dockPos };
         simState.current.battery = battery;
@@ -415,13 +435,13 @@ const App = () => {
     };
 
     const resetMowedOnly = () => {
-        stopSimulation();
+        stopSimulation(true);
         prepareSimulationState(grid, false);
         showToast("Rezultatas išvalytas");
     };
 
     const resetFull = () => {
-        stopSimulation();
+        stopSimulation(true);
         initGrid();
     };
 
@@ -478,10 +498,8 @@ const App = () => {
         const validHistory = stats.history.filter(h => h.mowedCount > 0);
         if (validHistory.length > 0) {
             const winner = validHistory.reduce((prev, curr) => {
-                if (curr.damagedGrass !== prev.damagedGrass) return curr.damagedGrass < prev.damagedGrass ? curr : prev;
-                if (curr.chargeCycles !== prev.chargeCycles) return curr.chargeCycles < prev.chargeCycles ? curr : prev;
-                if (curr.turns !== prev.turns) return curr.turns < prev.turns ? curr : prev;
-                return curr.distance < prev.distance ? curr : prev;
+                if (curr.penalty !== prev.penalty) return curr.penalty < prev.penalty ? curr : prev;
+                return curr.duration < prev.duration ? curr : prev;
             });
             winnerId = winner.id;
         }
@@ -567,15 +585,15 @@ const App = () => {
                                             <div className="flex justify-between text-[8px] font-bold text-indigo-400 uppercase tracking-tighter">
                                                 <span>Karta {trainingStatus.epoch}</span>
                                                 <span>
-                                                    Best: {Math.round(trainingStatus.bestFitness)}
-                                                    <span className="ml-2 opacity-50">({Math.max(0, Math.round((trainingStatus.bestFitness / 10000000) * 100))}%)</span>
+                                                    Best: {trainingStatus.bestFitness > 0 ? Math.round(trainingStatus.bestFitness) : 'Inicijuojama...'}
+                                                    <span className="ml-2 opacity-50">({Math.min(100, Math.max(0, Math.round((trainingStatus.bestFitness / 400000) * 100)))}%)</span>
                                                 </span>
                                             </div>
 
                                             <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full bg-indigo-500 transition-all duration-500 ease-out"
-                                                    style={{ width: `${Math.min(100, Math.max(0, (trainingStatus.bestFitness / 10000000) * 100))}%` }}
+                                                    style={{ width: `${Math.min(100, Math.max(0, (trainingStatus.bestFitness / 400000) * 100))}%` }}
                                                 ></div>
                                             </div>
 
@@ -601,7 +619,7 @@ const App = () => {
                             <div className="mt-8 space-y-2">
                                 <button onClick={runSimulation} className={`w-full py-3 rounded-xl font-black text-xs tracking-widest transition-all transform active:scale-95 ${isRunning && !isTestingAllRef.current ? 'bg-amber-400 text-amber-950' : 'bg-emerald-500 text-emerald-950 shadow-emerald-500/20 shadow-lg'}`}>{isRunning && !isTestingAllRef.current ? 'STABDYTI' : 'PRADĖTI'}</button>
                                 <button onClick={testAllAlgorithms} disabled={isRunning || isTesting} className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 rounded-xl text-[9px] font-black tracking-widest transition shadow-lg shadow-blue-500/20 text-blue-50">TESTUOTI VISUS ALGORITMUS</button>
-                                <button onClick={resetMowedOnly} className="w-full py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-[9px] font-black tracking-widest transition border border-slate-700/50">IŠVALYTI REZULTATĄ</button>
+                                <button onClick={resetMowedOnly} className="w-full py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-[9px] font-black tracking-widest transition border border-slate-700/50">IŠVALYTI ŽEMĖLAPĮ</button>
                                 <button onClick={resetFull} className="w-full py-2 text-slate-600 hover:text-slate-400 text-[9px] font-black tracking-widest transition">PILNAS RESETAS</button>
                             </div>
                         </div>
@@ -725,6 +743,7 @@ const App = () => {
                                                     <div className="flex flex-col items-center"><span className="text-slate-500 text-[8px]">POSŪKIAI</span><span>{record.turns}</span></div>
                                                     <div className="flex flex-col items-center"><span className="text-blue-500 text-[8px]">ĮKROVIMAI</span><span className="text-blue-400">{record.chargeCycles || 0}</span></div>
                                                     <div className="flex flex-col items-center"><span className="text-rose-500 text-[8px]">PAŽEISTA</span><span className="text-rose-400">{record.damagedGrass}</span></div>
+                                                    <div className="flex flex-col items-center"><span className="text-amber-500 text-[8px]">BAUDA</span><span className="text-amber-400 font-black">{record.penalty}</span></div>
                                                 </div>
                                             </div>
                                         ))}

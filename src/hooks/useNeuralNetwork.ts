@@ -4,7 +4,7 @@ import { FitnessEvaluator } from '../utils/fitness';
 import type { Grid, Point } from '../types';
 import { CELL_TYPES, DEFAULT_MAX_BATTERY } from '../constants';
 
-export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (msg: string) => void) => {
+export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (msg: string) => void, orientation: 'horizontal' | 'vertical' = 'horizontal') => {
 
     const [nn, setNn] = useState<NeuralNetwork | null>(null);
     const [trainingStatus, setTrainingStatus] = useState({
@@ -24,48 +24,40 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
     }, [nn]);
 
     useEffect(() => {
-        setNn(new NeuralNetwork([28, 64, 32, 4]));
+        setNn(new NeuralNetwork([38, 64, 32, 4]));
     }, []);
 
     const trainOnData = (sessionData: any[]) => {
         if (!nn || !sessionData || sessionData.length === 0) return;
 
-        let totalError = 0;
-        for (let i = 0; i < 10; i++) {
+        // Mokome tinklą po vieną žingsnį
+        for (let i = 0; i < 5; i++) { // 5 epochos per sesiją
             sessionData.forEach(item => {
-                totalError += nn.train(item.inputs, item.targets);
+                nn.train(item.inputs, item.targets);
             });
         }
-
-        const avgErr = totalError / (sessionData.length * 10);
-        setTrainingStatus(prev => ({ ...prev, avgError: avgErr }));
-        setStatusMessage(`Modelis apmokytas pagal jūsų pavyzdį (Error: ${avgErr.toFixed(4)})`);
+        setNn(nn.copy());
+        setStatusMessage(`AI pasimokė iš jūsų važiavimo (${sessionData.length} žingsnių)`);
     };
 
 
     const generateTrainingMaps = (width: number, height: number, dock: Point): Grid[] => {
-        const createBase = () => Array(height).fill(null).map((_, r) =>
+        const empty: Grid = Array(height).fill(null).map((_, r) =>
             Array(width).fill(null).map((_, c) => ({
                 type: (r === dock.y && c === dock.x) ? CELL_TYPES.DOCK : CELL_TYPES.GRASS,
-                damage: 0,
-                direction: null
+                damage: 0
             }))
         );
 
-        // 1. Empty Map
-        const empty = createBase();
-
-        // 2. Standard Obstacles
-        const obstacles = createBase();
-        for (let i = 0; i < 15; i++) {
-            const rx = Math.floor(Math.random() * width);
-            const ry = Math.floor(Math.random() * height);
-            if (rx !== dock.x || ry !== dock.y) obstacles[ry][rx].type = CELL_TYPES.OBSTACLE;
+        const obstacles = JSON.parse(JSON.stringify(empty));
+        for (let i = 0; i < 30; i++) {
+            const r = Math.floor(Math.random() * height);
+            const c = Math.floor(Math.random() * width);
+            if (r !== dock.y || c !== dock.x) obstacles[r][c].type = CELL_TYPES.OBSTACLE;
         }
 
-        // 3. Labyrinth/Maze
-        const maze = createBase();
-        for (let r = 0; r < height; r += 2) {
+        const maze = JSON.parse(JSON.stringify(empty));
+        for (let r = 0; r < height; r++) {
             for (let c = 0; c < width; c++) {
                 if (Math.random() > 0.3 && (c !== dock.x || r !== dock.y)) {
                     maze[r][c].type = CELL_TYPES.OBSTACLE;
@@ -73,7 +65,20 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
             }
         }
 
-        return [empty, obstacles, maze];
+        const longCorridor: Grid = JSON.parse(JSON.stringify(empty));
+        for (let c = 5; c < width - 5; c++) {
+            longCorridor[7][c].type = CELL_TYPES.OBSTACLE;
+            longCorridor[12][c].type = CELL_TYPES.OBSTACLE;
+        }
+
+        const cluttered: Grid = JSON.parse(JSON.stringify(empty));
+        for (let i = 0; i < 60; i++) {
+            const r = Math.floor(Math.random() * height);
+            const c = Math.floor(Math.random() * width);
+            if (r !== dock.y || c !== dock.x) cluttered[r][c].type = CELL_TYPES.OBSTACLE;
+        }
+
+        return [empty, obstacles, maze, longCorridor, cluttered];
     };
 
     const trainNN = async () => {
@@ -83,7 +88,8 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
         }
 
         isTrainingRef.current = true;
-        setStatusMessage("Vykdomas UNIVERSALUS mokymas (3 aplinkos)...");
+        const numWorkers = navigator.hardwareConcurrency || 4;
+        setStatusMessage(`Mokymas su ${numWorkers} CPU branduoliais...`);
 
         const popSize = 40;
         const maxSteps = 800;
@@ -94,87 +100,124 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
 
         const trainingMaps = generateTrainingMaps(25, 20, dockPos);
 
-        let population = Array(popSize).fill(null).map(() => {
-            const n = new NeuralNetwork([28, 64, 32, 4]);
-            if (bestNnRef.current) n.setWeights(bestNnRef.current.getWeights());
-            n.mutate(0.2, 0.2);
-            return n;
+        let population = Array(popSize).fill(null).map((_, i) => {
+            const n = new NeuralNetwork([38, 64, 32, 4]);
+            if (bestNnRef.current && bestNnRef.current.layers[0] === 38) {
+                n.setWeights(bestNnRef.current.getWeights());
+            }
+            n.mutate(0.2, 0.4);
+            return { id: i, nn: n };
         });
 
         setTrainingStatus(prev => ({ ...prev, isTraining: true }));
 
-        while (isTrainingRef.current) {
-            gen++;
-            const results: { nn: NeuralNetwork, fitness: number }[] = [];
+        // Sukuriame darbininkų „baseiną“ vieną kartą
+        const workers = Array(numWorkers).fill(null).map(() => 
+            new Worker(new URL('../training.worker.ts', import.meta.url), { type: 'module' })
+        );
 
-            // Lygiagretus vertinimas (Parallel Evaluation in chunks)
-            const chunkSize = 10;
-            for (let i = 0; i < popSize; i += chunkSize) {
-                if (!isTrainingRef.current) break;
-                
-                const chunk = population.slice(i, i + chunkSize);
-                const chunkPromises = chunk.map(async (individual) => {
-                    let totalFitness = 0;
-                    for (const map of trainingMaps) {
-                        totalFitness += await FitnessEvaluator.evaluate(individual, map, dockPos, maxSteps);
-                    }
-                    return { nn: individual, fitness: totalFitness / trainingMaps.length };
-                });
+        let currentTrainingMaps = trainingMaps;
+        let stagnationCount = 0;
+        let mutationStrength = 0.1;
 
-                const chunkResults = await Promise.all(chunkPromises);
-                results.push(...chunkResults);
+        try {
+            while (isTrainingRef.current) {
+                gen++;
+                const results: { nn: NeuralNetwork, fitness: number }[] = [];
 
-                // Leidžiame UI „atsikvėpti“ tarp grupių
-                await new Promise(r => setTimeout(r, 0));
-            }
+                const chunkSize = Math.ceil(popSize / numWorkers);
+                const workerPromises = [];
 
-            if (!isTrainingRef.current) break;
+                for (let w = 0; w < numWorkers; w++) {
+                    const workerData = population.slice(w * chunkSize, (w + 1) * chunkSize);
+                    if (workerData.length === 0) continue;
 
-            results.sort((a, b) => b.fitness - a.fitness);
-            const bestInGen = results[0];
-            const avgFitness = results.reduce((sum, r) => sum + r.fitness, 0) / popSize;
+                    workerPromises.push(new Promise((resolve) => {
+                        const worker = workers[w];
+                        
+                        worker.onmessage = (e) => {
+                            const workerResults = e.data.results.map(res => ({
+                                nn: population.find(p => p.id === res.id).nn,
+                                fitness: res.fitness
+                            }));
+                            resolve(workerResults);
+                        };
 
-            if (bestInGen.fitness > bestFitnessRef.current) {
-                bestFitnessRef.current = bestInGen.fitness;
-                bestNnRef.current = bestInGen.nn;
-                setNn(bestInGen.nn);
-            }
-
-            // Selection and Breeding
-            const survivors = results.slice(0, 10).map(r => r.nn);
-            const nextPop = [bestNnRef.current || survivors[0]]; // Elitism
-
-            while (nextPop.length < popSize) {
-                if (Math.random() < 0.4) {
-                    // Crossover
-                    const p1 = survivors[Math.floor(Math.random() * survivors.length)];
-                    const p2 = survivors[Math.floor(Math.random() * survivors.length)];
-                    const child = NeuralNetwork.crossover(p1, p2);
-                    child.mutate(0.05, 0.1); 
-                    nextPop.push(child);
-                } else {
-                    // Mutation
-                    const parent = survivors[Math.floor(Math.random() * survivors.length)];
-                    const child = parent.copy();
-                    const mutRate = 0.1 + Math.random() * 0.1;
-                    child.mutate(mutRate, 0.2);
-                    nextPop.push(child);
+                        worker.postMessage({
+                            workerId: w,
+                            populationData: workerData.map(p => ({ 
+                                id: p.id, 
+                                weights: p.nn.getWeights(),
+                                layers: p.nn.layers 
+                            })),
+                            trainingMaps: currentTrainingMaps,
+                            dockPos,
+                            maxSteps,
+                            orientation
+                        });
+                    }));
                 }
+
+                const allResults = await Promise.all(workerPromises);
+                results.push(...allResults.flat());
+
+                results.sort((a, b) => b.fitness - a.fitness);
+                const bestInGen = results[0];
+                const avgFitness = results.reduce((sum, r) => sum + r.fitness, 0) / popSize;
+
+                if (bestInGen.fitness > bestFitnessRef.current) {
+                    bestFitnessRef.current = bestInGen.fitness;
+                    bestNnRef.current = bestInGen.nn;
+                    setNn(bestInGen.nn);
+                    stagnationCount = 0;
+                    mutationStrength = 0.1;
+                } else {
+                    stagnationCount++;
+                    if (stagnationCount > 10) {
+                        mutationStrength = Math.min(0.5, mutationStrength + 0.05);
+                    }
+                }
+
+                // Dinamiškai keičiame žemėlapius kas 20 kartų, kad AI būtų universalus
+                if (gen % 20 === 0) {
+                    currentTrainingMaps = generateTrainingMaps(25, 20, dockPos);
+                }
+
+                // Selection and Breeding
+                const survivors = results.slice(0, 10).map(r => r.nn);
+                const nextPop: {id: number, nn: NeuralNetwork}[] = [{ id: 0, nn: (bestNnRef.current || survivors[0]).copy() }]; // Elitism
+
+                while (nextPop.length < popSize) {
+                    let childNn: NeuralNetwork;
+                    if (Math.random() < 0.4) {
+                        const p1 = survivors[Math.floor(Math.random() * survivors.length)];
+                        const p2 = survivors[Math.floor(Math.random() * survivors.length)];
+                        childNn = NeuralNetwork.crossover(p1, p2);
+                        childNn.mutate(0.05, mutationStrength / 2); 
+                    } else {
+                        const parent = survivors[Math.floor(Math.random() * survivors.length)];
+                        childNn = parent.copy();
+                        const mutRate = 0.1 + Math.random() * 0.1;
+                        childNn.mutate(mutRate, mutationStrength);
+                    }
+                    nextPop.push({ id: nextPop.length, nn: childNn });
+                }
+                population = nextPop;
+
+                setTrainingStatus(prev => ({
+                    ...prev,
+                    epoch: gen,
+                    avgError: avgFitness,
+                    bestFitness: bestFitnessRef.current
+                }));
+
+                await new Promise(r => setTimeout(r, 10));
             }
-            population = nextPop;
-
-            setTrainingStatus(prev => ({
-                ...prev,
-                epoch: gen,
-                avgError: avgFitness,
-                bestFitness: bestFitnessRef.current
-            }));
-
-            await new Promise(r => setTimeout(r, 10));
+        } finally {
+            workers.forEach(w => w.terminate());
+            setTrainingStatus(prev => ({ ...prev, isTraining: false }));
+            setStatusMessage("NN Optimizavimas sustabdytas.");
         }
-
-        setTrainingStatus(prev => ({ ...prev, isTraining: false }));
-        setStatusMessage("NN Optimizavimas sustabdytas.");
     };
 
     const downloadModel = () => {
@@ -197,9 +240,9 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
                 const contents = event.target?.result as string;
                 const data = JSON.parse(contents);
                 
-                // Ar modelis tinka dabartiniam kodui (28 įėjimai)?
-                if (!data.layers || data.layers[0] !== 28) {
-                    setStatusMessage(`KLAIDA: Modelis nesuderinamas! Tikimasi 28 jutiklių, o rasta ${data.layers ? data.layers[0] : 'nežinoma'}.`);
+                // Ar modelis tinka dabartiniam kodui (38 įėjimai)?
+                if (!data.layers || data.layers[0] !== 38) {
+                    setStatusMessage(`KLAIDA: Modelis nesuderinamas! Tikimasi 38 jutiklių (8-krypčių + orientacija), o rasta ${data.layers ? data.layers[0] : 'nežinoma'}.`);
                     return;
                 }
 

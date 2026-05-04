@@ -32,4 +32,6 @@ export interface State {
     isCharging: boolean;
     isReturningForCharge: boolean;
     visitCounts: { [key: string]: number };
+    orientation?: 'horizontal' | 'vertical';
+    maxBattery?: number;
 }
