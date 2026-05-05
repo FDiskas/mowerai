@@ -1,10 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { NeuralNetwork } from '../NeuralNetwork';
-import { FitnessEvaluator } from '../utils/fitness';
-import type { Grid, Point } from '../types';
-import { CELL_TYPES, DEFAULT_MAX_BATTERY } from '../constants';
+import type { Grid, Point, FitnessConfig } from '../types';
+import { DEFAULT_FITNESS_CONFIG } from '../types';
+import { CELL_TYPES } from '../constants';
+import { getNeuralNetworkMove } from '../algorithms';
 
-export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (msg: string) => void, orientation: 'horizontal' | 'vertical' = 'horizontal') => {
+export const useNeuralNetwork = (
+    dockPos: Point,
+    setStatusMessage: (msg: string) => void,
+    orientation: 'horizontal' | 'vertical' = 'horizontal',
+    speed: number = 85
+) => {
 
     const [nn, setNn] = useState<NeuralNetwork | null>(null);
     const [trainingStatus, setTrainingStatus] = useState({
@@ -14,28 +20,147 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
         avgError: 0,
         bestFitness: -Infinity
     });
+    const [showVisualTraining, setShowVisualTraining] = useState(false);
+    const [previewGrid, setPreviewGrid] = useState<Grid | null>(null);
+    const [previewMowerPos, setPreviewMowerPos] = useState<Point | null>(null);
+    const [fitnessConfig, setFitnessConfig] = useState<FitnessConfig>(DEFAULT_FITNESS_CONFIG);
+
     const isTrainingRef = useRef(false);
     const bestFitnessRef = useRef(-Infinity);
     const bestNnRef = useRef<NeuralNetwork | null>(null);
     const currentNnRef = useRef<NeuralNetwork | null>(null);
+    const previewIntervalRef = useRef<any>(null);
+    const previewStateRef = useRef<any>(null);
+    const userGridRef = useRef<Grid | null>(null);
 
     useEffect(() => {
         currentNnRef.current = nn;
     }, [nn]);
 
     useEffect(() => {
-        setNn(new NeuralNetwork([38, 64, 32, 4]));
+        setNn(new NeuralNetwork([46, 64, 32, 4]));
     }, []);
+
+    // Start/stop preview loop on the main map
+    useEffect(() => {
+        if (previewIntervalRef.current) {
+            clearInterval(previewIntervalRef.current);
+            previewIntervalRef.current = null;
+        }
+
+        if (!showVisualTraining) {
+            setPreviewGrid(null);
+            setPreviewMowerPos(null);
+            return;
+        }
+
+        const sourceGrid = userGridRef.current;
+        const previewNn = bestNnRef.current;
+        if (!sourceGrid || !previewNn) return;
+
+        // Reset preview state
+        const cleanGrid: Grid = sourceGrid.map(row => row.map(cell => ({
+            ...cell,
+            type: cell.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : cell.type,
+            damage: 0
+        })));
+
+        previewStateRef.current = {
+            pos: { ...dockPos },
+            prevDir: { dx: 0, dy: 1 },
+            battery: 100,
+            grid: cleanGrid,
+            dockPos: { ...dockPos },
+            isCharging: false,
+            isReturningForCharge: false,
+            visitCounts: {},
+            orientation,
+            maxBattery: 100
+        };
+
+        setPreviewGrid(cleanGrid.map(r => [...r]));
+        setPreviewMowerPos({ ...dockPos });
+
+        previewIntervalRef.current = setInterval(() => {
+            const state = previewStateRef.current;
+            const currentNn = bestNnRef.current;
+            if (!state || !currentNn) return;
+
+            const move = getNeuralNetworkMove(state, state.grid, state.prevDir, CELL_TYPES, currentNn);
+            if (!move) return;
+
+            // Atnaujinamas vizitų skaičius – tas pats kaip fitneso funkcijoje
+            const posKey = `${move.x},${move.y}`;
+            const visitCount = (state.visitCounts[posKey] || 0) + 1;
+            state.visitCounts[posKey] = visitCount;
+
+            const cell = state.grid[move.y][move.x];
+            if (cell.type === CELL_TYPES.GRASS) cell.type = CELL_TYPES.MOWED;
+
+            const dx = move.x - state.pos.x;
+            const dy = move.y - state.pos.y;
+            state.pos = move;
+            state.prevDir = { dx, dy };
+            state.battery -= 0.2;
+
+            const isDock = move.x === dockPos.x && move.y === dockPos.y;
+            const isLooping = !isDock && visitCount >= 5;
+
+            if (state.battery <= 0 || isLooping) {
+                // Reset – baterija baigėsi arba robotas sukosi vienoje vietoje
+                const src = userGridRef.current;
+                if (!src) return;
+                const fresh: Grid = src.map(row => row.map(c => ({
+                    ...c,
+                    type: c.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : c.type,
+                    damage: 0
+                })));
+                previewStateRef.current = {
+                    pos: { ...dockPos },
+                    prevDir: { dx: 0, dy: 1 },
+                    battery: 100,
+                    grid: fresh,
+                    dockPos: { ...dockPos },
+                    isCharging: false,
+                    isReturningForCharge: false,
+                    visitCounts: {},
+                    orientation,
+                    maxBattery: 100
+                };
+                setPreviewGrid(fresh.map(r => [...r]));
+                setPreviewMowerPos({ ...dockPos });
+                return;
+            }
+
+            setPreviewMowerPos({ ...move });
+            setPreviewGrid([...state.grid.map((r: any) => [...r])]);
+        }, Math.max(10, 140 - speed));
+
+
+        return () => {
+            if (previewIntervalRef.current) clearInterval(previewIntervalRef.current);
+        };
+    }, [showVisualTraining, dockPos, orientation, speed]);
 
     const trainOnData = (sessionData: any[]) => {
         if (!nn || !sessionData || sessionData.length === 0) return;
 
-        // Mokome tinklą po vieną žingsnį
-        for (let i = 0; i < 5; i++) { // 5 epochos per sesiją
-            sessionData.forEach(item => {
+        // Kopijuojame duomenis, kad galėtume maišyti
+        const data = [...sessionData];
+        
+        // Mokome tinklą su Adam optimizatoriumi
+        for (let i = 0; i < 10; i++) { // 10 epochų
+            // Atsitiktinis maišymas (Fisher-Yates)
+            for (let j = data.length - 1; j > 0; j--) {
+                const k = Math.floor(Math.random() * (j + 1));
+                [data[j], data[k]] = [data[k], data[j]];
+            }
+
+            data.forEach(item => {
                 nn.train(item.inputs, item.targets);
             });
         }
+        
         setNn(nn.copy());
         setStatusMessage(`AI pasimokė iš jūsų važiavimo (${sessionData.length} žingsnių)`);
     };
@@ -45,7 +170,8 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
         const empty: Grid = Array(height).fill(null).map((_, r) =>
             Array(width).fill(null).map((_, c) => ({
                 type: (r === dock.y && c === dock.x) ? CELL_TYPES.DOCK : CELL_TYPES.GRASS,
-                damage: 0
+                damage: 0,
+                direction: null
             }))
         );
 
@@ -81,7 +207,10 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
         return [empty, obstacles, maze, longCorridor, cluttered];
     };
 
-    const trainNN = async () => {
+    const trainNN = async (userGrid?: Grid, drainMove?: number, drainTurn?: number) => {
+        // Store user grid for preview simulation
+        if (userGrid) userGridRef.current = userGrid;
+
         if (isTrainingRef.current) {
             isTrainingRef.current = false;
             return;
@@ -98,11 +227,17 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
         bestFitnessRef.current = trainingStatus.bestFitness;
         bestNnRef.current = currentNnRef.current;
 
-        const trainingMaps = generateTrainingMaps(25, 20, dockPos);
+        const trainingDockPos = dockPos;
+        let currentTrainingMaps = generateTrainingMaps(25, 20, trainingDockPos);
+        
+        // Pridedame vartotojo nupieštą žemėlapį prie mokymo rinkinio
+        if (userGrid) {
+            currentTrainingMaps.push(userGrid);
+        }
 
         let population = Array(popSize).fill(null).map((_, i) => {
-            const n = new NeuralNetwork([38, 64, 32, 4]);
-            if (bestNnRef.current && bestNnRef.current.layers[0] === 38) {
+            const n = new NeuralNetwork([46, 64, 32, 4]);
+            if (bestNnRef.current && bestNnRef.current.layers[0] === 46) {
                 n.setWeights(bestNnRef.current.getWeights());
             }
             n.mutate(0.2, 0.4);
@@ -116,7 +251,6 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
             new Worker(new URL('../training.worker.ts', import.meta.url), { type: 'module' })
         );
 
-        let currentTrainingMaps = trainingMaps;
         let stagnationCount = 0;
         let mutationStrength = 0.1;
 
@@ -126,7 +260,7 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
                 const results: { nn: NeuralNetwork, fitness: number }[] = [];
 
                 const chunkSize = Math.ceil(popSize / numWorkers);
-                const workerPromises = [];
+                const workerPromises: Promise<{nn: NeuralNetwork, fitness: number}[]>[] = [];
 
                 for (let w = 0; w < numWorkers; w++) {
                     const workerData = population.slice(w * chunkSize, (w + 1) * chunkSize);
@@ -136,10 +270,13 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
                         const worker = workers[w];
                         
                         worker.onmessage = (e) => {
-                            const workerResults = e.data.results.map(res => ({
-                                nn: population.find(p => p.id === res.id).nn,
-                                fitness: res.fitness
-                            }));
+                            const workerResults = e.data.results.map((res: any) => {
+                                const parent = population.find(p => p.id === res.id);
+                                return {
+                                    nn: parent ? parent.nn : new NeuralNetwork([46, 64, 32, 4]),
+                                    fitness: res.fitness
+                                };
+                            });
                             resolve(workerResults);
                         };
 
@@ -153,7 +290,10 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
                             trainingMaps: currentTrainingMaps,
                             dockPos,
                             maxSteps,
-                            orientation
+                            orientation,
+                            drainMove: drainMove ?? 0.5,
+                            drainTurn: drainTurn ?? 0.3,
+                            fitnessConfig
                         });
                     }));
                 }
@@ -180,24 +320,52 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
 
                 // Dinamiškai keičiame žemėlapius kas 20 kartų, kad AI būtų universalus
                 if (gen % 20 === 0) {
-                    currentTrainingMaps = generateTrainingMaps(25, 20, dockPos);
+                    currentTrainingMaps = generateTrainingMaps(25, 20, trainingDockPos);
+                    if (userGrid) {
+                        currentTrainingMaps.push(userGrid);
+                    }
                 }
 
                 // Selection and Breeding
-                const survivors = results.slice(0, 10).map(r => r.nn);
-                const nextPop: {id: number, nn: NeuralNetwork}[] = [{ id: 0, nn: (bestNnRef.current || survivors[0]).copy() }]; // Elitism
+                const nextPop: {id: number, nn: NeuralNetwork}[] = [];
+                
+                // 1. Elitism: Keep the best one unchanged
+                nextPop.push({ id: 0, nn: (bestNnRef.current || results[0].nn).copy() });
+
+                // Tournament Selection — excludes fully disqualified individuals
+                const tournamentSelection = (size: number) => {
+                    const eligible = results.filter(r => r.fitness > -999999998);
+                    const pool = eligible.length > 0 ? eligible : results;
+                    let best: {nn: NeuralNetwork, fitness: number} | null = null;
+                    for (let i = 0; i < size; i++) {
+                        const randomInd = pool[Math.floor(Math.random() * pool.length)];
+                        if (!best || randomInd.fitness > best.fitness) {
+                            best = randomInd;
+                        }
+                    }
+                    return best!.nn;
+                };
 
                 while (nextPop.length < popSize) {
                     let childNn: NeuralNetwork;
-                    if (Math.random() < 0.4) {
-                        const p1 = survivors[Math.floor(Math.random() * survivors.length)];
-                        const p2 = survivors[Math.floor(Math.random() * survivors.length)];
+                    
+                    if (nextPop.length > popSize * 0.9) {
+                        // 2. Random Immigrants: 10% of population are fresh starts to prevent stagnation
+                        childNn = new NeuralNetwork([46, 64, 32, 4], 0.001);
+                    } else if (Math.random() < 0.6) {
+                        // 3. Crossover: Combine two parents from tournament
+                        const p1 = tournamentSelection(3);
+                        const p2 = tournamentSelection(3);
                         childNn = NeuralNetwork.crossover(p1, p2);
-                        childNn.mutate(0.05, mutationStrength / 2); 
+                        
+                        // Small mutation after crossover
+                        const mutRate = 0.05 + Math.random() * 0.05;
+                        childNn.mutate(mutRate, mutationStrength / 2); 
                     } else {
-                        const parent = survivors[Math.floor(Math.random() * survivors.length)];
+                        // 4. Asexual reproduction (Mutation only)
+                        const parent = tournamentSelection(3);
                         childNn = parent.copy();
-                        const mutRate = 0.1 + Math.random() * 0.1;
+                        const mutRate = 0.1 + Math.random() * 0.15;
                         childNn.mutate(mutRate, mutationStrength);
                     }
                     nextPop.push({ id: nextPop.length, nn: childNn });
@@ -211,6 +379,7 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
                     bestFitness: bestFitnessRef.current
                 }));
 
+
                 await new Promise(r => setTimeout(r, 10));
             }
         } finally {
@@ -222,14 +391,32 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
 
     const downloadModel = () => {
         if (!nn) return;
-        const data = nn.save();
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'mower_nn_model.json';
-        a.click();
+        try {
+            const data = nn.save();
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `mower_model_${new Date().toISOString().slice(0, 10)}.json`;
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+            
+            setStatusMessage("Modelis sėkmingai eksportuotas!");
+        } catch (err) {
+            console.error(err);
+            setStatusMessage("KLAIDA: Nepavyko sugeneruoti failo.");
+        }
     };
+
 
     const uploadModel = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -240,9 +427,9 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
                 const contents = event.target?.result as string;
                 const data = JSON.parse(contents);
                 
-                // Ar modelis tinka dabartiniam kodui (38 įėjimai)?
-                if (!data.layers || data.layers[0] !== 38) {
-                    setStatusMessage(`KLAIDA: Modelis nesuderinamas! Tikimasi 38 jutiklių (8-krypčių + orientacija), o rasta ${data.layers ? data.layers[0] : 'nežinoma'}.`);
+                // Ar modelis tinka dabartiniam kodui (46 įėjimai)?
+                if (!data.layers || data.layers[0] !== 46) {
+                    setStatusMessage(`KLAIDA: Modelis nesuderinamas! Tikimasi 46 jutiklių (8-krypčių mowed rays pridėta), o rasta ${data.layers ? data.layers[0] : 'nežinoma'}.`);
                     return;
                 }
 
@@ -268,6 +455,12 @@ export const useNeuralNetwork = (grid: Grid, dockPos: Point, setStatusMessage: (
         trainOnData,
         stopTraining,
         downloadModel,
-        uploadModel
+        uploadModel,
+        showVisualTraining,
+        setShowVisualTraining,
+        previewGrid,
+        previewMowerPos,
+        fitnessConfig,
+        setFitnessConfig
     };
 };

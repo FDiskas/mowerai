@@ -1,16 +1,16 @@
 import { DEFAULT_MAX_BATTERY } from './constants';
 import { NeuralNetwork } from './NeuralNetwork';
-import type { Point, Grid, Direction, State, Cell } from './types';
+import type { Grid, PositionType as Point, Direction, State } from './types';
 
-export const findPathToTarget = (
+export const findFullPathToTarget = (
     start: Point,
     currentGrid: Grid,
     currentDir: Direction,
     targetPredicate: (p: Point) => boolean
-): Point | null => {
+): Point[] | null => {
     const rows = currentGrid.length;
     const cols = currentGrid[0].length;
-    let openSet = [{ pos: start, path: [] as Point[], cost: 0, dir: currentDir }];
+    const openSet = [{ pos: start, path: [] as Point[], cost: 0, dir: currentDir }];
     const visited = new Set<string>();
     const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
     while (openSet.length > 0) {
@@ -20,7 +20,7 @@ export const findPathToTarget = (
         const stateKey = `${x},${y},${curr.dir.dx},${curr.dir.dy}`;
         if (visited.has(stateKey)) continue;
         visited.add(stateKey);
-        if (targetPredicate(curr.pos) && (x !== start.x || y !== start.y)) return curr.path[0];
+        if (targetPredicate(curr.pos) && (x !== start.x || y !== start.y)) return curr.path;
         for (const [dx, dy] of dirs) {
             const nextX = x + dx;
             const nextY = y + dy;
@@ -38,6 +38,16 @@ export const findPathToTarget = (
         if (openSet.length > 5000) break;
     }
     return null;
+};
+
+export const findPathToTarget = (
+    start: Point,
+    currentGrid: Grid,
+    currentDir: Direction,
+    targetPredicate: (p: Point) => boolean
+): Point | null => {
+    const path = findFullPathToTarget(start, currentGrid, currentDir, targetPredicate);
+    return path ? path[0] : null;
 };
 
 export const getZigzagMove = (
@@ -140,7 +150,7 @@ export const getSLAMBoustrophedonMove = (
 
     const isVert = orientation === 'vertical';
 
-    let allGrass: Point[] = [];
+    const allGrass: Point[] = [];
     for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
             if (curGrid[y][x].type === CELL_TYPES.GRASS) {
@@ -152,10 +162,10 @@ export const getSLAMBoustrophedonMove = (
     if (allGrass.length === 0) return null;
 
     let target: Point | null = null;
-    let grassInLine = allGrass.filter(g => isVert ? g.x === pos.x : g.y === pos.y);
+    const grassInLine = allGrass.filter(g => isVert ? g.x === pos.x : g.y === pos.y);
 
     if (grassInLine.length > 0) {
-        let forwardGrass = grassInLine.filter(g => {
+        const forwardGrass = grassInLine.filter(g => {
             if (isVert) return (state.slamDir === 1 ? g.y > pos.y : g.y < pos.y);
             return (state.slamDir === 1 ? g.x > pos.x : g.x < pos.x);
         });
@@ -187,8 +197,8 @@ export const getSLAMBoustrophedonMove = (
             }
         });
 
-        let nextCoord = isVert ? allGrass[0].x : allGrass[0].y;
-        let grassInNextLine = allGrass.filter(g => isVert ? g.x === nextCoord : g.y === nextCoord);
+        const nextCoord = isVert ? allGrass[0].x : allGrass[0].y;
+        const grassInNextLine = allGrass.filter(g => isVert ? g.x === nextCoord : g.y === nextCoord);
         grassInNextLine.sort((a, b) => {
             if (isVert) return Math.abs(a.y - pos.y) - Math.abs(b.y - pos.y);
             return Math.abs(a.x - pos.x) - Math.abs(b.x - pos.x);
@@ -238,7 +248,7 @@ export const getCellularBoustrophedonMove = (
 
     // Helper: Find grass in current line (row or col) contiguous with current position
     const getContiguousGrassInLine = (x: number, y: number): Point[] => {
-        let grass: Point[] = [];
+        const grass: Point[] = [];
         if (isVert) {
             for (let currY = y; currY < rows; currY++) {
                 if (curGrid[currY][x].type === CELL_TYPES.GRASS) grass.push({ x, y: currY });
@@ -262,9 +272,9 @@ export const getCellularBoustrophedonMove = (
     };
 
     // 1. Try to continue current sweep
-    let grassInLine = getContiguousGrassInLine(pos.x, pos.y);
+    const grassInLine = getContiguousGrassInLine(pos.x, pos.y);
     if (grassInLine.length > 0) {
-        let forwardGrass = grassInLine.filter(g => {
+        const forwardGrass = grassInLine.filter(g => {
             if (isVert) return (cellData.sweepDir === 1 ? g.y > pos.y : g.y < pos.y);
             return (cellData.sweepDir === 1 ? g.x > pos.x : g.x < pos.x);
         });
@@ -273,7 +283,8 @@ export const getCellularBoustrophedonMove = (
                 if (isVert) return Math.abs(a.y - pos.y) - Math.abs(b.y - pos.y);
                 return Math.abs(a.x - pos.x) - Math.abs(b.x - pos.x);
             });
-            return forwardGrass[0];
+            const target = forwardGrass[0];
+            return findPathToTarget(pos, curGrid, prevDir, (p) => p.x === target.x && p.y === target.y);
         }
     }
 
@@ -284,7 +295,7 @@ export const getCellularBoustrophedonMove = (
     if (nextX >= 0 && nextX < cols && nextY >= 0 && nextY < rows) {
         if (curGrid[nextY][nextX].type === CELL_TYPES.GRASS) {
             cellData.sweepDir *= -1;
-            return { x: nextX, y: nextY };
+            return findPathToTarget(pos, curGrid, prevDir, (p) => p.x === nextX && p.y === nextY);
         }
         // Try neighbor cells in next line
         const neighbors = isVert ?
@@ -294,8 +305,7 @@ export const getCellularBoustrophedonMove = (
         for (const n of neighbors) {
             if (n.x >= 0 && n.x < cols && n.y >= 0 && n.y < rows && curGrid[n.y][n.x].type === CELL_TYPES.GRASS) {
                 cellData.sweepDir *= -1;
-                const move = findPathToTarget(pos, curGrid, prevDir, (p) => p.x === n.x && p.y === n.y);
-                if (move) return move;
+                return findPathToTarget(pos, curGrid, prevDir, (p) => p.x === n.x && p.y === n.y);
             }
         }
     }
@@ -321,7 +331,7 @@ export const aStarSearch = (
     const rows = currentGrid.length;
     const cols = currentGrid[0].length;
     const heuristic = (p1: Point, p2: Point) => Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
-    let openSet = [{ pos: start, path: [] as Point[], g: 0, f: heuristic(start, target), dir: currentDir }];
+    const openSet = [{ pos: start, path: [] as Point[], g: 0, f: heuristic(start, target), dir: currentDir }];
     const visited = new Set<string>();
     const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
 
@@ -362,7 +372,7 @@ export const dijkstraSearch = (
 ): Point | null => {
     const rows = currentGrid.length;
     const cols = currentGrid[0].length;
-    let openSet = [{ pos: start, path: [] as Point[], cost: 0, dir: currentDir }];
+    const openSet = [{ pos: start, path: [] as Point[], cost: 0, dir: currentDir }];
     const visited = new Set<string>();
     const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
 
@@ -400,7 +410,7 @@ export const bfsSearch = (
 ): Point | null => {
     const rows = currentGrid.length;
     const cols = currentGrid[0].length;
-    let queue = [{ pos: start, path: [] as Point[] }];
+    const queue = [{ pos: start, path: [] as Point[] }];
     const visited = new Set<string>();
     const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
 
@@ -437,7 +447,7 @@ export const greedyBestFirstSearch = (
     const rows = currentGrid.length;
     const cols = currentGrid[0].length;
     const heuristic = (p1: Point, p2: Point) => Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
-    let openSet = [{ pos: start, path: [] as Point[], h: heuristic(start, target), dir: currentDir }];
+    const openSet = [{ pos: start, path: [] as Point[], h: heuristic(start, target), dir: currentDir }];
     const visited = new Set<string>();
     const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
 
@@ -484,7 +494,7 @@ export const dStarLiteSearch = (
     const rows = currentGrid.length;
     const cols = currentGrid[0].length;
     const heuristic = (p1: Point, p2: Point) => Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
-    let openSet = [{ pos: start, path: [] as Point[], g: 0, f: heuristic(start, target), dir: currentDir }];
+    const openSet = [{ pos: start, path: [] as Point[], g: 0, f: heuristic(start, target), dir: currentDir }];
     const visited = new Set<string>();
     const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
 
@@ -524,7 +534,7 @@ const getClosestGrass = (pos: Point, grid: Grid, CELL_TYPES: any): Point | null 
     for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[0].length; x++) {
             if (grid[y][x].type === CELL_TYPES.GRASS) {
-                let dist = Math.abs(x - pos.x) + Math.abs(y - pos.y);
+                const dist = Math.abs(x - pos.x) + Math.abs(y - pos.y);
                 if (dist < minDist) { minDist = dist; closest = { x, y }; }
             }
         }
@@ -542,7 +552,7 @@ export const getDijkstraMove = (state: State, curGrid: Grid, prevDir: Direction,
     return dijkstraSearch(state.pos, (p) => curGrid[p.y][p.x].type === CELL_TYPES.GRASS, curGrid, prevDir);
 };
 
-export const getBFSMove = (state: State, curGrid: Grid, prevDir: Direction, CELL_TYPES: any): Point | null => {
+export const getBFSMove = (state: State, curGrid: Grid, _prevDir: Direction, CELL_TYPES: any): Point | null => {
     return bfsSearch(state.pos, (p) => curGrid[p.y][p.x].type === CELL_TYPES.GRASS, curGrid);
 };
 
@@ -552,7 +562,7 @@ export const getGreedyBestFirstMove = (state: State, curGrid: Grid, prevDir: Dir
     return greedyBestFirstSearch(state.pos, target, curGrid, prevDir);
 };
 
-export const getJPSMove = (state: State, curGrid: Grid, prevDir: Direction, CELL_TYPES: any): Point | null => {
+export const getJPSMove = (state: State, curGrid: Grid, _prevDir: Direction, CELL_TYPES: any): Point | null => {
     const target = getClosestGrass(state.pos, curGrid, CELL_TYPES);
     if (!target) return null;
     return jpsSearch(state.pos, target, curGrid);
@@ -589,40 +599,30 @@ export const getCustomMove = (state: State, curGrid: Grid, prevDir: Direction, C
 };
 
 const castRay = (startX: number, startY: number, dx: number, dy: number, grid: Grid, CELL_TYPES: any) => {
-    const rows = grid.length;
-    const cols = grid[0].length;
-    let distToGrass = -1;
-    let distToObstacle = -1;
-    let steps = 0;
-
     let x = startX + dx;
     let y = startY + dy;
+    let dist = 1;
+    let grassDist = -1;
+    let obstacleDist = -1;
+    let mowedDist = -1;
 
-    while (x >= 0 && x < cols && y >= 0 && y < rows) {
-        steps++;
-        const cell = grid[y][x];
+    while (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length) {
+        const cellType = grid[y][x].type;
+        if (cellType === CELL_TYPES.GRASS && grassDist === -1) grassDist = dist;
+        if (cellType === CELL_TYPES.OBSTACLE && obstacleDist === -1) obstacleDist = dist;
+        if (cellType === CELL_TYPES.MOWED && mowedDist === -1) mowedDist = dist;
         
-        if (distToGrass === -1 && cell.type === CELL_TYPES.GRASS) {
-            distToGrass = steps;
-        }
-        
-        if (cell.type === CELL_TYPES.OBSTACLE) {
-            distToObstacle = steps;
-            break; 
-        }
+        if (grassDist !== -1 && obstacleDist !== -1 && mowedDist !== -1) break;
         x += dx;
         y += dy;
+        dist++;
+        if (dist > 12) break; // Slightly longer range
     }
 
-    if (distToObstacle === -1) {
-        // Distance to wall if no obstacle found
-        distToObstacle = steps + 1;
-    }
-
-    const maxDim = Math.max(rows, cols);
     return {
-        grass: distToGrass === -1 ? -1.0 : distToGrass / maxDim,
-        obstacle: distToObstacle / maxDim
+        grass: grassDist !== -1 ? 1.0 - (grassDist / 12) : 0,
+        obstacle: obstacleDist !== -1 ? 1.0 - (obstacleDist / 12) : 0,
+        mowed: mowedDist !== -1 ? 1.0 - (mowedDist / 12) : 0
     };
 };
 
@@ -689,11 +689,18 @@ export const prepareNNInputs = (state: State, curGrid: Grid, CELL_TYPES: any): n
         castRay(pos.x, pos.y, 1, 1, curGrid, CELL_TYPES).obstacle,
         castRay(pos.x, pos.y, 1, -1, curGrid, CELL_TYPES).obstacle,
         castRay(pos.x, pos.y, -1, 1, curGrid, CELL_TYPES).obstacle,
-        castRay(pos.x, pos.y, -1, -1, curGrid, CELL_TYPES).obstacle, // 36
+        castRay(pos.x, pos.y, -1, -1, curGrid, CELL_TYPES).obstacle, 
+
+        // Mowed Rays (8 directions)
+        rayUp.mowed, rayDown.mowed, rayLeft.mowed, rayRight.mowed,
+        castRay(pos.x, pos.y, 1, 1, curGrid, CELL_TYPES).mowed,
+        castRay(pos.x, pos.y, 1, -1, curGrid, CELL_TYPES).mowed,
+        castRay(pos.x, pos.y, -1, 1, curGrid, CELL_TYPES).mowed,
+        castRay(pos.x, pos.y, -1, -1, curGrid, CELL_TYPES).mowed, // 44
         
-        // ORIENTACIJA (Pageidaujamas pjovimo būdas)
-        state.orientation === 'horizontal' ? 1.0 : 0.0, // 37
-        state.orientation === 'vertical' ? 1.0 : 0.0    // 38
+        // ORIENTACIJA
+        state.orientation === 'horizontal' ? 1.0 : 0.0, // 45
+        state.orientation === 'vertical' ? 1.0 : 0.0    // 46
     ];
     return inputs;
 };
@@ -704,12 +711,13 @@ const getCellValue = (x: number, y: number, grid: Grid, CELL_TYPES: any): number
     if (cell.type === CELL_TYPES.OBSTACLE) return -1.0;
     if (cell.type === CELL_TYPES.GRASS) return 1.0;
     if (cell.type === CELL_TYPES.MOWED) {
-        // Strong negative signal for mowed grass, extremely low if damaged
-        return -0.2 - Math.min((cell.damage || 0) * 0.5, 0.8);
+        // Much stronger negative signal for mowed grass to distinguish from fresh grass
+        return -0.8 - Math.min((cell.damage || 0) * 0.2, 0.2);
     }
     if (cell.type === CELL_TYPES.DOCK) return 0.5;
     return 0.0;
 };
+
 
 
 export const getNeuralNetworkMove = (
@@ -721,27 +729,80 @@ export const getNeuralNetworkMove = (
 ): Point | null => {
     if (!nn) return getSmartAIMove(state, curGrid, prevDir, CELL_TYPES);
 
-    const inputs = prepareNNInputs(state, curGrid, CELL_TYPES);
-    const outputs = nn.predict(inputs);
-
-    const moves = [
-        { x: state.pos.x, y: state.pos.y - 1, dx: 0, dy: -1 },
-        { x: state.pos.x, y: state.pos.y + 1, dx: 0, dy: 1 },
-        { x: state.pos.x - 1, y: state.pos.y, dx: -1, dy: 0 },
-        { x: state.pos.x + 1, y: state.pos.y, dx: 1, dy: 0 }
-    ];
-
-    const sortedMoves = moves
-        .map((m, i) => ({ ...m, score: outputs[i] }))
-        .sort((a, b) => b.score - a.score);
-
+    const { pos, orientation, visitCounts } = state;
     const rows = curGrid.length;
     const cols = curGrid[0].length;
 
-    for (const move of sortedMoves) {
-        if (move.x >= 0 && move.x < cols && move.y >= 0 && move.y < rows && curGrid[move.y][move.x].type !== 'obstacle') {
-            return { x: move.x, y: move.y };
+    const isValid = (x: number, y: number) =>
+        x >= 0 && x < cols && y >= 0 && y < rows &&
+        curGrid[y][x].type !== CELL_TYPES.OBSTACLE;
+
+    const isGrass = (x: number, y: number) =>
+        isValid(x, y) && curGrid[y][x].type === CELL_TYPES.GRASS;
+
+    // Only block the immediate previous cell (anti-ping-pong, not too restrictive)
+    const prevX = pos.x - prevDir.dx;
+    const prevY = pos.y - prevDir.dy;
+
+    // ── TIER 1: If there is fresh grass directly ahead in orientation direction, take it ──
+    // This enforces the row-by-row pattern only when it's obviously the right move.
+    if (orientation === 'horizontal') {
+        // Continue in same horizontal direction if there's grass
+        const fwd = { x: pos.x + prevDir.dx, y: pos.y };
+        if (prevDir.dx !== 0 && isGrass(fwd.x, fwd.y)) return fwd;
+        // Or check both horizontal options if not moving horizontally
+        if (prevDir.dx === 0) {
+            if (isGrass(pos.x + 1, pos.y)) return { x: pos.x + 1, y: pos.y };
+            if (isGrass(pos.x - 1, pos.y)) return { x: pos.x - 1, y: pos.y };
         }
+    } else {
+        // Vertical orientation
+        const fwd = { x: pos.x, y: pos.y + prevDir.dy };
+        if (prevDir.dy !== 0 && isGrass(fwd.x, fwd.y)) return fwd;
+        if (prevDir.dy === 0) {
+            if (isGrass(pos.x, pos.y + 1)) return { x: pos.x, y: pos.y + 1 };
+            if (isGrass(pos.x, pos.y - 1)) return { x: pos.x, y: pos.y - 1 };
+        }
+    }
+
+    // ── TIER 2: NN decides with a soft orientation bias ──
+    const inputs = prepareNNInputs(state, curGrid, CELL_TYPES);
+    const outputs = nn.predict(inputs);
+
+    const allMoves = [
+        { x: pos.x, y: pos.y - 1, dx: 0, dy: -1, idx: 0 },
+        { x: pos.x, y: pos.y + 1, dx: 0, dy:  1, idx: 1 },
+        { x: pos.x - 1, y: pos.y, dx: -1, dy: 0, idx: 2 },
+        { x: pos.x + 1, y: pos.y, dx:  1, dy: 0, idx: 3 },
+    ];
+
+    const scoredMoves = allMoves.map(m => {
+        let score = outputs[m.idx];
+
+        // Soft orientation preference (not a mandate)
+        const isAligned = orientation === 'horizontal' ? (m.dx !== 0) : (m.dy !== 0);
+        if (isAligned) score += 0.6;
+
+        // Prefer grass over mowed
+        if (isGrass(m.x, m.y)) score += 1.0;
+
+        // Penalize frequently-visited cells
+        const visits = visitCounts?.[`${m.x},${m.y}`] || 0;
+        if (visits > 0) score -= visits * 0.25;
+
+        return { ...m, score };
+    }).sort((a, b) => b.score - a.score);
+
+    // First pass: avoid going back to the immediate previous cell
+    for (const move of scoredMoves) {
+        if (!isValid(move.x, move.y)) continue;
+        if (move.x === prevX && move.y === prevY) continue;
+        return { x: move.x, y: move.y };
+    }
+
+    // Second pass: allow going back if truly stuck
+    for (const move of scoredMoves) {
+        if (isValid(move.x, move.y)) return { x: move.x, y: move.y };
     }
 
     return getSmartAIMove(state, curGrid, prevDir, CELL_TYPES);

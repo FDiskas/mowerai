@@ -6,7 +6,8 @@ import {
     DAMAGE_PER_PASS, 
     DAMAGE_PER_TURN 
 } from '../constants';
-import type { Grid, Point, State, Cell } from '../types';
+import type { Grid, Point, State, FitnessConfig } from '../types';
+import { DEFAULT_FITNESS_CONFIG } from '../types';
 import { getNeuralNetworkMove } from '../algorithms';
 import { NeuralNetwork } from '../NeuralNetwork';
 
@@ -16,17 +17,36 @@ export class FitnessEvaluator {
         initialGrid: Grid, 
         dockPos: Point, 
         maxSteps: number,
-        orientation: 'horizontal' | 'vertical' = 'horizontal'
+        orientation: 'horizontal' | 'vertical' = 'horizontal',
+        drainMove: number = DEFAULT_DRAIN_MOVE,
+        drainTurn: number = DEFAULT_DRAIN_TURN,
+        cfg: FitnessConfig = DEFAULT_FITNESS_CONFIG
     ): Promise<number> {
+        const rows = initialGrid.length;
+        const cols = initialGrid[0].length;
+        
+        // Fast grid clone
+        const workingGrid: Grid = new Array(rows);
+        let totalGrass = 0;
+        for (let r = 0; r < rows; r++) {
+            workingGrid[r] = new Array(cols);
+            for (let c = 0; c < cols; c++) {
+                const cell = initialGrid[r][c];
+                const isGrass = cell.type === CELL_TYPES.GRASS || cell.type === CELL_TYPES.MOWED;
+                if (isGrass) totalGrass++;
+                workingGrid[r][c] = {
+                    type: cell.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : cell.type,
+                    damage: 0,
+                    direction: null
+                };
+            }
+        }
+
         const state: State = {
             pos: { ...dockPos },
             prevDir: { dx: 0, dy: 1 },
             battery: DEFAULT_MAX_BATTERY,
-            grid: initialGrid.map(row => row.map(cell => ({
-                ...cell,
-                type: cell.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : cell.type,
-                damage: 0
-            }))),
+            grid: workingGrid,
             dockPos: { ...dockPos },
             isCharging: false,
             isReturningForCharge: false,
@@ -41,15 +61,17 @@ export class FitnessEvaluator {
         let totalDamage = 0;
         let chargeCycles = 0;
         let penaltyPoints = 0;
-        let discoveryReward = 0;
+        let totalDiscoveryReward = 0;
         let straightLineSteps = 0;
-        let orientationBonus = 0;
+        let totalOrientationBonus = 0;
+        let mowedRevisits = 0;
+        let batteryUsed = 0;
+        const maxAllowedRevisits = Math.floor(maxSteps * cfg.maxMowedRevisitRatio);
         
-        const totalGrass = initialGrid.flat().filter(c => c.type === CELL_TYPES.GRASS || c.type === CELL_TYPES.MOWED).length;
         const posHistory: string[] = [];
 
         for (let step = 0; step < maxSteps; step++) {
-            const isLowBattery = (state.battery / DEFAULT_MAX_BATTERY) * 100 < 20;
+            const isLowBattery = (state.battery / DEFAULT_MAX_BATTERY) < 0.2;
             
             if (isLowBattery || state.isReturningForCharge) {
                 state.isReturningForCharge = true;
@@ -60,68 +82,71 @@ export class FitnessEvaluator {
                 }
             }
 
-            const move = getNeuralNetworkMove(state, state.grid, state.prevDir, CELL_TYPES, nn);
+            const move = getNeuralNetworkMove(state, workingGrid, state.prevDir, CELL_TYPES, nn);
             if (!move) break;
 
             const dx = move.x - state.pos.x;
             const dy = move.y - state.pos.y;
             const isTurn = dx !== state.prevDir.dx || dy !== state.prevDir.dy;
 
-            if (isTurn) {
-                turns++;
-            } else {
-                straightLineSteps++;
-            }
+            if (isTurn) turns++;
+            else straightLineSteps++;
+            
             distance++;
 
             const posKey = `${move.x},${move.y}`;
-            const isFirstVisit = !state.visitCounts[posKey];
-            state.visitCounts[posKey] = (state.visitCounts[posKey] || 0) + 1;
+            const visitCount = (state.visitCounts[posKey] || 0) + 1;
+            state.visitCounts[posKey] = visitCount;
 
-            if (isFirstVisit) {
-                discoveryReward += 500; // Didesnis apdovanojimas už naujo langelio radimą
+            if (visitCount === 1) {
+                totalDiscoveryReward += cfg.discoveryReward;
             }
 
-            const cell = state.grid[move.y][move.x];
+            // Kritinis limitas: jei NE-DOKO langelis aplankytas per daug kartų - diskvalifikacija
+            if (visitCount >= cfg.visitLimit && !(move.x === dockPos.x && move.y === dockPos.y)) {
+                return -999999999;
+            }
+
+            const cell = workingGrid[move.y][move.x];
             if (cell.type === CELL_TYPES.GRASS) {
                 cell.type = CELL_TYPES.MOWED;
                 mowed++;
             } else if (cell.type === CELL_TYPES.MOWED) {
+                mowedRevisits++;
                 const stepDamage = isTurn ? DAMAGE_PER_TURN : DAMAGE_PER_PASS;
                 const currentDamage = cell.damage || 0;
-                const damageImpact = stepDamage * (1 + currentDamage * 200); 
-                totalDamage += damageImpact;
+                totalDamage += stepDamage * (1 + currentDamage * 200); 
                 cell.damage = currentDamage + stepDamage;
+                penaltyPoints += cfg.mowedRevisitPenalty + (mowedRevisits * 2);
                 
-                // Subalansuota bauda už važiavimą per nupjautą žolę
-                penaltyPoints += 50.0; 
+                if (mowedRevisits > maxAllowedRevisits) {
+                    penaltyPoints += 50000;
+                    break;
+                }
             }
 
             state.pos = move;
             state.prevDir = { dx, dy };
 
-            // APDOVANOJIMAS UŽ TIESIĄ LINIJĄ PAGAL ORIENTACIJĄ
             const isCorrectOrientation = 
                 (orientation === 'horizontal' && dy === 0 && dx !== 0) ||
                 (orientation === 'vertical' && dx === 0 && dy !== 0);
             
             if (isCorrectOrientation && !isTurn) {
-                orientationBonus += 100; // Milžiniškas paskatinimas laikytis krypties
+                totalOrientationBonus += cfg.orientationBonus;
             }
 
-            state.battery -= (DEFAULT_DRAIN_MOVE + (isTurn ? DEFAULT_DRAIN_TURN : 0));
+            const stepDrain = drainMove + (isTurn ? drainTurn : 0);
+            state.battery -= stepDrain;
+            batteryUsed += stepDrain;
 
             posHistory.push(posKey);
-            if (posHistory.length > 15) {
+            if (posHistory.length > 8) {
                 posHistory.shift();
                 const unique = new Set(posHistory);
-                if (unique.size <= 4) {
-                    penaltyPoints += 1000.0; // Bauda už „malimąsi“ (atitinka ~100% padengimo vertę)
+                if (unique.size <= 3) {
+                    penaltyPoints += cfg.oscillationPenalty;
                 }
-            }
-
-            if (state.visitCounts[posKey] > 2) {
-                penaltyPoints += state.visitCounts[posKey] * 50; // Bauda už lankymąsi 3+ kartą
             }
 
             if (state.battery <= 0) {
@@ -129,13 +154,13 @@ export class FitnessEvaluator {
                     state.battery = DEFAULT_MAX_BATTERY;
                     chargeCycles++;
                 } else {
-                    penaltyPoints += 2000; // Bauda už išsikrovimą ne stotelėje
+                    penaltyPoints += cfg.batteryOutPenalty;
                     break;
                 }
             }
 
             if (mowed === totalGrass && state.pos.x === state.dockPos.x && state.pos.y === state.dockPos.y) {
-                penaltyPoints -= 10000; 
+                penaltyPoints -= cfg.completionBonus;
                 break;
             }
         }
@@ -143,14 +168,24 @@ export class FitnessEvaluator {
         if (totalGrass === 0) return 0;
 
         const coverageScore = (mowed / totalGrass) * 100000;
-        const efficiencyScore = (mowed > 0) ? (mowed / distance) * 20000 : 0;
-        const straightLineBonus = straightLineSteps * 5; 
-        const totalPenalty = (turns * 500) + (totalDamage * 5000) + (chargeCycles * 20000) + (penaltyPoints * 100);
+        const efficiencyScore = (mowed > 0) ? (mowed / distance) * 50000 : 0;
+        const straightLineBonus = straightLineSteps * cfg.straightLineBonus;
+
+        // Baterijos efektyvumo premija
+        const batteryPerMow = mowed > 0 ? batteryUsed / mowed : 999;
+        const idealBatteryPerMow = drainMove;
+        const batteryEfficiencyBonus = mowed > 0
+            ? Math.max(0, (idealBatteryPerMow / batteryPerMow)) * cfg.batteryEfficiencyWeight
+            : 0;
+
+        // Posūkio bauda proporcinga drainTurn nustatymui
+        const turnPenaltyWeight = cfg.turnPenalty + (drainTurn / drainMove) * 200;
+        const totalPenalty = (turns * turnPenaltyWeight) + (totalDamage * cfg.damageWeight) + (chargeCycles * cfg.chargeCycleWeight) + (penaltyPoints * 150);
 
         const distToDock = Math.abs(state.pos.x - state.dockPos.x) + Math.abs(state.pos.y - state.dockPos.y);
-        const dockBonus = distToDock === 0 ? 10000 : (1 / (distToDock + 1)) * 2000;
+        const dockBonus = distToDock === 0 ? 20000 : (1 / (distToDock + 1)) * 5000;
 
-        const fitness = coverageScore + efficiencyScore + dockBonus + discoveryReward + straightLineBonus + orientationBonus - totalPenalty;
+        const fitness = coverageScore + efficiencyScore + dockBonus + totalDiscoveryReward + straightLineBonus + totalOrientationBonus + batteryEfficiencyBonus - totalPenalty;
         return isNaN(fitness) ? -10000000 : fitness;
     }
 }
