@@ -1,7 +1,7 @@
 import { NeuralNetwork } from './NeuralNetwork';
 import { FitnessEvaluator } from './utils/fitness';
 
-// Šis failas veikia atskirame procesoriaus sraute
+// This file runs in a separate processor thread
 self.onmessage = async (e: MessageEvent) => {
     const { populationData, trainingMaps, dockPos, maxSteps, workerId, orientation, drainMove, drainTurn, fitnessConfig } = e.data;
     

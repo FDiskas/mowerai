@@ -115,7 +115,7 @@ export const useAppSimulation = (
         if (((battery / maxBattery) * 100 < 20 || isReturningForCharge) && grassRemaining > 0) {
             if (pos.x === currentDock.x && pos.y === currentDock.y) return null;
             if (!simState.current.isReturningForCharge) {
-                showToast("Baterija senka - grįžtama krautis", 'indigo');
+                showToast("Battery low - returning to charge", 'indigo');
                 simState.current.isReturningForCharge = true;
                 simState.current.returnPath = algos.findFullPathToTarget(pos, curGrid, prevDir, (p) => p.x === currentDock.x && p.y === currentDock.y) || [];
             }
@@ -128,7 +128,7 @@ export const useAppSimulation = (
         if (grassRemaining === 0) {
             if (pos.x === currentDock.x && pos.y === currentDock.y) return null;
             if (!simState.current.hasNotifiedFinished) {
-                showToast("Pjovimas baigtas - grįžtama į bazę", 'success');
+                showToast("Mowing finished - returning to dock", 'success');
                 simState.current.hasNotifiedFinished = true;
                 simState.current.returnPath = algos.findFullPathToTarget(pos, curGrid, prevDir, (p) => p.x === currentDock.x && p.y === currentDock.y) || [];
             }
@@ -138,7 +138,7 @@ export const useAppSimulation = (
             return algos.findPathToTarget(pos, curGrid, prevDir, (p) => p.x === currentDock.x && p.y === currentDock.y);
         }
 
-        setStatusMessage("Pjaunama veja...");
+        setStatusMessage("Mowing grass...");
 
         let move = null;
         const fns: any = {
@@ -175,7 +175,7 @@ export const useAppSimulation = (
 
         if (!move) {
             if (pos.x === currentDock.x && pos.y === currentDock.y) return null;
-            setStatusMessage("Nerasta vejos - grįžtama namo");
+            setStatusMessage("No grass found - returning home");
             return algos.findPathToTarget(pos, curGrid, prevDir, (p) => p.x === currentDock.x && p.y === currentDock.y);
         }
 
@@ -210,7 +210,7 @@ export const useAppSimulation = (
                 if (updatedMower.battery.percentage >= 80) {
                     simState.current.isCharging = false;
                     simState.current.isReturningForCharge = false;
-                    setStatusMessage("Baterija įkrauta. Tęsiame...");
+                    setStatusMessage("Battery charged. Continuing...");
                 }
                 setEnv(prevEnv.withMower(updatedMower));
                 return;
@@ -223,7 +223,7 @@ export const useAppSimulation = (
             }
 
             if (mower.battery.isEmpty) {
-                setStatusMessage("Baterija išseko!");
+                setStatusMessage("Battery ran out!");
                 stopSimulation();
                 return;
             }
@@ -241,7 +241,7 @@ export const useAppSimulation = (
 
             if (!nextMoveObj) {
                 const isAtDock = mower.pos.equals(dPos);
-                setStatusMessage(isAtDock ? (domainGrid.countGrass() === 0 ? "Darbas baigtas sėkmingai!" : "Baigta (yra nepasiekiamos vejos)") : "Klaida: Baza nepasiekiama!");
+                setStatusMessage(isAtDock ? (domainGrid.countGrass() === 0 ? "Work finished successfully!" : "Finished (some grass unreachable)") : "Error: Dock unreachable!");
                 stopSimulation();
                 return;
             }

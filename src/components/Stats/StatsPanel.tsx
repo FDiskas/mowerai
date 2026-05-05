@@ -25,26 +25,26 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, duration, winnerI
     return (
         <Card variant="glass" className="w-full mt-8 p-10">
             <div className="flex flex-col items-center mb-10">
-                <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Darbo Analitika</h2>
+                <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-2">Work Analytics</h2>
                 <div className="h-1 w-12 bg-emerald-500/30 rounded-full"></div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <StatCard label="Padengimas" value={`${coverage}%`} subvalue={`${stats.mowedCount} / ${stats.totalGrass} lang.`} colorClass="text-emerald-400" />
-                <StatCard label="Atstumas" value={`${stats.distance}m`} subvalue={`${duration} sek. darbo`} colorClass="text-cyan-400" />
-                <StatCard label="Manevrai" value={stats.turns} subvalue="Posūkiai" colorClass="text-amber-500" />
-                <StatCard label="Ciklai" value={stats.chargeCycles} subvalue="Įkrovimai" colorClass="text-blue-400" />
-                <StatCard label="Pažeidimai" value={currentDamage} subvalue="Lauko žala" colorClass="text-rose-400" />
+                <StatCard label="Coverage" value={`${coverage}%`} subvalue={`${stats.mowedCount} / ${stats.totalGrass} cells`} colorClass="text-emerald-400" />
+                <StatCard label="Distance" value={`${stats.distance}m`} subvalue={`${duration} sec. work`} colorClass="text-cyan-400" />
+                <StatCard label="Maneuvers" value={stats.turns} subvalue="Turns" colorClass="text-amber-500" />
+                <StatCard label="Cycles" value={stats.chargeCycles} subvalue="Charges" colorClass="text-blue-400" />
+                <StatCard label="Damage" value={currentDamage} subvalue="Field Damage" colorClass="text-rose-400" />
             </div>
 
             <div className="mt-10 flex justify-center gap-12 pt-8 border-t border-slate-800/30">
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Efektyvumas: <span className="text-slate-200">{efficiency} p/m</span></span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Efficiency: <span className="text-slate-200">{efficiency} p/m</span></span>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-1.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Baterijos Panaudojimas: <span className="text-slate-200">{stats.chargeCycles}x</span></span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Battery Usage: <span className="text-slate-200">{stats.chargeCycles}x</span></span>
                 </div>
             </div>
 
@@ -52,7 +52,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, duration, winnerI
             {stats.history && stats.history.length > 0 && (
                 <div className="mt-16 space-y-6">
                     <div className="flex items-center gap-4">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Sesijų Istorija</h3>
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Session History</h3>
                         <div className="h-[1px] flex-1 bg-slate-800"></div>
                     </div>
 
@@ -77,19 +77,19 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, duration, winnerI
                                         </span>
                                         {record.id === winnerId && (
                                             <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
-                                                <span>👑</span> Geriausias Rezultatas
+                                                <span>👑</span> Best Result
                                             </span>
                                         )}
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-3 md:flex md:gap-8 flex-1 text-right md:text-center">
-                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Veikimas</span><span className="text-slate-200 text-xs font-mono">{record.duration}s</span></div>
+                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Runtime</span><span className="text-slate-200 text-xs font-mono">{record.duration}s</span></div>
                                     <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Mow</span><span className="text-slate-200 text-xs font-mono">{record.mowedCount}</span></div>
-                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Metrai</span><span className="text-slate-200 text-xs font-mono">{record.distance}m</span></div>
-                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Pasūk.</span><span className="text-slate-200 text-xs font-mono">{record.turns}</span></div>
-                                    <div className="flex flex-col"><span className="text-rose-500 text-[7px] font-black uppercase">Žala</span><span className="text-rose-400 text-xs font-mono">{record.damagedGrass}</span></div>
-                                    <div className="flex flex-col bg-slate-900/50 px-3 py-1 rounded-lg border border-slate-800"><span className="text-amber-500 text-[7px] font-black uppercase">Taškai</span><span className="text-amber-400 text-xs font-black font-mono">{record.penalty}</span></div>
+                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Meters</span><span className="text-slate-200 text-xs font-mono">{record.distance}m</span></div>
+                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Turns</span><span className="text-slate-200 text-xs font-mono">{record.turns}</span></div>
+                                    <div className="flex flex-col"><span className="text-rose-500 text-[7px] font-black uppercase">Damage</span><span className="text-rose-400 text-xs font-mono">{record.damagedGrass}</span></div>
+                                    <div className="flex flex-col bg-slate-900/50 px-3 py-1 rounded-lg border border-slate-800"><span className="text-amber-500 text-[7px] font-black uppercase">Points</span><span className="text-amber-400 text-xs font-black font-mono">{record.penalty}</span></div>
                                 </div>
                             </div>
                         ))}

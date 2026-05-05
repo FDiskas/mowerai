@@ -70,7 +70,7 @@ export const TrainingPreview: React.FC<TrainingPreviewProps> = ({ nn, initialGri
                 setMowerPos({ ...move });
                 setBattery(state.battery);
                 
-                // Tik kas kelis žingsnius atnaujiname tinklelį vizualiai dėl našumo
+                // Only update the grid visually every few steps for performance
                 setPreviewGrid([...state.grid.map(r => [...r])]);
 
                 if (state.battery <= 0) {
@@ -94,7 +94,7 @@ export const TrainingPreview: React.FC<TrainingPreviewProps> = ({ nn, initialGri
     return (
         <div className="space-y-3 bg-slate-950/60 p-3 rounded-2xl border border-indigo-500/20 shadow-inner">
             <div className="flex justify-between items-center px-1">
-                <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Geriausias AI (Live)</span>
+                <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Best AI (Live)</span>
                 <div className="flex gap-2">
                     <span className="text-[9px] font-mono text-indigo-300">⚡ {Math.round(battery)}%</span>
                 </div>

@@ -418,11 +418,11 @@ export const prepareNNInputs = (state: State, curGrid: Grid, CELL_TYPES: any): n
         isCharging ? 1 : 0,
         isReturningForCharge || isLowBattery ? 1 : 0,
         
-        // Sustiprintas tikslo vektorius (Target Vector)
+        // Enhanced Target Vector
         Math.sign(target.x - pos.x),
         Math.sign(target.y - pos.y),
         
-        // Sustiprinta ankstesnė kryptis (Inercija)
+        // Enhanced Previous Direction (Inertia)
         prevDir.dx,
         prevDir.dy,
         distToDock,
@@ -464,7 +464,7 @@ export const prepareNNInputs = (state: State, curGrid: Grid, CELL_TYPES: any): n
         castRay(pos.x, pos.y, -1, 1, curGrid, CELL_TYPES).mowed,
         castRay(pos.x, pos.y, -1, -1, curGrid, CELL_TYPES).mowed, // 44
         
-        // ORIENTACIJA
+        // ORIENTATION
         state.orientation === 'horizontal' ? 1.0 : 0.0, // 45
         state.orientation === 'vertical' ? 1.0 : 0.0    // 46
     ];

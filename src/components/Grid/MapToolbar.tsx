@@ -22,7 +22,7 @@ export const MapToolbar: React.FC<MapToolbarProps> = ({ brushType, setBrushType,
                     <div className="w-1 h-1 bg-current rounded-full" />
                 </div>
                 <span className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-slate-200 text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-slate-800 shadow-xl">
-                    NUSTATYMAI
+                    SETTINGS
                 </span>
             </button>
 
@@ -39,7 +39,7 @@ export const MapToolbar: React.FC<MapToolbarProps> = ({ brushType, setBrushType,
             >
                 <div className={`w-3.5 h-3.5 bg-current rounded-sm transition-transform duration-500 ${brushType === cellTypes.OBSTACLE ? 'rotate-45' : 'group-hover:rotate-12'}`} />
                 <span className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-slate-200 text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-slate-800 shadow-xl">
-                    KLIŪTIS
+                    OBSTACLE
                 </span>
             </button>
 
@@ -53,7 +53,7 @@ export const MapToolbar: React.FC<MapToolbarProps> = ({ brushType, setBrushType,
             >
                 <div className={`w-3.5 h-3.5 border-2 border-current rounded-sm transition-transform duration-500 ${brushType === cellTypes.GRASS ? 'scale-110' : 'group-hover:scale-90'}`} />
                 <span className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-slate-200 text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-slate-800 shadow-xl">
-                    VEJA
+                    GRASS
                 </span>
             </button>
 
@@ -67,7 +67,7 @@ export const MapToolbar: React.FC<MapToolbarProps> = ({ brushType, setBrushType,
             >
                 <div className={`w-3.5 h-3.5 rounded-full border-2 border-current transition-all duration-500 ${brushType === cellTypes.DOCK ? 'scale-110 border-4' : 'group-hover:scale-125'}`} />
                 <span className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-slate-200 text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-slate-800 shadow-xl">
-                    BAZĖ
+                    DOCK
                 </span>
             </button>
         </div>

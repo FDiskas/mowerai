@@ -100,7 +100,7 @@ export const App: React.FC = () => {
             }))
         );
         prepareSimulationState(newGrid);
-        setStatusMessage("Paruošta darbui");
+        setStatusMessage("Ready for work");
     }, [dockPos, prepareSimulationState, setStatusMessage]);
 
     useEffect(() => {
@@ -123,13 +123,13 @@ export const App: React.FC = () => {
     const resetMowedOnly = () => {
         stopSimulation(true);
         prepareSimulationState(grid);
-        showToast("Žemėlapis išvalytas");
+        showToast("Map cleared");
     };
 
     const resetFull = () => {
         stopSimulation(true);
         initGrid();
-        showToast("Sistemos perkrovimas sėkmingas", 'indigo');
+        showToast("System reboot successful", 'indigo');
     };
 
     const updateCell = (r: number, c: number) => {
@@ -254,8 +254,8 @@ export const App: React.FC = () => {
                     <div className="modal-content border border-emerald-500/20" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-8">
                             <div>
-                                <h2 className="text-2xl font-black text-white uppercase tracking-tight">AI Teritorijos Analizė</h2>
-                                <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest mt-1">Sukurta naudojant Gemini Flash</p>
+                                <h2 className="text-2xl font-black text-white uppercase tracking-tight">AI Territory Analysis</h2>
+                                <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest mt-1">Created using Gemini Flash</p>
                             </div>
                             <button onClick={() => setIsAnalysisOpen(false)} className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 text-slate-500 hover:text-white transition-colors text-2xl flex items-center justify-center">&times;</button>
                         </div>
@@ -264,7 +264,7 @@ export const App: React.FC = () => {
                         </div>
                         <div className="mt-8">
                             <Button variant="primary" size="lg" fullWidth onClick={() => setIsAnalysisOpen(false)}>
-                                SUPRASTU ANALIZĘ
+                                UNDERSTAND ANALYSIS
                             </Button>
                         </div>
                     </div>

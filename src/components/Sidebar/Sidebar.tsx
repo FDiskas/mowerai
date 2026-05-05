@@ -83,11 +83,11 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                 <div className="space-y-8">
                     {/* AI Generation Section */}
                     <div className="bg-slate-950/40 p-4 rounded-2xl border border-slate-800/50 space-y-4">
-                        <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block text-left ml-1">AI Parko Dizainas</label>
+                        <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block text-left ml-1">AI Park Design</label>
                         <div className="relative group">
                             <input 
                                 type="text" 
-                                placeholder="Sukurk parką..." 
+                                placeholder="Create a park..." 
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs outline-none focus:border-emerald-500 transition-all text-center pr-10" 
                                 value={props.aiPrompt} 
                                 onChange={(e) => props.setAiPrompt(e.target.value)} 
@@ -106,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                                 onClick={props.onGenerateAi} 
                                 disabled={props.isAiLoading || !props.aiPrompt}
                             >
-                                GENERUOTI
+                                GENERATE
                             </Button>
                             <Button 
                                 variant="outline" 
@@ -115,7 +115,7 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                                 onClick={props.onAnalyzeTerrain} 
                                 disabled={props.isAiLoading}
                             >
-                                ANALIZUOTI
+                                ANALYZE
                             </Button>
                         </div>
                     </div>
@@ -138,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                         onClick={props.onRunSimulation}
                         className="text-sm py-4"
                     >
-                        {props.isRunning && !props.isTesting ? 'STABDYTI' : 'PRADĖTI DARBĄ'}
+                        {props.isRunning && !props.isTesting ? 'STOP' : 'START WORK'}
                     </Button>
                     
                     <Button 
@@ -148,12 +148,12 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                         onClick={props.onTestAll} 
                         disabled={props.isRunning || props.isTesting}
                     >
-                        TESTUOTI VISUS
+                        TEST ALL
                     </Button>
                     
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" fullWidth onClick={props.onResetMap}>
-                            VALYTI
+                            CLEAR
                         </Button>
                         <Button variant="ghost" size="sm" fullWidth onClick={props.onFullReset} className="text-slate-600">
                             RESET
@@ -165,14 +165,14 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
             {/* NN Training Block (Separate) */}
             <Card variant="glass" className="space-y-4">
                 <div className="bg-indigo-500/5 border border-indigo-500/20 p-5 rounded-2xl space-y-4">
-                    <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block text-left ml-1">Neurotinklas (NN)</label>
+                    <label className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block text-left ml-1">Neural Network (NN)</label>
 
                     {props.trainingStatus.isTraining ? (
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-tight">Karta {props.trainingStatus.epoch}</span>
-                                    <span className="text-[9px] text-indigo-500 font-mono">Tikslumas: {Math.round(props.trainingStatus.bestFitness)}</span>
+                                    <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-tight">Gen {props.trainingStatus.epoch}</span>
+                                    <span className="text-[9px] text-indigo-500 font-mono">Fitness: {Math.round(props.trainingStatus.bestFitness)}</span>
                                 </div>
                                 
                                 <button 
@@ -196,17 +196,17 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
 
                             {props.showVisualTraining && (
                                 <div className="text-[9px] text-indigo-400/60 text-center animate-pulse">
-                                    ↑ Pagrindiniame žemėlapyje matosi geriausias AI
+                                    ↑ Best AI is shown on the main map
                                 </div>
                             )}
 
                             <Button variant="danger" size="sm" fullWidth onClick={props.onStopTrainNN}>
-                                STABDYTI MOKYMĄ
+                                STOP TRAINING
                             </Button>
                         </div>
                     ) : (
                         <Button variant="indigo" size="sm" fullWidth onClick={props.onTrainNN}>
-                            PRADĖTI EVOLIUCIJĄ
+                            START EVOLUTION
                         </Button>
                     )}
 
@@ -226,38 +226,38 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                         onClick={() => setShowFitness(v => !v)}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-indigo-500/40 transition-all"
                     >
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">⚙ Mokymo parametrai</span>
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">⚙ Training Parameters</span>
                         <span className="text-[10px] text-slate-600">{showFitness ? '▲' : '▼'}</span>
                     </button>
 
                     {showFitness && (
                         <div className="space-y-3 bg-slate-950/60 border border-slate-800 rounded-2xl p-3">
                             {/* Rewards */}
-                            <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">✦ Apdovanojimai</p>
+                            <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">✦ Rewards</p>
                             <div className="space-y-2">
-                                <FitnessRow label="Naujas langelis" cfgKey="discoveryReward" />
-                                <FitnessRow label="Teisingos krypties žingsnis" cfgKey="orientationBonus" step={10} />
-                                <FitnessRow label="Tiesios linijos žingsnis" cfgKey="straightLineBonus" step={50} />
-                                <FitnessRow label="Užbaigimas + grįžimas" cfgKey="completionBonus" />
-                                <FitnessRow label="Baterijos efektyvumas ×" cfgKey="batteryEfficiencyWeight" />
+                                <FitnessRow label="New Cell" cfgKey="discoveryReward" />
+                                <FitnessRow label="Correct Direction Step" cfgKey="orientationBonus" step={10} />
+                                <FitnessRow label="Straight Line Step" cfgKey="straightLineBonus" step={50} />
+                                <FitnessRow label="Completion + Return" cfgKey="completionBonus" />
+                                <FitnessRow label="Battery Efficiency ×" cfgKey="batteryEfficiencyWeight" />
                             </div>
 
                             {/* Penalties */}
-                            <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest mt-2">✦ Baudos</p>
+                            <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest mt-2">✦ Penalties</p>
                             <div className="space-y-2">
-                                <FitnessRow label="Nupjautos žolės perriedėjimas" cfgKey="mowedRevisitPenalty" step={10} />
-                                <FitnessRow label="Ciklinis judėjimas" cfgKey="oscillationPenalty" />
-                                <FitnessRow label="Posūkis" cfgKey="turnPenalty" step={10} />
-                                <FitnessRow label="Baterija baigėsi ne doke" cfgKey="batteryOutPenalty" />
-                                <FitnessRow label="Žolės pažeidimas ×" cfgKey="damageWeight" />
-                                <FitnessRow label="Įkrovimo ciklas ×" cfgKey="chargeCycleWeight" />
+                                <FitnessRow label="Mowed Grass Revisit" cfgKey="mowedRevisitPenalty" step={10} />
+                                <FitnessRow label="Cyclic Movement" cfgKey="oscillationPenalty" />
+                                <FitnessRow label="Turn" cfgKey="turnPenalty" step={10} />
+                                <FitnessRow label="Out of Battery Outside Dock" cfgKey="batteryOutPenalty" />
+                                <FitnessRow label="Grass Damage ×" cfgKey="damageWeight" />
+                                <FitnessRow label="Charge Cycle ×" cfgKey="chargeCycleWeight" />
                             </div>
 
                             {/* Hard limits */}
-                            <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest mt-2">✦ Kietieji limitai</p>
+                            <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest mt-2">✦ Hard Limits</p>
                             <div className="space-y-2">
-                                <FitnessRow label="Vizitų limitas (diskval.)" cfgKey="visitLimit" step={1} min={2} max={20} />
-                                <FitnessRow label="Max perriedėjimų dalis" cfgKey="maxMowedRevisitRatio" step={0.05} min={0.05} max={1} />
+                                <FitnessRow label="Visit Limit (Disqual.)" cfgKey="visitLimit" step={1} min={2} max={20} />
+                                <FitnessRow label="Max Revisit Ratio" cfgKey="maxMowedRevisitRatio" step={0.05} min={0.05} max={1} />
                             </div>
                         </div>
                     )}

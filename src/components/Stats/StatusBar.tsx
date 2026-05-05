@@ -15,17 +15,17 @@ export const StatusBar: React.FC<StatusBarProps> = ({ statusMessage, battery, ma
         <Card variant="glass" className="w-full mb-6 py-5 px-8 flex flex-col gap-4">
             <div className="flex justify-between items-end">
                 <div className="flex flex-col items-start gap-1">
-                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Sistemos Būsena</span>
+                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">System Status</span>
                     <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${statusMessage.includes('išseko') ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`}></div>
-                        <span className={`text-sm font-bold tracking-tight ${statusMessage.includes('išseko') ? 'text-rose-400' : 'text-slate-200'}`}>
+                        <div className={`w-2 h-2 rounded-full ${statusMessage.toLowerCase().includes('low') || statusMessage.toLowerCase().includes('empty') ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`}></div>
+                        <span className={`text-sm font-bold tracking-tight ${statusMessage.toLowerCase().includes('low') || statusMessage.toLowerCase().includes('empty') ? 'text-rose-400' : 'text-slate-200'}`}>
                             {statusMessage}
                         </span>
                     </div>
                 </div>
                 
                 <div className="text-right flex flex-col items-end gap-1">
-                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Energijos Rezervas</span>
+                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Energy Reserve</span>
                     <div className="flex items-baseline gap-2">
                         <span className={`font-mono text-2xl font-black ${isLowBattery ? 'text-rose-500 animate-pulse' : 'text-emerald-400'}`}>
                             {batteryPercentage.toFixed(1)}%

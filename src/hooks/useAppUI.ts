@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 
 export const useAppUI = () => {
-    const [statusMessage, setStatusMessage] = useState("Paruošta darbui");
+    const [statusMessage, setStatusMessage] = useState("Ready for work");
     const [toasts, setToasts] = useState<any[]>([]);
     const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 

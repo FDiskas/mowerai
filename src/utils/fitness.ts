@@ -102,7 +102,7 @@ export class FitnessEvaluator {
                 totalDiscoveryReward += cfg.discoveryReward;
             }
 
-            // Kritinis limitas: jei NE-DOKO langelis aplankytas per daug kartų - diskvalifikacija
+            // Critical limit: if a NON-DOCK cell is visited too many times - disqualification
             if (visitCount >= cfg.visitLimit && !(move.x === dockPos.x && move.y === dockPos.y)) {
                 return -999999999;
             }

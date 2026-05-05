@@ -74,24 +74,24 @@ export interface State {
 }
 
 export interface FitnessConfig {
-    // Apdovanojimai (teigiami = gerai)
-    discoveryReward: number;       // Premija už naują langelį (default: 500)
-    orientationBonus: number;      // Premija už teisingą kryptį (default: 100)
-    completionBonus: number;       // Premija už visų plotų nupjovimą ir grįžimą (default: 10000)
-    straightLineBonus: number;     // Premija už tiesią liniją (default: 500)
-    batteryEfficiencyWeight: number; // Baterijos efektyvumo premijos svoris (default: 30000)
+    // Rewards (positive = good)
+    discoveryReward: number;       // Bonus for a new cell (default: 500)
+    orientationBonus: number;      // Bonus for the correct direction (default: 100)
+    completionBonus: number;       // Bonus for mowing all areas and returning (default: 10000)
+    straightLineBonus: number;     // Bonus for a straight line (default: 500)
+    batteryEfficiencyWeight: number; // Weight for battery efficiency bonus (default: 30000)
 
-    // Baudos (neigiamos reikšmės suprantamos kaip bauda)
-    mowedRevisitPenalty: number;   // Bauda už nupjautos žolės perriedėjimą (default: 50)
-    oscillationPenalty: number;    // Bauda už ciklinį judėjimą (default: 5000)
-    turnPenalty: number;           // Bauda už posūkį (default: 100)
-    batteryOutPenalty: number;     // Bauda už baterijos išsikrovimą ne doke (default: 2000)
-    damageWeight: number;          // Žolės pažeidimo baudos svoris (default: 10000)
-    chargeCycleWeight: number;     // Įkrovimo ciklų baudos svoris (default: 20000)
+    // Penalties (negative values are understood as penalties)
+    mowedRevisitPenalty: number;   // Penalty for overrunning mowed grass (default: 50)
+    oscillationPenalty: number;    // Penalty for cyclic movement (default: 5000)
+    turnPenalty: number;           // Penalty for a turn (default: 100)
+    batteryOutPenalty: number;     // Penalty for battery running out outside the dock (default: 2000)
+    damageWeight: number;          // Weight for grass damage penalty (default: 10000)
+    chargeCycleWeight: number;     // Weight for charging cycle penalty (default: 20000)
 
-    // Kietieji limitai
-    visitLimit: number;            // Vizitų limitas prieš diskvalifikaciją (default: 5)
-    maxMowedRevisitRatio: number;  // Max nupjautos žolės perriedėjimų dalis (default: 0.25)
+    // Hard Limits
+    visitLimit: number;            // Visit limit before disqualification (default: 5)
+    maxMowedRevisitRatio: number;  // Max ratio of mowed grass overruns (default: 0.25)
 }
 
 export const DEFAULT_FITNESS_CONFIG: FitnessConfig = {

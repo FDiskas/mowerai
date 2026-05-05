@@ -89,7 +89,7 @@ export const useNeuralNetwork = (
             const move = getNeuralNetworkMove(state, state.grid, state.prevDir, CELL_TYPES, currentNn);
             if (!move) return;
 
-            // Atnaujinamas vizitų skaičius – tas pats kaip fitneso funkcijoje
+            // Updating visit count – same as in the fitness function
             const posKey = `${move.x},${move.y}`;
             const visitCount = (state.visitCounts[posKey] || 0) + 1;
             state.visitCounts[posKey] = visitCount;
@@ -107,7 +107,7 @@ export const useNeuralNetwork = (
             const isLooping = !isDock && visitCount >= 5;
 
             if (state.battery <= 0 || isLooping) {
-                // Reset – baterija baigėsi arba robotas sukosi vienoje vietoje
+                // Reset – battery ran out or robot was spinning in one place
                 const src = userGridRef.current;
                 if (!src) return;
                 const fresh: Grid = src.map(row => row.map(c => ({
@@ -145,12 +145,12 @@ export const useNeuralNetwork = (
     const trainOnData = (sessionData: any[]) => {
         if (!nn || !sessionData || sessionData.length === 0) return;
 
-        // Kopijuojame duomenis, kad galėtume maišyti
+        // Copying data so we can shuffle
         const data = [...sessionData];
         
-        // Mokome tinklą su Adam optimizatoriumi
-        for (let i = 0; i < 10; i++) { // 10 epochų
-            // Atsitiktinis maišymas (Fisher-Yates)
+        // Training the network with Adam optimizer
+        for (let i = 0; i < 10; i++) { // 10 epochs
+            // Random shuffle (Fisher-Yates)
             for (let j = data.length - 1; j > 0; j--) {
                 const k = Math.floor(Math.random() * (j + 1));
                 [data[j], data[k]] = [data[k], data[j]];
@@ -162,7 +162,7 @@ export const useNeuralNetwork = (
         }
         
         setNn(nn.copy());
-        setStatusMessage(`AI pasimokė iš jūsų važiavimo (${sessionData.length} žingsnių)`);
+        setStatusMessage(`AI learned from your drive (${sessionData.length} steps)`);
     };
 
 
@@ -218,7 +218,7 @@ export const useNeuralNetwork = (
 
         isTrainingRef.current = true;
         const numWorkers = navigator.hardwareConcurrency || 4;
-        setStatusMessage(`Mokymas su ${numWorkers} CPU branduoliais...`);
+        setStatusMessage(`Training with ${numWorkers} CPU cores...`);
 
         const popSize = 60; // Increased for better genetic diversity
         const maxSteps = 800;
@@ -380,7 +380,7 @@ export const useNeuralNetwork = (
         } finally {
             workers.forEach(w => w.terminate());
             setTrainingStatus(prev => ({ ...prev, isTraining: false }));
-            setStatusMessage("NN Optimizavimas sustabdytas.");
+            setStatusMessage("NN Optimization stopped.");
         }
     };
 
@@ -405,10 +405,10 @@ export const useNeuralNetwork = (
                 URL.revokeObjectURL(url);
             }, 100);
             
-            setStatusMessage("Modelis sėkmingai eksportuotas!");
+            setStatusMessage("Model successfully exported!");
         } catch (err) {
             console.error(err);
-            setStatusMessage("KLAIDA: Nepavyko sugeneruoti failo.");
+            setStatusMessage("ERROR: Failed to generate file.");
         }
     };
 
@@ -422,17 +422,17 @@ export const useNeuralNetwork = (
                 const contents = event.target?.result as string;
                 const data = JSON.parse(contents);
                 
-                // Ar modelis tinka dabartiniam kodui (46 įėjimai)?
+                // Does the model fit current code (46 inputs)?
                 if (!data.layers || data.layers[0] !== 46) {
-                    setStatusMessage(`KLAIDA: Modelis nesuderinamas! Tikimasi 46 jutiklių (8-krypčių mowed rays pridėta), o rasta ${data.layers ? data.layers[0] : 'nežinoma'}.`);
+                    setStatusMessage(`ERROR: Model incompatible! Expected 46 sensors (8-way mowed rays added), found ${data.layers ? data.layers[0] : 'unknown'}.`);
                     return;
                 }
 
                 const loadedNn = NeuralNetwork.load(contents);
                 setNn(loadedNn);
-                setStatusMessage("Modelis sėkmingai įkeltas!");
+                setStatusMessage("Model successfully loaded!");
             } catch (err) {
-                setStatusMessage("KLAIDA: Nepavyko perskaityti failo.");
+                setStatusMessage("ERROR: Failed to read file.");
             }
         };
         reader.readAsText(file);
