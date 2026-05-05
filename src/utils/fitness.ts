@@ -107,17 +107,21 @@ export class FitnessEvaluator {
                 return -999999999;
             }
 
+            let grassMowedThisStep = false;
             const cell = workingGrid[move.y][move.x];
             if (cell.type === CELL_TYPES.GRASS) {
                 cell.type = CELL_TYPES.MOWED;
                 mowed++;
+                grassMowedThisStep = true;
             } else if (cell.type === CELL_TYPES.MOWED) {
                 mowedRevisits++;
                 const stepDamage = isTurn ? DAMAGE_PER_TURN : DAMAGE_PER_PASS;
                 const currentDamage = cell.damage || 0;
                 totalDamage += stepDamage * (1 + currentDamage * 200); 
                 cell.damage = currentDamage + stepDamage;
-                penaltyPoints += cfg.mowedRevisitPenalty + (mowedRevisits * 2);
+                
+                // Significantly increased penalty for revisiting to force "corner cutting" (shortest path)
+                penaltyPoints += cfg.mowedRevisitPenalty * (1 + mowedRevisits * 0.5);
                 
                 if (mowedRevisits > maxAllowedRevisits) {
                     penaltyPoints += 50000;
@@ -132,7 +136,9 @@ export class FitnessEvaluator {
                 (orientation === 'horizontal' && dy === 0 && dx !== 0) ||
                 (orientation === 'vertical' && dx === 0 && dy !== 0);
             
-            if (isCorrectOrientation && !isTurn) {
+            // CRITICAL: Only reward orientation if we actually mowed grass!
+            // This prevents "zigzagging" patterns on already mowed areas.
+            if (isCorrectOrientation && !isTurn && grassMowedThisStep) {
                 totalOrientationBonus += cfg.orientationBonus;
             }
 
@@ -165,27 +171,45 @@ export class FitnessEvaluator {
             }
         }
 
+        // Final Scores Calculation
         if (totalGrass === 0) return 0;
 
-        const coverageScore = (mowed / totalGrass) * 100000;
-        const efficiencyScore = (mowed > 0) ? (mowed / distance) * 50000 : 0;
+        // Coverage: 0 to 50,000 (scaled by percentage)
+        const coverageScore = (mowed / totalGrass) * 50000;
+        
+        // Efficiency: (Mowed / Distance) * weight. Ideal is 1.0.
+        const efficiencyScore = (distance > 0) ? (mowed / distance) * 20000 : 0;
+        
+        // Straight line bonus helps with systematic patterns
         const straightLineBonus = straightLineSteps * cfg.straightLineBonus;
 
-        // Baterijos efektyvumo premija
+        // Battery efficiency: (Ideal battery / Actual battery) * weight
         const batteryPerMow = mowed > 0 ? batteryUsed / mowed : 999;
         const idealBatteryPerMow = drainMove;
         const batteryEfficiencyBonus = mowed > 0
-            ? Math.max(0, (idealBatteryPerMow / batteryPerMow)) * cfg.batteryEfficiencyWeight
+            ? Math.min(2, (idealBatteryPerMow / batteryPerMow)) * cfg.batteryEfficiencyWeight
             : 0;
 
-        // Posūkio bauda proporcinga drainTurn nustatymui
-        const turnPenaltyWeight = cfg.turnPenalty + (drainTurn / drainMove) * 200;
-        const totalPenalty = (turns * turnPenaltyWeight) + (totalDamage * cfg.damageWeight) + (chargeCycles * cfg.chargeCycleWeight) + (penaltyPoints * 150);
+        // Total Penalties
+        const turnPenaltyWeight = cfg.turnPenalty + (drainTurn / drainMove) * 10;
+        const totalPenalty = (turns * turnPenaltyWeight) + 
+                             (totalDamage * cfg.damageWeight) + 
+                             (chargeCycles * cfg.chargeCycleWeight) + 
+                             (penaltyPoints);
 
+        // Docking bonus
         const distToDock = Math.abs(state.pos.x - state.dockPos.x) + Math.abs(state.pos.y - state.dockPos.y);
-        const dockBonus = distToDock === 0 ? 20000 : (1 / (distToDock + 1)) * 5000;
+        const dockBonus = distToDock === 0 ? 10000 : (1 / (distToDock + 1)) * 2000;
 
-        const fitness = coverageScore + efficiencyScore + dockBonus + totalDiscoveryReward + straightLineBonus + totalOrientationBonus + batteryEfficiencyBonus - totalPenalty;
-        return isNaN(fitness) ? -10000000 : fitness;
+        const fitness = coverageScore + 
+                        efficiencyScore + 
+                        dockBonus + 
+                        totalDiscoveryReward + 
+                        straightLineBonus + 
+                        totalOrientationBonus + 
+                        batteryEfficiencyBonus - 
+                        totalPenalty;
+
+        return isNaN(fitness) ? -1000000 : fitness;
     }
 }

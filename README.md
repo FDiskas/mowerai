@@ -1,73 +1,91 @@
-# React + TypeScript + Vite
+# 🚜 MowerAI: Autonomous Lawnmower Simulator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-Currently, two official plugins are available:
+**MowerAI** is a high-fidelity autonomous lawnmower simulation environment designed to test and visualize advanced pathfinding and coverage algorithms. From classic sweep patterns to evolved neural networks, MowerAI provides a robust playground for robotic navigation research and development.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+![MowerAI Mockup](public/mockup.png)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🌟 Key Features
 
-## Expanding the ESLint configuration
+- **🤖 Autonomous Brains**: Switch between a wide array of navigation strategies, including a Genetic Algorithm-trained Neural Network.
+- **⚡ Real-time Simulation**: Interactive grid environment with dynamic obstacle placement and mower state tracking.
+- **🔋 Resource Management**: Realistic battery consumption logic and automated docking station return.
+- **🌱 Environmental Impact**: Tracks lawn damage from excessive turning or over-mowing.
+- **📊 Visual Metrics**: Heatmaps for visit counts and path visualization to analyze coverage efficiency.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🧠 Navigation Algorithms
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+MowerAI implements a comprehensive suite of algorithms categorized by their approach:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 🧩 Coverage & Sweep
+- **Boustrophedon (Sweep)**: Classic back-and-forth "ox-turning" pattern for systematic coverage.
+- **Spiral Coverage**: Expanding outward from a center point to cover circular or open areas.
+- **Spanning Tree Coverage (STC)**: Guaranteed 100% coverage using a grid-based Hamiltonian cycle.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 🧬 AI & Heuristics
+- **Neural Network (Evolved)**: A 46-input deep learning model evolved through genetic algorithms, utilizing raycasting vision and memory states.
+- **Smart AI (Closest Grass)**: A greedy heuristic approach that always targets the nearest un-mowed patch.
+- **Artificial Potential Fields (APF)**: Uses virtual physics—grass "pulls" the mower while obstacles "push" it away.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 📍 Classic Pathfinding
+- **A* & Dijkstra**: Optimal pathfinding between the mower and its target (grass or dock).
+- **RRT (Rapidly-exploring Random Trees)**: Efficiently explores complex or tight spaces.
+- **JPS (Jump Point Search)** & **D* Lite**: Incremental and optimized search variants for dynamic environments.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- [npm](https://www.npmjs.com/)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/FDiskas/mowerai.git
+   cd mowerai
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open your browser to `http://localhost:5173` to see the simulator in action!
+
+---
+
+## 🛠️ Technical Stack
+
+- **Core**: React 19, TypeScript
+- **Styling**: Tailwind CSS 4.0
+- **Build Tool**: Vite 8.0
+- **AI/Logic**: Custom Neural Network implementation with Genetic Algorithm evolution logic.
+
+---
+
+## 📈 Roadmap
+
+- [ ] Implementation of full Hamiltonian Cycle for STC.
+- [ ] 3D Visualization using Three.js.
+- [ ] Multi-mower swarm coordination.
+- [ ] Real-world map data integration (OpenStreetMap).
+
+---
+
+Developed with ❤️ by [FDiskas](https://github.com/FDiskas)

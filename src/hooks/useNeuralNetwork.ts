@@ -220,7 +220,7 @@ export const useNeuralNetwork = (
         const numWorkers = navigator.hardwareConcurrency || 4;
         setStatusMessage(`Mokymas su ${numWorkers} CPU branduoliais...`);
 
-        const popSize = 40;
+        const popSize = 60; // Increased for better genetic diversity
         const maxSteps = 800;
         let gen = trainingStatus.epoch;
 
@@ -230,7 +230,6 @@ export const useNeuralNetwork = (
         const trainingDockPos = dockPos;
         let currentTrainingMaps = generateTrainingMaps(25, 20, trainingDockPos);
         
-        // Pridedame vartotojo nupieštą žemėlapį prie mokymo rinkinio
         if (userGrid) {
             currentTrainingMaps.push(userGrid);
         }
@@ -240,13 +239,13 @@ export const useNeuralNetwork = (
             if (bestNnRef.current && bestNnRef.current.layers[0] === 46) {
                 n.setWeights(bestNnRef.current.getWeights());
             }
-            n.mutate(0.2, 0.4);
+            // More aggressive initial mutation for diversity
+            n.mutate(0.3, 0.5);
             return { id: i, nn: n };
         });
 
         setTrainingStatus(prev => ({ ...prev, isTraining: true }));
 
-        // Sukuriame darbininkų „baseiną“ vieną kartą
         const workers = Array(numWorkers).fill(null).map(() => 
             new Worker(new URL('../training.worker.ts', import.meta.url), { type: 'module' })
         );
@@ -314,31 +313,30 @@ export const useNeuralNetwork = (
                 } else {
                     stagnationCount++;
                     if (stagnationCount > 10) {
-                        mutationStrength = Math.min(0.5, mutationStrength + 0.05);
+                        mutationStrength = Math.min(0.6, mutationStrength + 0.05);
                     }
                 }
 
-                // Dinamiškai keičiame žemėlapius kas 20 kartų, kad AI būtų universalus
-                if (gen % 20 === 0) {
+                if (gen % 25 === 0) {
                     currentTrainingMaps = generateTrainingMaps(25, 20, trainingDockPos);
-                    if (userGrid) {
-                        currentTrainingMaps.push(userGrid);
-                    }
+                    if (userGrid) currentTrainingMaps.push(userGrid);
                 }
 
-                // Selection and Breeding
+                // --- BREEDING NEXT POPULATION ---
                 const nextPop: {id: number, nn: NeuralNetwork}[] = [];
                 
-                // 1. Elitism: Keep the best one unchanged
+                // 1. Elitism: Keep top 2 individuals
                 nextPop.push({ id: 0, nn: (bestNnRef.current || results[0].nn).copy() });
+                if (results.length > 1) {
+                    nextPop.push({ id: 1, nn: results[1].nn.copy() });
+                }
 
-                // Tournament Selection — excludes fully disqualified individuals
+                // Tournament Selection
                 const tournamentSelection = (size: number) => {
-                    const eligible = results.filter(r => r.fitness > -999999998);
-                    const pool = eligible.length > 0 ? eligible : results;
+                    const poolSize = results.length;
                     let best: {nn: NeuralNetwork, fitness: number} | null = null;
                     for (let i = 0; i < size; i++) {
-                        const randomInd = pool[Math.floor(Math.random() * pool.length)];
+                        const randomInd = results[Math.floor(Math.random() * poolSize)];
                         if (!best || randomInd.fitness > best.fitness) {
                             best = randomInd;
                         }
@@ -348,25 +346,22 @@ export const useNeuralNetwork = (
 
                 while (nextPop.length < popSize) {
                     let childNn: NeuralNetwork;
-                    
-                    if (nextPop.length > popSize * 0.9) {
-                        // 2. Random Immigrants: 10% of population are fresh starts to prevent stagnation
+                    const rand = Math.random();
+
+                    if (rand < 0.1) {
+                        // 10% Random Immigrants for diversity
                         childNn = new NeuralNetwork([46, 64, 32, 4], 0.001);
-                    } else if (Math.random() < 0.6) {
-                        // 3. Crossover: Combine two parents from tournament
-                        const p1 = tournamentSelection(3);
-                        const p2 = tournamentSelection(3);
+                    } else if (rand < 0.6) {
+                        // 50% Crossover
+                        const p1 = tournamentSelection(4);
+                        const p2 = tournamentSelection(4);
                         childNn = NeuralNetwork.crossover(p1, p2);
-                        
-                        // Small mutation after crossover
-                        const mutRate = 0.05 + Math.random() * 0.05;
-                        childNn.mutate(mutRate, mutationStrength / 2); 
+                        childNn.mutate(0.05, mutationStrength / 2); 
                     } else {
-                        // 4. Asexual reproduction (Mutation only)
-                        const parent = tournamentSelection(3);
+                        // 40% Asexual Mutation
+                        const parent = tournamentSelection(4);
                         childNn = parent.copy();
-                        const mutRate = 0.1 + Math.random() * 0.15;
-                        childNn.mutate(mutRate, mutationStrength);
+                        childNn.mutate(0.15, mutationStrength);
                     }
                     nextPop.push({ id: nextPop.length, nn: childNn });
                 }

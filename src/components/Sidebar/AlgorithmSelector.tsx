@@ -16,10 +16,11 @@ export const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({
 
     // Group algorithms for better UX
     const groups = {
-        'AI & Learning': ['smart_ai', 'neural_network', 'custom_mower'],
-        'Boustrophedon': ['cellular_boustrophedon', 'slam_boustrophedon', 'zigzag', 'u_shape'],
+        'AI & Autonomous': ['smart_ai', 'neural_network', 'potential_field'],
+        'Coverage & Sweep': ['boustrophedon', 'spiral', 'stc', 'rrt'],
         'Pathfinding': ['a_star', 'dijkstra', 'bfs', 'greedy_bfs', 'jps', 'd_star_lite'],
     };
+
 
     return (
         <div className="space-y-3">

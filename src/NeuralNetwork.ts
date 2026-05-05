@@ -21,6 +21,7 @@ export class NeuralNetwork {
     constructor(layers: number[], learningRate: number = 0.001) {
         this.layers = layers;
         this.learningRate = learningRate;
+        
         this.weights = [];
         this.biases = [];
         this.mWeights = [];
@@ -28,6 +29,10 @@ export class NeuralNetwork {
         this.mBiases = [];
         this.vBiases = [];
 
+        this.initializeNetwork(layers);
+    }
+
+    private initializeNetwork(layers: number[]) {
         for (let i = 0; i < layers.length - 1; i++) {
             const inputNodes = layers[i];
             const outputNodes = layers[i + 1];
@@ -78,16 +83,24 @@ export class NeuralNetwork {
     }
 
     private activate(x: number): number {
-        return Math.max(0.01 * x, x); // Leaky ReLU
+        return x > 0 ? x : 0.01 * x; // Leaky ReLU
+    }
+
+    private activateDeriv(x: number): number {
+        return x > 0 ? 1 : 0.01;
     }
 
     private softmax(arr: number[]): number[] {
         const maxLogit = Math.max(...arr);
         const exps = arr.map(x => Math.exp(x - maxLogit));
         const sumExps = exps.reduce((a, b) => a + b, 0);
-        return exps.map(x => x / sumExps);
+        return exps.map(x => x / (sumExps + 1e-10));
     }
 
+    /**
+     * Standard feedforward pass.
+     * Returns all activations (including input layer) for backpropagation.
+     */
     feedForward(inputs: number[]): number[][] {
         let current = inputs;
         const activations: number[][] = [inputs];
@@ -104,41 +117,46 @@ export class NeuralNetwork {
                 next.push(isOutput ? sum : this.activate(sum));
             }
             
-            // Output layer uses softmax with temperature scaling
-            const layerOutput = isOutput ? this.softmax(next.map(x => x * 2.0)) : next;
+            // Output layer uses softmax (on raw logits for training stability)
+            const layerOutput = isOutput ? this.softmax(next) : next;
             current = layerOutput;
             activations.push(current);
         }
         return activations;
     }
 
-
-    private activateDeriv(x: number): number {
-        return x > 0 ? 1 : 0.01;
-    }
-
+    /**
+     * Train using Supervised Learning (Backpropagation).
+     * Assumes Cross-Entropy Loss + Softmax Output Layer.
+     */
     train(inputs: number[], targets: number[]): number {
-        this.t++; // Increment Adam timestep
+        this.t++;
         const activations = this.feedForward(inputs);
         const outputActivations = activations[activations.length - 1];
-        let errors = targets.map((t, i) => t - outputActivations[i]);
         
-        const stepError = errors.reduce((sum, e) => sum + e * e, 0) / errors.length;
+        // Loss: Cross-Entropy. Gradient w.r.t. output logits (before softmax) is (P - Y)
+        // Since we want to MINIMIZE loss, and we use += below, we'll calculate (Y - P)
+        let deltas = targets.map((y, i) => y - outputActivations[i]);
+        
+        const mse = deltas.reduce((sum, d) => sum + d * d, 0) / deltas.length;
 
         for (let i = this.weights.length - 1; i >= 0; i--) {
             const isOutput = i === this.weights.length - 1;
-            const nextErrors: number[] = new Array(this.layers[i]).fill(0);
-            const currentActivations = activations[i + 1];
             const prevActivations = activations[i];
+            const nextDeltas: number[] = new Array(this.layers[i]).fill(0);
 
             for (let j = 0; j < this.weights[i].length; j++) {
-                const delta = errors[j] * (isOutput ? 1 : this.activateDeriv(currentActivations[j]));
+                // If it's a hidden layer, we need the derivative of activation
+                const error = isOutput ? deltas[j] : deltas[j] * this.activateDeriv(activations[i + 1][j]);
                 
                 for (let k = 0; k < this.weights[i][j].length; k++) {
-                    const gradient = delta * prevActivations[k] - 0.0001 * this.weights[i][j][k]; // Include L2 Reg
-                    nextErrors[k] += this.weights[i][j][k] * delta;
+                    // Gradient calculation with L2 Regularization (Weight Decay)
+                    const gradient = error * prevActivations[k] - 0.0001 * this.weights[i][j][k];
                     
-                    // Adam Weight Update
+                    // Backpropagate error to next layer
+                    nextDeltas[k] += this.weights[i][j][k] * error;
+                    
+                    // Adam Optimizer: Update Weights
                     this.mWeights[i][j][k] = this.beta1 * this.mWeights[i][j][k] + (1 - this.beta1) * gradient;
                     this.vWeights[i][j][k] = this.beta2 * this.vWeights[i][j][k] + (1 - this.beta2) * (gradient * gradient);
                     
@@ -148,18 +166,18 @@ export class NeuralNetwork {
                     this.weights[i][j][k] += (this.learningRate * mHat) / (Math.sqrt(vHat) + this.epsilon);
                 }
                 
-                // Adam Bias Update
-                this.mBiases[i][j] = this.beta1 * this.mBiases[i][j] + (1 - this.beta1) * delta;
-                this.vBiases[i][j] = this.beta2 * this.vBiases[i][j] + (1 - this.beta2) * (delta * delta);
+                // Adam Optimizer: Update Biases
+                this.mBiases[i][j] = this.beta1 * this.mBiases[i][j] + (1 - this.beta1) * error;
+                this.vBiases[i][j] = this.beta2 * this.vBiases[i][j] + (1 - this.beta2) * (error * error);
                 
                 const mbHat = this.mBiases[i][j] / (1 - Math.pow(this.beta1, this.t));
                 const vbHat = this.vBiases[i][j] / (1 - Math.pow(this.beta2, this.t));
                 
                 this.biases[i][j] += (this.learningRate * mbHat) / (Math.sqrt(vbHat) + this.epsilon);
             }
-            errors = nextErrors;
+            deltas = nextDeltas;
         }
-        return stepError;
+        return mse;
     }
 
     predict(inputs: number[]): number[] {
@@ -169,14 +187,14 @@ export class NeuralNetwork {
 
     getWeights(): number[] {
         const flat: number[] = [];
-        this.weights.forEach(layer => {
-            layer.forEach(node => {
-                node.forEach(w => flat.push(w));
-            });
-        });
-        this.biases.forEach(layer => {
-            layer.forEach(b => flat.push(b));
-        });
+        for (const layer of this.weights) {
+            for (const node of layer) {
+                for (const w of node) flat.push(w);
+            }
+        }
+        for (const layer of this.biases) {
+            for (const b of layer) flat.push(b);
+        }
         return flat;
     }
 
@@ -198,11 +216,12 @@ export class NeuralNetwork {
 
     mutate(rate: number, amount: number = 0.1) {
         for (let i = 0; i < this.weights.length; i++) {
+            const stdDev = Math.sqrt(2.0 / this.layers[i]);
             for (let j = 0; j < this.weights[i].length; j++) {
                 for (let k = 0; k < this.weights[i][j].length; k++) {
                     if (Math.random() < rate) {
+                        // 5% chance of complete reset to encourage exploration
                         if (Math.random() < 0.05) {
-                            const stdDev = Math.sqrt(2.0 / this.layers[i]);
                             this.weights[i][j][k] = this.gaussianRandom(0, stdDev);
                         } else {
                             this.weights[i][j][k] += this.gaussianRandom(0, amount);
@@ -233,16 +252,23 @@ export class NeuralNetwork {
         const nn = new NeuralNetwork(this.layers, this.learningRate);
         nn.setWeights(this.getWeights());
         
-        // Deep copy Adam state
-        nn.mWeights = JSON.parse(JSON.stringify(this.mWeights));
-        nn.vWeights = JSON.parse(JSON.stringify(this.vWeights));
-        nn.mBiases = JSON.parse(JSON.stringify(this.mBiases));
-        nn.vBiases = JSON.parse(JSON.stringify(this.vBiases));
+        // Fast deep copy for Adam state
+        nn.mWeights = this.deepCopy3D(this.mWeights);
+        nn.vWeights = this.deepCopy3D(this.vWeights);
+        nn.mBiases = this.deepCopy2D(this.mBiases);
+        nn.vBiases = this.deepCopy2D(this.vBiases);
         nn.t = this.t;
         
         return nn;
     }
 
+    private deepCopy3D(arr: number[][][]): number[][][] {
+        return arr.map(layer => layer.map(node => [...node]));
+    }
+
+    private deepCopy2D(arr: number[][]): number[][] {
+        return arr.map(layer => [...layer]);
+    }
 
     save(): string {
         return JSON.stringify({
@@ -250,13 +276,12 @@ export class NeuralNetwork {
             weights: this.weights,
             biases: this.biases,
             learningRate: this.learningRate,
-            // Save Adam state for perfect resumption
             mWeights: this.mWeights,
             vWeights: this.vWeights,
             mBiases: this.mBiases,
             vBiases: this.vBiases,
             t: this.t
-        }, null, 2);
+        });
     }
 
     static load(json: string): NeuralNetwork {
@@ -264,16 +289,12 @@ export class NeuralNetwork {
         const nn = new NeuralNetwork(data.layers, data.learningRate);
         nn.weights = data.weights;
         nn.biases = data.biases;
-        
-        // Load Adam state if exists
-        if (data.mWeights) nn.mWeights = data.mWeights;
-        if (data.vWeights) nn.vWeights = data.vWeights;
-        if (data.mBiases) nn.mBiases = data.mBiases;
-        if (data.vBiases) nn.vBiases = data.vBiases;
-        if (data.t) nn.t = data.t;
-        
+        nn.mWeights = data.mWeights || nn.mWeights;
+        nn.vWeights = data.vWeights || nn.vWeights;
+        nn.mBiases = data.mBiases || nn.mBiases;
+        nn.vBiases = data.vBiases || nn.vBiases;
+        nn.t = data.t || 0;
         return nn;
     }
-
 }
 

@@ -12,22 +12,34 @@ export const CELL_TYPES = {
 };
 
 export const ALGORITHMS_LIST = [
-    'smart_ai', 'neural_network', 'cellular_boustrophedon', 'slam_boustrophedon', 'zigzag', 'u_shape', 'a_star', 
-    'dijkstra', 'bfs', 'greedy_bfs', 'jps', 'd_star_lite', 'custom_mower'
+    'smart_ai', 
+    'neural_network', 
+    'boustrophedon',
+    'potential_field',
+    'spiral',
+    'rrt',
+    'stc',
+    'a_star', 
+    'dijkstra', 
+    'bfs', 
+    'greedy_bfs', 
+    'jps', 
+    'd_star_lite'
 ];
 
 export const ALGORITHMS_NAMES = { 
-    smart_ai: 'Smart AI', 
-    neural_network: 'Neural Network',
-    cellular_boustrophedon: 'Cellular Boustrophedon',
-    slam_boustrophedon: 'SLAM Boustrophedon', 
-    zigzag: 'Zigzag (V)', 
-    u_shape: 'U-Shape (H)', 
-    a_star: 'A* (A-Star)', 
-    dijkstra: 'Dijkstra', 
-    bfs: 'BFS', 
+    smart_ai: 'Smart AI (Closest)', 
+    neural_network: 'Neural Network (Evolved)',
+    boustrophedon: 'Boustrophedon (Sweep)',
+    potential_field: 'Artificial Potential Fields',
+    spiral: 'Spiral Coverage',
+    rrt: 'RRT Exploration',
+    stc: 'Spanning Tree Coverage',
+    a_star: 'A* (Optimal Path)', 
+    dijkstra: 'Dijkstra (Uniform)', 
+    bfs: 'BFS (Shortest)', 
     greedy_bfs: 'Greedy BFS', 
     jps: 'JPS (Jump Point)', 
-    d_star_lite: 'D* Lite', 
-    custom_mower: 'Custom (Best)' 
+    d_star_lite: 'D* Lite (Incremental)'
 };
+

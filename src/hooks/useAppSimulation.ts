@@ -141,28 +141,33 @@ export const useAppSimulation = (
         setStatusMessage("Pjaunama veja...");
 
         let move = null;
-        if (['zigzag', 'u_shape', 'slam_boustrophedon', 'cellular_boustrophedon'].includes(algo)) {
-            const fns: any = {
-                zigzag: algos.getZigzagMove,
-                u_shape: algos.getUShapeMove,
-                slam_boustrophedon: algos.getSLAMBoustrophedonMove,
-                cellular_boustrophedon: algos.getCellularBoustrophedonMove
-            };
-            move = fns[algo](simState.current, curGrid, prevDir, rows, cols, CELL_TYPES, orientation);
+        const fns: any = {
+            boustrophedon: (s: any, g: any, d: any) => algos.getBoustrophedonMove(s, g, d, CELL_TYPES),
+            potential_field: (s: any, g: any) => algos.getPotentialFieldMove(s, g, CELL_TYPES),
+            spiral: (s: any, g: any) => algos.getSpiralMove(s, g, CELL_TYPES),
+            rrt: (s: any, g: any, d: any) => algos.getRRTMove(s, g, d, CELL_TYPES),
+            stc: (s: any, g: any, d: any) => algos.getSTCMove(s, g, d, CELL_TYPES),
+            a_star: (s: any, g: any, d: any) => algos.aStarSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, d),
+            dijkstra: (s: any, g: any, d: any) => algos.dijkstraSearch(s.pos, (p: any) => g[p.y][p.x].type === CELL_TYPES.GRASS, g, d),
+            bfs: (s: any, g: any) => algos.bfsSearch(s.pos, (p: any) => g[p.y][p.x].type === CELL_TYPES.GRASS, g),
+            greedy_bfs: (s: any, g: any, d: any) => algos.greedyBestFirstSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, d),
+            jps: (s: any, g: any) => algos.aStarSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, { dx: 0, dy: 1 }),
+            d_star_lite: (s: any, g: any, d: any) => algos.dStarLiteSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, d),
+            smart_ai: (s: any, g: any, d: any) => algos.getSmartAIMove(s, g, d, CELL_TYPES),
+            neural_network: (s: any, g: any, d: any) => algos.getNeuralNetworkMove(s, g, d, CELL_TYPES, nn)
+        };
+
+        if (fns[algo]) {
+            move = fns[algo](simState.current, curGrid, prevDir);
         } else {
-            const fns: any = {
-                a_star: algos.getAStarMove,
-                dijkstra: algos.getDijkstraMove,
-                bfs: algos.getBFSMove,
-                greedy_bfs: algos.getGreedyBestFirstMove,
-                jps: algos.getJPSMove,
-                d_star_lite: algos.getDStarLiteMove,
-                custom_mower: algos.getCustomMove,
-                smart_ai: algos.getSmartAIMove,
-                neural_network: (s: any, g: any, d: any, c: any) => algos.getNeuralNetworkMove(s, g, d, c, nn)
-            };
-            move = (fns[algo] || algos.getSmartAIMove)(simState.current, curGrid, prevDir, CELL_TYPES);
+            // Legacy mapping fallback
+            if (['zigzag', 'u_shape', 'slam_boustrophedon', 'cellular_boustrophedon'].includes(algo)) {
+                move = algos.getBoustrophedonMove(simState.current, curGrid, prevDir, CELL_TYPES);
+            } else {
+                move = algos.getSmartAIMove(simState.current, curGrid, prevDir, CELL_TYPES);
+            }
         }
+
 
         if (!move && algo !== 'smart_ai' && grassRemaining > 0) {
             move = algos.getSmartAIMove(simState.current, curGrid, prevDir, CELL_TYPES);
