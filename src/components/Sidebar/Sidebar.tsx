@@ -15,7 +15,9 @@ interface SidebarProps {
     
     selectedAlgo: string;
     setAlgo: (val: string) => void;
-    
+    speed: number;
+    setSpeed: (val: number) => void;
+
     brushType: string;
     setBrushType: (val: string) => void;
     cellTypes: any;
@@ -67,20 +69,15 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
     );
 
     return (
-        <div className="w-full lg:w-85 flex flex-col gap-6">
-            <Card variant="glass" className="text-center">
+        <div className="w-full lg:w-80 flex flex-col gap-6">
+            <Card variant="glass" className="text-left">
                 {/* Header */}
-                <div className="flex items-center gap-3 mb-8 justify-center">
-                    <div className="p-2.5 bg-emerald-500/20 rounded-xl">
-                        <div className="w-4 h-4 bg-emerald-500 rounded-sm rotate-45 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-black tracking-tight text-white uppercase leading-none">MowerAI</h1>
-                        <span className="text-emerald-500 text-[10px] font-bold tracking-widest uppercase">Version 5.2</span>
-                    </div>
+                <div className="mb-6">
+                    <h2 className="font-display text-sm font-semibold text-white tracking-wide">Simulation Setup</h2>
+                    <div className="h-0.5 w-10 bg-cyan-400/50 rounded-full mt-2" />
                 </div>
 
-                <div className="space-y-8">
+                <div className="space-y-6">
                     {/* AI Generation Section */}
                     <div className="bg-slate-950/40 p-4 rounded-2xl border border-slate-800/50 space-y-4">
                         <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block text-left ml-1">AI Park Design</label>
@@ -122,11 +119,36 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
 
 
                     {/* Algorithm Selector */}
-                    <AlgorithmSelector 
-                        selectedAlgo={props.selectedAlgo} 
-                        onSelect={props.setAlgo} 
-                        isRunning={props.isRunning} 
+                    <AlgorithmSelector
+                        selectedAlgo={props.selectedAlgo}
+                        onSelect={props.setAlgo}
+                        isRunning={props.isRunning}
                     />
+
+                    {/* Speed control */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center px-1">
+                            <label className="text-[11px] font-medium text-slate-400 tracking-wide">Speed</label>
+                            <span className="text-[11px] font-semibold text-cyan-400 font-display tabular-nums">
+                                {((1000 / Math.max(10, 140 - props.speed)) * 0.045).toFixed(1)} m/s
+                            </span>
+                        </div>
+                        <input
+                            type="range"
+                            min={10}
+                            max={135}
+                            step={5}
+                            value={props.speed}
+                            onChange={(e) => props.setSpeed(Number(e.target.value))}
+                            disabled={props.isRunning}
+                            className="range-cyan w-full disabled:opacity-50"
+                        />
+                        <div className="flex justify-between text-[9px] font-medium text-slate-600 px-0.5">
+                            <span>1x</span>
+                            <span>2x</span>
+                            <span>5x</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Primary Actions */}

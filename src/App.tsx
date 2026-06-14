@@ -13,8 +13,10 @@ import { SimulationGrid } from './components/Grid/SimulationGrid';
 import { MapToolbar } from './components/Grid/MapToolbar';
 import { SettingsModal } from './components/Sidebar/SettingsModal';
 import { StatsPanel } from './components/Stats/StatsPanel';
-import { StatusBar } from './components/Stats/StatusBar';
+import { TopBar } from './components/Layout/TopBar';
+import { TelemetryPanel } from './components/Stats/TelemetryPanel';
 import { Button } from './components/ui/Button';
+import { ALGORITHMS_NAMES } from './constants';
 
 // Domain
 import { useSimulation } from './hooks/useSimulation';
@@ -27,9 +29,45 @@ import { useAppSettings } from './hooks/useAppSettings';
 import { useAppUI } from './hooks/useAppUI';
 import { useAppSimulation } from './hooks/useAppSimulation';
 
+/** Seed a natural-looking default scatter of trees / bushes / rocks (obstacles). */
+const seedObstacles = (cells: GridType, dock: { x: number; y: number }): GridType => {
+    const rows = cells.length;
+    const cols = cells[0]?.length ?? 0;
+    return cells.map((row, r) => row.map((cell, c) => {
+        if (cell.type === CELL_TYPES.DOCK) return cell;
+        // keep a clear landing zone around the dock
+        if (Math.abs(r - dock.y) <= 1 && Math.abs(c - dock.x) <= 1) return cell;
+        const h = Math.abs((r * 928371) ^ (c * 1299721) ^ ((r + c) * 40503));
+        const nearEdge = r < 2 || c < 2 || r > rows - 3 || c > cols - 3;
+        const make = nearEdge ? h % 5 === 0 : h % 23 === 0;
+        return make ? { ...cell, type: CELL_TYPES.OBSTACLE, damage: 0, direction: null } : cell;
+    }));
+};
+
+/** Build a fresh grass grid of the given size with a dock and a seeded obstacle scatter. */
+const buildGrid = (cols: number, rows: number, dock: { x: number; y: number }): GridType => {
+    const base: GridType = Array(rows).fill(null).map((_, r) =>
+        Array(cols).fill(null).map((_, c) => ({
+            type: (r === dock.y && c === dock.x) ? CELL_TYPES.DOCK : CELL_TYPES.GRASS,
+            damage: 0,
+            direction: null
+        }))
+    );
+    return seedObstacles(base, dock);
+};
+
 export const App: React.FC = () => {
     // UI State
     const [isDrawing, setIsDrawing] = useState(false);
+    const [clock, setClock] = useState('');
+    const [gridSize, setGridSize] = useState({ cols: 25, rows: 20 });
+
+    useEffect(() => {
+        const tick = () => setClock(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        tick();
+        const id = setInterval(tick, 15000);
+        return () => clearInterval(id);
+    }, []);
 
     // Settings & Config
     const settings = useAppSettings();
@@ -92,16 +130,18 @@ export const App: React.FC = () => {
     );
 
     const initGrid = useCallback(() => {
-        const newGrid: GridType = Array(20).fill(null).map((_, r) =>
-            Array(25).fill(null).map((_, c) => ({
-                type: (r === dockPos.y && c === dockPos.x) ? CELL_TYPES.DOCK : CELL_TYPES.GRASS,
-                damage: 0,
-                direction: null
-            }))
-        );
+        const newGrid = buildGrid(gridSize.cols, gridSize.rows, dockPos);
         prepareSimulationState(newGrid);
         setStatusMessage("Ready for work");
-    }, [dockPos, prepareSimulationState, setStatusMessage]);
+    }, [gridSize, dockPos, prepareSimulationState, setStatusMessage]);
+
+    const handleResize = useCallback((cols: number, rows: number) => {
+        stopSimulation(true);
+        const dock = { x: Math.min(dockPos.x, cols - 1), y: Math.min(dockPos.y, rows - 1) };
+        setGridSize({ cols, rows });
+        resetSimulation(buildGrid(cols, rows, dock), dock, maxBattery);
+        setStatusMessage("Ready for work");
+    }, [dockPos, maxBattery, resetSimulation, stopSimulation, setStatusMessage]);
 
     useEffect(() => {
         initGrid();
@@ -165,10 +205,26 @@ export const App: React.FC = () => {
         return env.grid.cells.flat().filter(c => c.type === CELL_TYPES.MOWED && c.damage > 0).length;
     }, [env.grid.cells]);
 
+    // Telemetry (right panel) derivations
+    const coverage = stats.totalGrass > 0 ? (stats.mowedCount / stats.totalGrass) * 100 : 0;
+    const batteryPct = (battery / maxBattery) * 100;
+    const stepDelay = Math.max(10, 140 - speed);
+    const speedLabel = `${((1000 / stepDelay) * 0.045).toFixed(1)} m/s`;
+    const complexity = stats.distance > 0 ? Math.min(100, (stats.turns / stats.distance) * 220) : 0;
+    const algoName = ALGORITHMS_NAMES[algo as keyof typeof ALGORITHMS_NAMES] || algo;
+
     return (
-        <div className="flex flex-col items-center p-8 bg-slate-950 min-h-screen text-slate-200 font-sans selection:bg-emerald-500/30" onMouseUp={() => setIsDrawing(false)}>
-            <div className="w-full max-w-[1400px]">
-                <div className="flex flex-col lg:flex-row gap-12 items-start">
+        <div className="flex flex-col items-center p-4 md:p-6 min-h-screen text-slate-200 font-sans selection:bg-cyan-500/30" onMouseUp={() => setIsDrawing(false)}>
+            <div className="w-full max-w-[1500px]">
+                <TopBar
+                    lawnName="Maple St. Lot"
+                    algorithmName={algoName}
+                    status={isRunning ? 'Mowing' : statusMessage}
+                    isActive={isRunning && !isTesting}
+                    time={clock}
+                />
+
+                <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
                     <Sidebar
                         aiPrompt={aiPrompt}
                         setAiPrompt={setAiPrompt}
@@ -177,6 +233,8 @@ export const App: React.FC = () => {
                         onAnalyzeTerrain={handleAnalyzeTerrain}
                         selectedAlgo={algo}
                         setAlgo={setAlgo}
+                        speed={speed}
+                        setSpeed={setSpeed}
                         brushType={brushType}
                         setBrushType={setBrushType}
                         cellTypes={CELL_TYPES}
@@ -197,22 +255,17 @@ export const App: React.FC = () => {
                         onFullReset={resetFull}
                     />
 
-
-                    <div className="flex-1 flex flex-col items-center min-w-0">
-                        <StatusBar
-                            statusMessage={statusMessage}
-                            battery={battery}
-                            maxBattery={maxBattery}
-                        />
-
+                    <div className="flex flex-col items-center min-w-0 shrink-0 mt-2 lg:mt-0 mr-0 lg:mr-12">
                         <div className="relative">
                             <SimulationGrid
                                 grid={showVisualTraining && previewGrid ? previewGrid : grid}
                                 mowerPos={showVisualTraining && previewMowerPos ? previewMowerPos : mowerPos}
+                                mowerDir={env.mower.nav.dir}
                                 isAiLoading={isAiLoading}
                                 onMouseDown={() => setIsDrawing(true)}
                                 onCellClick={showVisualTraining ? undefined : updateCell}
                                 onCellMouseEnter={(r, c) => !showVisualTraining && isDrawing && updateCell(r, c)}
+                                onResize={isRunning || showVisualTraining ? undefined : handleResize}
                             />
 
                             <MapToolbar
@@ -238,15 +291,23 @@ export const App: React.FC = () => {
                             setOrientation={setOrientation}
                             isRunning={isRunning}
                         />
-
-                        <StatsPanel
-                            stats={stats}
-                            duration={duration}
-                            winnerId={winnerId}
-                            currentDamage={currentDamage}
-                        />
                     </div>
+
+                    <TelemetryPanel
+                        coverage={coverage}
+                        durationSec={duration}
+                        batteryPct={batteryPct}
+                        speedLabel={speedLabel}
+                        complexity={complexity}
+                    />
                 </div>
+
+                <StatsPanel
+                    stats={stats}
+                    duration={duration}
+                    winnerId={winnerId}
+                    currentDamage={currentDamage}
+                />
             </div>
 
             {isAnalysisOpen && aiFeedback && (

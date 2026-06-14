@@ -1,6 +1,108 @@
-import React, { memo } from 'react';
-import type { Grid as GridType, PositionType as Position } from '../../types';
+import React, { memo, useMemo, useRef } from 'react';
+import type { Grid as GridType, PositionType as Position, Direction } from '../../types';
 import { CELL_TYPES } from '../../constants';
+
+/** Rendered cell size in px (matches the w-6 / h-6 = 24px cells). */
+const CELL_PX = 24;
+
+type ObsToken = 'rock' | 'bush' | 'tree' | 'hedge' | 'stone' | 'covered';
+
+interface Overlay {
+    key: string;
+    left: number;
+    top: number;
+    w: number;
+    h: number;
+    kind: 'canopy-tree' | 'canopy-bush' | 'building';
+}
+
+interface AnalysisResult {
+    tokens: (ObsToken | null)[][];
+    overlays: Overlay[];
+}
+
+const hashAt = (r: number, c: number) => Math.abs((r * 73856093) ^ (c * 19349663) ^ ((r + c) * 83492791));
+
+/**
+ * Classify connected obstacle groups so they render contextually:
+ *  - single cell      -> rock / bush / tree
+ *  - straight line    -> hedge / fence
+ *  - small 2x2 blob   -> one big tree or bush
+ *  - large footprint  -> stone-walled building / foundation
+ */
+const analyzeObstacles = (grid: GridType): AnalysisResult => {
+    const rows = grid.length;
+    const cols = grid[0]?.length ?? 0;
+    const tokens: (ObsToken | null)[][] = Array.from({ length: rows }, () => Array(cols).fill(null));
+    const overlays: Overlay[] = [];
+    const seen: boolean[][] = Array.from({ length: rows }, () => Array(cols).fill(false));
+    const isObs = (r: number, c: number) =>
+        r >= 0 && r < rows && c >= 0 && c < cols && grid[r][c].type === CELL_TYPES.OBSTACLE;
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (!isObs(r, c) || seen[r][c]) continue;
+
+            // BFS the connected component (4-connectivity)
+            const cells: { r: number; c: number }[] = [];
+            const stack = [{ r, c }];
+            seen[r][c] = true;
+            let minR = r, maxR = r, minC = c, maxC = c;
+            while (stack.length) {
+                const cur = stack.pop()!;
+                cells.push(cur);
+                minR = Math.min(minR, cur.r); maxR = Math.max(maxR, cur.r);
+                minC = Math.min(minC, cur.c); maxC = Math.max(maxC, cur.c);
+                const nb = [[cur.r - 1, cur.c], [cur.r + 1, cur.c], [cur.r, cur.c - 1], [cur.r, cur.c + 1]];
+                for (const [nr, nc] of nb) {
+                    if (isObs(nr, nc) && !seen[nr][nc]) { seen[nr][nc] = true; stack.push({ r: nr, c: nc }); }
+                }
+            }
+
+            const w = maxC - minC + 1;
+            const h = maxR - minR + 1;
+            const count = cells.length;
+            const isRect = count === w * h;
+            const isLine = Math.min(w, h) === 1 && count >= 2;
+            const big = count >= 6 || (w >= 3 && h >= 3);
+            const hash = hashAt(minR, minC);
+
+            if (count === 1) {
+                const v = hash % 100;
+                tokens[r][c] = v < 48 ? 'rock' : v < 82 ? 'bush' : 'tree';
+            } else if (isLine) {
+                cells.forEach(p => { tokens[p.r][p.c] = 'hedge'; });
+            } else if (big) {
+                if (isRect) {
+                    cells.forEach(p => { tokens[p.r][p.c] = 'covered'; });
+                    overlays.push({ key: `b-${minR}-${minC}`, left: minC * CELL_PX, top: minR * CELL_PX, w: w * CELL_PX, h: h * CELL_PX, kind: 'building' });
+                } else {
+                    cells.forEach(p => { tokens[p.r][p.c] = 'stone'; });
+                }
+            } else {
+                // small compact cluster -> one big tree / bush
+                if (isRect) {
+                    cells.forEach(p => { tokens[p.r][p.c] = 'covered'; });
+                    overlays.push({ key: `g-${minR}-${minC}`, left: minC * CELL_PX, top: minR * CELL_PX, w: w * CELL_PX, h: h * CELL_PX, kind: hash % 2 ? 'canopy-tree' : 'canopy-bush' });
+                } else {
+                    cells.forEach((p, i) => { tokens[p.r][p.c] = (hashAt(p.r, p.c) + i) % 3 === 0 ? 'tree' : 'bush'; });
+                }
+            }
+        }
+    }
+    return { tokens, overlays };
+};
+
+/** Cut-grass colour: fresh green -> worn khaki -> brown as a tile is run over repeatedly. */
+const mownColor = (damage: number) => {
+    const t = Math.min(1, damage / 1.2);
+    const fresh = [122, 178, 86], worn = [150, 132, 66], dead = [120, 86, 48];
+    const a = t < 0.5 ? fresh : worn;
+    const b = t < 0.5 ? worn : dead;
+    const k = t < 0.5 ? t / 0.5 : (t - 0.5) / 0.5;
+    const m = (i: number) => Math.round(a[i] + (b[i] - a[i]) * k);
+    return `rgb(${m(0)}, ${m(1)}, ${m(2)})`;
+};
 
 interface CellProps {
     r: number;
@@ -8,70 +110,64 @@ interface CellProps {
     cell: any;
     isMower: boolean;
     isDock: boolean;
+    obs: ObsToken | null;
     onCellClick: (r: number, c: number) => void;
     onCellMouseEnter: (r: number, c: number) => void;
 }
 
-const MemoizedCell = memo(({ r, c, cell, isMower, isDock, onCellClick, onCellMouseEnter }: CellProps) => {
-    const isObstacle = cell.type === CELL_TYPES.OBSTACLE;
+const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, onCellClick, onCellMouseEnter }: CellProps) => {
     const isMowed = cell.type === CELL_TYPES.MOWED;
-    
-    const getCellColor = () => {
-        if (isObstacle) return undefined;
-        if (cell.type === CELL_TYPES.DOCK) return '#3b82f6';
-        if (cell.type === CELL_TYPES.GRASS) return '#065f46';
-        
-        // Mowed gradient
-        const baseMowed = [20, 35, 30];
-        const targetRed = [220, 38, 38];
-        const rVal = Math.round(baseMowed[0] + (targetRed[0] - baseMowed[0]) * Math.min(1, cell.damage));
-        const gVal = Math.round(baseMowed[1] + (targetRed[1] - baseMowed[1]) * Math.min(1, cell.damage));
-        const bVal = Math.round(baseMowed[2] + (targetRed[2] - baseMowed[2]) * Math.min(1, cell.damage));
-        return `rgb(${rVal}, ${gVal}, ${bVal})`;
-    };
+
+    let trailClass = 'trail-dot';
+    if (cell.direction) {
+        if (cell.direction.dx !== 0) trailClass = 'trail-h';
+        else if (cell.direction.dy !== 0) trailClass = 'trail-v';
+    }
 
     return (
         <div
             onMouseDown={() => onCellClick(r, c)}
             onMouseEnter={() => onCellMouseEnter(r, c)}
-            className={`w-6 h-6 rounded-sm relative group cursor-crosshair
-                ${isObstacle ? 'scale-90 rounded-md shadow-inner bg-slate-700' : ''}`}
-            style={{
-                backgroundColor: !isObstacle ? getCellColor() : undefined,
-                borderTop: (isMowed && cell.direction && cell.direction.dx !== 0) ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid transparent',
-                borderBottom: (isMowed && cell.direction && cell.direction.dx !== 0) ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid transparent',
-                borderLeft: (isMowed && cell.direction && cell.direction.dy !== 0) ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid transparent',
-                borderRight: (isMowed && cell.direction && cell.direction.dy !== 0) ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid transparent',
-            }}
+            className="w-6 h-6 relative group cursor-crosshair"
         >
-            {/* Mower Visual */}
-            {isMower && (
-                <div className="absolute inset-0 bg-amber-400 rounded-md shadow-[0_0_25px_rgba(251,191,36,1)] z-20 flex items-center justify-center scale-125 border-2 border-amber-300">
-                    <div className="w-1.5 h-1.5 bg-black/30 rounded-full animate-ping"></div>
-                </div>
-            )}
-            
-            {/* Dock Visual */}
-            {isDock && !isMower && (
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <div className="w-2.5 h-2.5 bg-white/70 rounded-full animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
-                    <div className="absolute inset-0 border-2 border-white/20 rounded-sm scale-75"></div>
-                </div>
-            )}
-            
-            {/* Damage Indicator - Optimized to single div with pattern */}
-            {isMowed && !isMower && cell.damage > 0 && (
-                <div 
-                    className="absolute inset-0 opacity-20 pointer-events-none"
-                    style={{
-                        backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent)',
-                        backgroundSize: '4px 4px'
-                    }}
-                />
+            {/* Mown grass: cut shade + directional stripes + multi-pass wear */}
+            {isMowed && (
+                <>
+                    <div className="mown-base" style={{ background: mownColor(cell.damage || 0) }} />
+                    <div className={cell.direction && cell.direction.dx !== 0 ? 'mown-stripe-h' : 'mown-stripe-v'} />
+                    {cell.damage > 0 && (
+                        <div className="mown-wear" style={{ opacity: Math.min(0.55, cell.damage * 0.4) }} />
+                    )}
+                    <div className="trail">
+                        <div
+                            key={`${cell.damage}-${cell.direction?.dx ?? 0}-${cell.direction?.dy ?? 0}`}
+                            className={`trail-seg ${trailClass}`}
+                        />
+                    </div>
+                </>
             )}
 
-            {!isMower && (
-                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors pointer-events-none"></div>
+            {/* Obstacles */}
+            {obs === 'hedge' && <div className="obs-hedge" />}
+            {obs === 'stone' && <div className="obs-stone" />}
+            {(obs === 'rock' || obs === 'bush' || obs === 'tree') && (
+                <div className="obstacle"><div className={`obs-${obs}`} /></div>
+            )}
+
+            {/* Charging station */}
+            {isDock && !isMower && (
+                <div className="dock-pad">
+                    <div className="dock-pad-inner">
+                        <svg viewBox="0 0 24 24" className="w-3 h-3" fill="currentColor">
+                            <path d="M13 2 4 14h6l-1 8 9-12h-6z" />
+                        </svg>
+                    </div>
+                </div>
+            )}
+
+            {/* Hover affordance (editable cells only) */}
+            {!isMower && !obs && (
+                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/15 transition-colors pointer-events-none" />
             )}
         </div>
     );
@@ -80,43 +176,131 @@ const MemoizedCell = memo(({ r, c, cell, isMower, isDock, onCellClick, onCellMou
 interface GridProps {
     grid: GridType;
     mowerPos: Position;
+    mowerDir?: Direction;
     isAiLoading: boolean;
     onCellClick: (r: number, c: number) => void;
     onCellMouseEnter: (r: number, c: number) => void;
     onMouseDown: () => void;
+    onResize?: (cols: number, rows: number) => void;
 }
 
 export const SimulationGrid: React.FC<GridProps> = ({
     grid,
     mowerPos,
+    mowerDir,
     isAiLoading,
     onCellClick,
     onCellMouseEnter,
-    onMouseDown
+    onMouseDown,
+    onResize
 }) => {
+    const rows = grid.length;
+    const cols = grid[0]?.length ?? 0;
+
+    // Recompute obstacle layout only when the obstacle footprint changes.
+    const obsSig = grid.map(row => row.map(c => (c.type === CELL_TYPES.OBSTACLE ? '1' : '0')).join('')).join('|');
+    const { tokens, overlays } = useMemo(() => analyzeObstacles(grid), [obsSig]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Mower heading -> rotation (sprite drawn facing right = +x).
+    const dir = mowerDir && (mowerDir.dx !== 0 || mowerDir.dy !== 0) ? mowerDir : { dx: 0, dy: 1 };
+    const angle = Math.atan2(dir.dy, dir.dx) * (180 / Math.PI);
+    const mowerW = CELL_PX * 1.9;
+    const mowerH = CELL_PX * 1.3;
+
+    const dragState = useRef<{ x: number; y: number; cols: number; rows: number; lc: number; lr: number } | null>(null);
+
+    const onResizeStart = (e: React.PointerEvent) => {
+        if (!onResize) return;
+        e.preventDefault();
+        dragState.current = { x: e.clientX, y: e.clientY, cols, rows, lc: cols, lr: rows };
+
+        const onMove = (ev: PointerEvent) => {
+            const s = dragState.current;
+            if (!s) return;
+            const nc = Math.max(8, Math.min(60, s.cols + Math.round((ev.clientX - s.x) / CELL_PX)));
+            const nr = Math.max(8, Math.min(48, s.rows + Math.round((ev.clientY - s.y) / CELL_PX)));
+            if (nc !== s.lc || nr !== s.lr) { s.lc = nc; s.lr = nr; onResize(nc, nr); }
+        };
+        const onUp = () => {
+            dragState.current = null;
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+    };
+
     return (
-        <div 
-            className={`grid gap-[2px] bg-slate-900 p-4 rounded-[2.5rem] shadow-2xl border border-slate-800/50 overflow-hidden transition-opacity duration-500 relative
-                ${isAiLoading ? 'opacity-40 scale-95 grayscale' : 'opacity-100'}`}
-            onMouseDown={onMouseDown}
-        >
-            {grid.map((row, r) => (
-                <div key={r} className="flex gap-[2px]">
-                    {row.map((cell, c) => (
-                        <MemoizedCell
-                            key={`${r}-${c}`}
-                            r={r}
-                            c={c}
-                            cell={cell}
-                            isMower={mowerPos.x === c && mowerPos.y === r}
-                            isDock={cell.type === CELL_TYPES.DOCK}
-                            onCellClick={onCellClick}
-                            onCellMouseEnter={onCellMouseEnter}
+        <div className="relative inline-block">
+            <div
+                className={`lawn-field inline-block p-3 rounded-[2rem] border border-white/10 ring-1 ring-black/40
+                    shadow-[0_30px_70px_-20px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-500 relative
+                    ${isAiLoading ? 'opacity-50 scale-95 grayscale' : 'opacity-100'}`}
+                onMouseDown={onMouseDown}
+            >
+                {/* padding-free positioning context so px-based overlays align with cells */}
+                <div className="relative field-grid">
+                    {grid.map((row, r) => (
+                        <div key={r} className="flex">
+                            {row.map((cell, c) => (
+                                <MemoizedCell
+                                    key={`${r}-${c}`}
+                                    r={r}
+                                    c={c}
+                                    cell={cell}
+                                    isMower={mowerPos.x === c && mowerPos.y === r}
+                                    isDock={cell.type === CELL_TYPES.DOCK}
+                                    obs={tokens[r]?.[c] ?? null}
+                                    onCellClick={onCellClick}
+                                    onCellMouseEnter={onCellMouseEnter}
+                                />
+                            ))}
+                        </div>
+                    ))}
+
+                    {/* Large connected obstacles (trees, bushes, buildings) */}
+                    {overlays.map(o => (
+                        <div
+                            key={o.key}
+                            className={`obs-overlay ${o.kind}`}
+                            style={{ left: o.left, top: o.top, width: o.w, height: o.h }}
                         />
                     ))}
+
+                    {/* Robot mower — larger than a cell, rotated to its heading */}
+                    <div
+                        className="mower"
+                        style={{
+                            left: mowerPos.x * CELL_PX + CELL_PX / 2,
+                            top: mowerPos.y * CELL_PX + CELL_PX / 2,
+                            width: mowerW,
+                            height: mowerH,
+                            transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+                        }}
+                    >
+                        <div className="mower-halo" />
+                        <div className="mower-body">
+                            <div className="mower-wheel top" />
+                            <div className="mower-wheel bottom" />
+                            <div className="mower-back" />
+                            <div className="mower-front" />
+                        </div>
+                    </div>
                 </div>
-            ))}
+
+                {/* Drag-to-resize handle */}
+                {onResize && (
+                    <div className="resize-handle" onPointerDown={onResizeStart} title="Drag to resize the lawn">
+                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                            <path d="M20 9 9 20M20 15l-5 5" />
+                        </svg>
+                    </div>
+                )}
+            </div>
+
+            <div className="text-center text-[11px] font-medium text-slate-500 tracking-widest mt-3 font-display">
+                {cols}×{rows}
+            </div>
         </div>
     );
 };
-
