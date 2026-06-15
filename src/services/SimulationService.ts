@@ -1,7 +1,7 @@
 import { SimulationEnvironment } from '../domain/SimulationEnvironment';
 import { SimulationStats } from '../domain/SimulationStats';
 import { Position } from '../domain/Position';
-import { CELL_TYPES, DAMAGE_PER_PASS, DAMAGE_PER_TURN } from '../constants';
+import { mowTile, headingBetween } from '../domain/MowingStep';
 
 export interface SimulationConfig {
     drainMove: number;
@@ -12,23 +12,19 @@ export interface SimulationConfig {
 
 export class SimulationService {
     static calculateStep(
-        env: SimulationEnvironment, 
-        stats: SimulationStats, 
-        nextPos: Position, 
+        env: SimulationEnvironment,
+        stats: SimulationStats,
+        nextPos: Position,
         config: SimulationConfig
     ): { env: SimulationEnvironment; stats: SimulationStats; wasGrass: boolean } {
         const isTurn = env.mower.nav.isTurning(nextPos);
         const cost = config.drainMove + (isTurn ? config.drainTurn : 0);
-        
-        // 1. Update Grid
-        const currentCell = env.grid.getCell(env.mower.pos);
-        const wasGrass = currentCell.type === CELL_TYPES.GRASS;
-        
-        const updatedGrid = env.grid.updateCell(env.mower.pos, {
-            type: wasGrass ? CELL_TYPES.MOWED : currentCell.type,
-            direction: env.mower.nav.dir,
-            damage: (currentCell.damage || 0) + (isTurn ? DAMAGE_PER_TURN : (wasGrass ? 0 : DAMAGE_PER_PASS))
-        });
+
+        // 1. Cut the current tile via the shared mowing rule.
+        const currentPos = env.mower.pos;
+        const heading = headingBetween(currentPos, nextPos);
+        const outcome = mowTile(env.grid.getCell(currentPos), heading, isTurn);
+        const updatedGrid = env.grid.updateCell(currentPos, outcome.cell);
 
         // 2. Update Mower
         const updatedMower = env.mower.move(nextPos, cost);
@@ -36,13 +32,13 @@ export class SimulationService {
         // 3. Update Stats
         let newMovement = stats.movement.addMove();
         if (isTurn) newMovement = newMovement.addTurn();
-        
+
         let newEfficiency = stats.efficiency;
-        if (wasGrass) newEfficiency = newEfficiency.addMow();
+        if (outcome.cutFreshGrass) newEfficiency = newEfficiency.addMow();
 
         const nextEnv = env.withMower(updatedMower).withGrid(updatedGrid);
         const nextStats = new SimulationStats(newMovement, newEfficiency, stats.impact);
 
-        return { env: nextEnv, stats: nextStats, wasGrass };
+        return { env: nextEnv, stats: nextStats, wasGrass: outcome.cutFreshGrass };
     }
 }

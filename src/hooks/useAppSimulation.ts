@@ -1,11 +1,11 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import * as algos from '../algorithms';
-import { countGrass } from '../utils/simUtils';
-import { CELL_TYPES, DEFAULT_MAX_BATTERY } from '../constants';
+import { countGrass, resetLawn } from '../utils/simUtils';
+import { CELL_TYPES } from '../constants';
 import { Position } from '../domain/Position';
 import { SimulationService, type SimulationConfig } from '../services/SimulationService';
-import { SimulationStats, EfficiencyMetrics } from '../domain/SimulationStats';
-import type { Grid as GridType, HistoryRecord } from '../types';
+import { SimulationStats } from '../domain/SimulationStats';
+import type { Grid as GridType, HistoryRecord, State } from '../types';
 
 export const useAppSimulation = (
     env: any,
@@ -37,6 +37,16 @@ export const useAppSimulation = (
     const pendingAlgosRef = useRef<string[]>([]);
     const isTestingAllRef = useRef(false);
     const currentSessionMoves = useRef<any[]>([]);
+    // Pristine lawn captured at the start of a "Test All" run; each algorithm is
+    // replayed against it so the map and stats reset between models.
+    const testGridRef = useRef<GridType | null>(null);
+    // Handle for the delayed start of the next "Test All" model, so a manual
+    // stop can cancel it instead of letting the next model fire anyway.
+    const pendingRunTimeoutRef = useRef<any>(null);
+    // Watchdog: detect a run that stalls (robot spinning in place) or overruns.
+    const idleStepsRef = useRef(0);
+    const lastMowedRef = useRef(0);
+    const totalStepsRef = useRef(0);
 
     const simState = useRef({
         pos: { x: 0, y: 0 },
@@ -52,7 +62,11 @@ export const useAppSimulation = (
         hasNotifiedFinished: false,
         orientation: config.orientation as 'horizontal' | 'vertical',
         maxBattery: config.maxBattery,
-        returnPath: [] as any[]
+        returnPath: [] as any[],
+        cellData: undefined as State['cellData'],
+        spiralStep: undefined as number | undefined,
+        spiralCenter: undefined as { x: number; y: number } | undefined,
+        stcPath: undefined as any[] | undefined,
     });
 
     const configRef = useRef(config);
@@ -69,8 +83,15 @@ export const useAppSimulation = (
         if (simulationRef.current) clearInterval(simulationRef.current);
 
         if (isManual) {
+            // Cancel a pending next-model start and end the whole "Test All".
+            if (pendingRunTimeoutRef.current) {
+                clearTimeout(pendingRunTimeoutRef.current);
+                pendingRunTimeoutRef.current = null;
+            }
             setIsTesting(false);
             isTestingAllRef.current = false;
+            pendingAlgosRef.current = [];
+            testGridRef.current = null;
             return;
         }
 
@@ -98,19 +119,20 @@ export const useAppSimulation = (
         if (isTestingAllRef.current && pendingAlgosRef.current.length > 0) {
             const nextAlgo = pendingAlgosRef.current.shift()!;
             setAlgo(nextAlgo);
-            setTimeout(() => runSimulation(), 500);
+            // Regrow the lawn and reset stats before the next model runs.
+            if (testGridRef.current) prepareSimulationState(testGridRef.current);
+            pendingRunTimeoutRef.current = setTimeout(() => runSimulation(), 500);
         } else {
             setIsTesting(false);
             isTestingAllRef.current = false;
+            testGridRef.current = null;
         }
     }, [setHistory, setAlgo]);
 
     const getNextStep = useCallback((state: any) => {
         const { pos, grid: curGrid, prevDir, dockPos: currentDock, battery, isReturningForCharge } = state;
-        const rows = curGrid.length;
-        const cols = curGrid[0].length;
         const grassRemaining = countGrass(curGrid);
-        const { maxBattery, algo, orientation } = configRef.current;
+        const { maxBattery, algo } = configRef.current;
 
         if (((battery / maxBattery) * 100 < 20 || isReturningForCharge) && grassRemaining > 0) {
             if (pos.x === currentDock.x && pos.y === currentDock.y) return null;
@@ -198,6 +220,21 @@ export const useAppSimulation = (
 
         currentSessionMoves.current = [];
 
+        // Start each session with a clean algorithm state so the contour/sweep
+        // and spiral phases restart instead of resuming a previous run.
+        simState.current.orientation = configRef.current.orientation as 'horizontal' | 'vertical';
+        simState.current.cellData = undefined;
+        simState.current.spiralStep = undefined;
+        simState.current.spiralCenter = undefined;
+        simState.current.stcPath = undefined;
+        simState.current.hasNotifiedFinished = false;
+        simState.current.isReturningForCharge = false;
+        simState.current.returnPath = [];
+
+        idleStepsRef.current = 0;
+        lastMowedRef.current = sessionStartStats.current.mowedCount;
+        totalStepsRef.current = 0;
+
         simulationRef.current = setInterval(() => {
             const prevEnv = envRef.current;
             const mower = prevEnv.mower;
@@ -261,6 +298,29 @@ export const useAppSimulation = (
             simState.current.battery = result.env.mower.battery.current;
             simState.current.grid = result.env.grid.cells;
 
+            // Track cell visits so coverage algorithms (NN, potential field) can
+            // penalise revisits exactly like they do during training.
+            const visitKey = `${nextMoveObj.x},${nextMoveObj.y}`;
+            simState.current.visitCounts[visitKey] = (simState.current.visitCounts[visitKey] || 0) + 1;
+
+            // Watchdog: abort a run that stops making progress (robot spinning in
+            // place) or overruns a sane step budget, so "Test All" moves on.
+            totalStepsRef.current++;
+            const mowedNow = result.stats.efficiency.mowedCount;
+            if (mowedNow > lastMowedRef.current) {
+                lastMowedRef.current = mowedNow;
+                idleStepsRef.current = 0;
+            } else {
+                idleStepsRef.current++;
+            }
+
+            const area = result.env.grid.cells.length * result.env.grid.cells[0].length;
+            if (idleStepsRef.current > Math.max(300, area) || totalStepsRef.current > area * 6) {
+                setStatusMessage(isTestingAllRef.current ? "Model stuck — skipping to next" : "Stopped: no progress (stuck)");
+                stopSimulation();
+                return;
+            }
+
             const inputs = algos.prepareNNInputs(legacyState, domainGrid.cells, CELL_TYPES);
             const targets = [0, 0, 0, 0];
             const dir = result.env.mower.nav.dir;
@@ -275,12 +335,7 @@ export const useAppSimulation = (
 
     const prepareSimulationState = useCallback((sourceGrid: GridType) => {
         const dockPos = envRef.current.dockPos.toObject();
-        const cleanGrid: GridType = sourceGrid.map(row => row.map(cell => ({
-            ...cell,
-            type: (cell.type === CELL_TYPES.MOWED) ? CELL_TYPES.GRASS : cell.type,
-            damage: 0,
-            direction: null
-        })));
+        const cleanGrid: GridType = resetLawn(sourceGrid);
 
         resetSimulation(cleanGrid, dockPos, configRef.current.maxBattery);
 
@@ -299,7 +354,12 @@ export const useAppSimulation = (
             hasNotifiedFinished: false,
             orientation: configRef.current.orientation as 'horizontal' | 'vertical',
             maxBattery: configRef.current.maxBattery,
-            returnPath: []
+            returnPath: [],
+            // Clear per-algorithm state so it cannot leak across runs.
+            cellData: undefined,
+            spiralStep: undefined,
+            spiralCenter: undefined,
+            stcPath: undefined,
         };
         return cleanGrid;
     }, [resetSimulation]);
@@ -307,13 +367,15 @@ export const useAppSimulation = (
     const testAll = useCallback((algosList: string[], currentGrid: GridType) => {
         if (isRunningRef.current) stopSimulation(true);
         setIsTesting(true);
+        // Keep a pristine copy so every model is scored on the same fresh lawn.
+        testGridRef.current = resetLawn(currentGrid);
         prepareSimulationState(currentGrid);
         pendingAlgosRef.current = [...algosList];
         isTestingAllRef.current = true;
 
         const firstAlgo = pendingAlgosRef.current.shift()!;
         setAlgo(firstAlgo);
-        setTimeout(() => runSimulation(), 500);
+        pendingRunTimeoutRef.current = setTimeout(() => runSimulation(), 500);
     }, [prepareSimulationState, runSimulation, setAlgo, stopSimulation]);
 
     return {

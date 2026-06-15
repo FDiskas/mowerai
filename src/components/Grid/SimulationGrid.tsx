@@ -111,8 +111,8 @@ interface CellProps {
     isMower: boolean;
     isDock: boolean;
     obs: ObsToken | null;
-    onCellClick: (r: number, c: number) => void;
-    onCellMouseEnter: (r: number, c: number) => void;
+    onCellClick?: (r: number, c: number) => void;
+    onCellMouseEnter?: (r: number, c: number) => void;
 }
 
 const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, onCellClick, onCellMouseEnter }: CellProps) => {
@@ -126,8 +126,8 @@ const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, onCellClick, onCe
 
     return (
         <div
-            onMouseDown={() => onCellClick(r, c)}
-            onMouseEnter={() => onCellMouseEnter(r, c)}
+            onMouseDown={() => onCellClick?.(r, c)}
+            onMouseEnter={() => onCellMouseEnter?.(r, c)}
             className="w-6 h-6 relative group cursor-crosshair"
         >
             {/* Mown grass: cut shade + directional stripes + multi-pass wear */}
@@ -137,6 +137,10 @@ const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, onCellClick, onCe
                     <div className={cell.direction && cell.direction.dx !== 0 ? 'mown-stripe-h' : 'mown-stripe-v'} />
                     {cell.damage > 0 && (
                         <div className="mown-wear" style={{ opacity: Math.min(0.55, cell.damage * 0.4) }} />
+                    )}
+                    {/* overlap: mower drove over already-cut grass — flagged so repeats are obvious */}
+                    {(cell.passes || 0) >= 2 && (
+                        <div className="mown-overlap" style={{ opacity: Math.min(0.9, 0.4 + ((cell.passes || 2) - 2) * 0.2) }} />
                     )}
                     <div className="trail">
                         <div
@@ -178,8 +182,8 @@ interface GridProps {
     mowerPos: Position;
     mowerDir?: Direction;
     isAiLoading: boolean;
-    onCellClick: (r: number, c: number) => void;
-    onCellMouseEnter: (r: number, c: number) => void;
+    onCellClick?: (r: number, c: number) => void;
+    onCellMouseEnter?: (r: number, c: number) => void;
     onMouseDown: () => void;
     onResize?: (cols: number, rows: number) => void;
 }

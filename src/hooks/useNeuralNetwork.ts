@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { NeuralNetwork } from '../NeuralNetwork';
 import type { Grid, Point, FitnessConfig } from '../types';
 import { DEFAULT_FITNESS_CONFIG } from '../types';
 import { CELL_TYPES } from '../constants';
 import { getNeuralNetworkMove } from '../algorithms';
+import { mowTile, headingBetween } from '../domain/MowingStep';
+import { resetLawn } from '../utils/simUtils';
 
 export const useNeuralNetwork = (
     dockPos: Point,
@@ -23,6 +25,7 @@ export const useNeuralNetwork = (
     const [showVisualTraining, setShowVisualTraining] = useState(false);
     const [previewGrid, setPreviewGrid] = useState<Grid | null>(null);
     const [previewMowerPos, setPreviewMowerPos] = useState<Point | null>(null);
+    const [previewMowerDir, setPreviewMowerDir] = useState<{ dx: number; dy: number } | null>(null);
     const [fitnessConfig, setFitnessConfig] = useState<FitnessConfig>(DEFAULT_FITNESS_CONFIG);
 
     const isTrainingRef = useRef(false);
@@ -51,19 +54,20 @@ export const useNeuralNetwork = (
         if (!showVisualTraining) {
             setPreviewGrid(null);
             setPreviewMowerPos(null);
+            setPreviewMowerDir(null);
             return;
         }
+
+        // Animate only while evolution is actually running; once it stops the
+        // last frame stays frozen instead of looping forever.
+        if (!trainingStatus.isTraining) return;
 
         const sourceGrid = userGridRef.current;
         const previewNn = bestNnRef.current;
         if (!sourceGrid || !previewNn) return;
 
         // Reset preview state
-        const cleanGrid: Grid = sourceGrid.map(row => row.map(cell => ({
-            ...cell,
-            type: cell.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : cell.type,
-            damage: 0
-        })));
+        const cleanGrid: Grid = resetLawn(sourceGrid);
 
         previewStateRef.current = {
             pos: { ...dockPos },
@@ -80,6 +84,7 @@ export const useNeuralNetwork = (
 
         setPreviewGrid(cleanGrid.map(r => [...r]));
         setPreviewMowerPos({ ...dockPos });
+        setPreviewMowerDir({ dx: 0, dy: 1 });
 
         previewIntervalRef.current = setInterval(() => {
             const state = previewStateRef.current;
@@ -89,18 +94,21 @@ export const useNeuralNetwork = (
             const move = getNeuralNetworkMove(state, state.grid, state.prevDir, CELL_TYPES, currentNn);
             if (!move) return;
 
+            const heading = headingBetween(state.pos, move);
+            const isTurn = heading.dx !== state.prevDir.dx || heading.dy !== state.prevDir.dy;
+
+            // Cut the tile being left with the shared rule so the preview records
+            // heading, wear and overlap exactly like the live simulation.
+            state.grid[state.pos.y][state.pos.x] =
+                mowTile(state.grid[state.pos.y][state.pos.x], heading, isTurn).cell;
+
             // Updating visit count – same as in the fitness function
             const posKey = `${move.x},${move.y}`;
             const visitCount = (state.visitCounts[posKey] || 0) + 1;
             state.visitCounts[posKey] = visitCount;
 
-            const cell = state.grid[move.y][move.x];
-            if (cell.type === CELL_TYPES.GRASS) cell.type = CELL_TYPES.MOWED;
-
-            const dx = move.x - state.pos.x;
-            const dy = move.y - state.pos.y;
             state.pos = move;
-            state.prevDir = { dx, dy };
+            state.prevDir = heading;
             state.battery -= 0.2;
 
             const isDock = move.x === dockPos.x && move.y === dockPos.y;
@@ -110,11 +118,7 @@ export const useNeuralNetwork = (
                 // Reset – battery ran out or robot was spinning in one place
                 const src = userGridRef.current;
                 if (!src) return;
-                const fresh: Grid = src.map(row => row.map(c => ({
-                    ...c,
-                    type: c.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : c.type,
-                    damage: 0
-                })));
+                const fresh: Grid = resetLawn(src);
                 previewStateRef.current = {
                     pos: { ...dockPos },
                     prevDir: { dx: 0, dy: 1 },
@@ -129,10 +133,12 @@ export const useNeuralNetwork = (
                 };
                 setPreviewGrid(fresh.map(r => [...r]));
                 setPreviewMowerPos({ ...dockPos });
+                setPreviewMowerDir({ dx: 0, dy: 1 });
                 return;
             }
 
             setPreviewMowerPos({ ...move });
+            setPreviewMowerDir(heading);
             setPreviewGrid([...state.grid.map((r: any) => [...r])]);
         }, Math.max(10, 140 - speed));
 
@@ -140,7 +146,7 @@ export const useNeuralNetwork = (
         return () => {
             if (previewIntervalRef.current) clearInterval(previewIntervalRef.current);
         };
-    }, [showVisualTraining, dockPos, orientation, speed]);
+    }, [showVisualTraining, trainingStatus.isTraining, dockPos, orientation, speed]);
 
     const trainOnData = (sessionData: any[]) => {
         if (!nn || !sessionData || sessionData.length === 0) return;
@@ -455,6 +461,7 @@ export const useNeuralNetwork = (
         setShowVisualTraining,
         previewGrid,
         previewMowerPos,
+        previewMowerDir,
         fitnessConfig,
         setFitnessConfig
     };

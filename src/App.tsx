@@ -111,7 +111,7 @@ export const App: React.FC = () => {
 
     // AI & NN Hooks
     const { aiPrompt, setAiPrompt, isAiLoading, aiFeedback, generateAiPattern, analyzeTerrain } = useGeminiAI();
-    const { nn, trainingStatus, trainNN, stopTraining, downloadModel, uploadModel, showVisualTraining, setShowVisualTraining, previewGrid, previewMowerPos, fitnessConfig, setFitnessConfig } = useNeuralNetwork(dockPos, showToast, orientation as 'horizontal' | 'vertical', speed);
+    const { nn, trainingStatus, trainNN, stopTraining, downloadModel, uploadModel, showVisualTraining, setShowVisualTraining, previewGrid, previewMowerPos, previewMowerDir, fitnessConfig, setFitnessConfig } = useNeuralNetwork(dockPos, showToast, orientation as 'horizontal' | 'vertical', speed);
 
     const {
         isRunning,
@@ -250,6 +250,7 @@ export const App: React.FC = () => {
                         isRunning={isRunning}
                         isTesting={isTesting}
                         onRunSimulation={runSimulation}
+                        onStopSimulation={() => stopSimulation(true)}
                         onTestAll={() => testAll(ALGORITHMS_LIST as string[], grid)}
                         onResetMap={resetMowedOnly}
                         onFullReset={resetFull}
@@ -260,7 +261,7 @@ export const App: React.FC = () => {
                             <SimulationGrid
                                 grid={showVisualTraining && previewGrid ? previewGrid : grid}
                                 mowerPos={showVisualTraining && previewMowerPos ? previewMowerPos : mowerPos}
-                                mowerDir={env.mower.nav.dir}
+                                mowerDir={showVisualTraining && previewMowerDir ? previewMowerDir : env.mower.nav.dir}
                                 isAiLoading={isAiLoading}
                                 onMouseDown={() => setIsDrawing(true)}
                                 onCellClick={showVisualTraining ? undefined : updateCell}

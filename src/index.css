@@ -212,6 +212,14 @@ body {
     rgba(60,30,10,0.6) 50%, rgba(60,30,10,0.6) 75%, transparent 75%, transparent);
   background-size: 5px 5px;
 }
+/* overlap — mower drove over already-cut grass; red hatch + ring make repeats pop */
+.mown-overlap {
+  position: absolute; inset: 0; pointer-events: none; z-index: 6;
+  background: repeating-linear-gradient(45deg,
+    rgba(244, 63, 94, 0) 0 3px, rgba(244, 63, 94, 0.6) 3px 5px);
+  box-shadow: inset 0 0 0 1.5px rgba(244, 63, 94, 0.85),
+              inset 0 0 8px rgba(244, 63, 94, 0.5);
+}
 
 /* ============================================================
    OBSTACLES — rocks, bushes, trees, hedges, stone buildings
@@ -339,6 +347,8 @@ body {
   align-items: center;
   justify-content: center;
   filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.6));
+  /* smoothly swivel toward the heading instead of snapping */
+  transition: transform 0.12s linear;
 }
 .mower-body {
   position: relative;

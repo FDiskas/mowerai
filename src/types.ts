@@ -11,6 +11,8 @@ export interface Cell {
     type: CellType;
     damage: number;
     direction: Direction | null;
+    /** How many times the mower has driven over this tile (>=2 means overlap). */
+    passes?: number;
 }
 
 export type Grid = Cell[][];
@@ -64,7 +66,14 @@ export interface State {
     cellData?: {
         sweepDir: number;
         cellScanDir: number;
+        /** Mowing direction chosen by direction-optimization (longest-edge). */
+        orientation?: 'horizontal' | 'vertical';
+        /** State machine phase: contour pass first, then parallel sweep. */
+        phase?: 'edge' | 'zigzag';
     };
+    spiralStep?: number;
+    spiralCenter?: PositionType;
+    stcPath?: PositionType[];
     dockPos: PositionType;
     isCharging: boolean;
     isReturningForCharge: boolean;

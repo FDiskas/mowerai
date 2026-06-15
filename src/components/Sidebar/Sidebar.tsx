@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { Slider } from '../ui/Slider';
 import { AlgorithmSelector } from './AlgorithmSelector';
-import type { TrainingStatus, Grid, Point, FitnessConfig } from '../../types';
-import { CELL_TYPES } from '../../constants';
+import type { TrainingStatus, FitnessConfig } from '../../types';
 
 interface SidebarProps {
     aiPrompt: string;
@@ -35,6 +33,7 @@ interface SidebarProps {
     isRunning: boolean;
     isTesting: boolean;
     onRunSimulation: () => void;
+    onStopSimulation: () => void;
     onTestAll: () => void;
     onResetMap: () => void;
     onFullReset: () => void;
@@ -153,14 +152,14 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
 
                 {/* Primary Actions */}
                 <div className="mt-10 space-y-3 pt-6 border-t border-slate-800/50">
-                    <Button 
-                        variant={props.isRunning && !props.isTesting ? 'danger' : 'primary'} 
-                        size="lg" 
-                        fullWidth 
-                        onClick={props.onRunSimulation}
+                    <Button
+                        variant={props.isRunning || props.isTesting ? 'danger' : 'primary'}
+                        size="lg"
+                        fullWidth
+                        onClick={props.isRunning || props.isTesting ? props.onStopSimulation : props.onRunSimulation}
                         className="text-sm py-4"
                     >
-                        {props.isRunning && !props.isTesting ? 'STOP' : 'START WORK'}
+                        {props.isTesting ? 'STOP TEST ALL' : props.isRunning ? 'STOP' : 'START WORK'}
                     </Button>
                     
                     <Button 
