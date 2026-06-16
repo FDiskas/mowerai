@@ -324,7 +324,6 @@ export const SimulationGrid: React.FC<GridProps> = ({
                                 );
 
                                 // Filter out redundant stubs from previous perpendicular passes
-                                const isHorizontalDir = cell.direction?.dx !== 0;
                                 const isVerticalDir = cell.direction?.dy !== 0;
 
                                 if (hasLeft && hasRight && hasTop && hasBottom) {
