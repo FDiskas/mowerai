@@ -15,6 +15,7 @@ import { MapToolbar } from './components/Grid/MapToolbar';
 import { SettingsModal } from './components/Sidebar/SettingsModal';
 import { StatsPanel } from './components/Stats/StatsPanel';
 import { TopBar } from './components/Layout/TopBar';
+import { Footer } from './components/Layout/Footer';
 import { TelemetryPanel } from './components/Stats/TelemetryPanel';
 import { Button } from './components/ui/Button';
 import { ALGORITHMS_NAMES } from './constants';
@@ -431,6 +432,8 @@ export const App: React.FC = () => {
                     currentDamage={currentDamage}
                     onClearHistory={handleClearHistory}
                 />
+
+                <Footer />
             </div>
 
             {isAnalysisOpen && aiFeedback && (
