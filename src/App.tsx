@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useGeminiAI } from './hooks/useGeminiAI';
+import { MapManagerModal } from './components/Sidebar/MapManagerModal';
 import { useNeuralNetwork } from './hooks/useNeuralNetwork';
 import {
     CELL_TYPES,
@@ -17,13 +17,11 @@ import { StatsPanel } from './components/Stats/StatsPanel';
 import { TopBar } from './components/Layout/TopBar';
 import { Footer } from './components/Layout/Footer';
 import { TelemetryPanel } from './components/Stats/TelemetryPanel';
-import { Button } from './components/ui/Button';
 import { ALGORITHMS_NAMES } from './constants';
 
 // Domain
 import { useSimulation } from './hooks/useSimulation';
 import { Position } from './domain/Position';
-import { SimulationGrid as DomainGrid } from './domain/SimulationGrid';
 import { SimulationStats, EfficiencyMetrics } from './domain/SimulationStats';
 import { SimulationHistory } from './domain/SimulationHistory';
 
@@ -59,6 +57,24 @@ const buildGrid = (cols: number, rows: number, dock: { x: number; y: number }): 
     return seedObstacles(base, dock);
 };
 
+const randomizeObstacles = (cells: GridType, dock: { x: number; y: number }): GridType => {
+    return cells.map((row, r) => row.map((cell, c) => {
+        if (cell.type === CELL_TYPES.DOCK) return cell;
+        if (Math.abs(r - dock.y) <= 1 && Math.abs(c - dock.x) <= 1) return cell;
+        const isObstacle = Math.random() < 0.15;
+        return isObstacle 
+            ? { ...cell, type: CELL_TYPES.OBSTACLE, damage: 0, direction: null } 
+            : { ...cell, type: CELL_TYPES.GRASS, damage: 0, direction: null };
+    }));
+};
+
+const clearObstacles = (cells: GridType): GridType => {
+    return cells.map(row => row.map(cell => {
+        if (cell.type === CELL_TYPES.DOCK) return cell;
+        return { ...cell, type: CELL_TYPES.GRASS, damage: 0, direction: null };
+    }));
+};
+
 export const App: React.FC = () => {
     // UI State
     const [isDrawing, setIsDrawing] = useState(false);
@@ -87,7 +103,6 @@ export const App: React.FC = () => {
     const {
         statusMessage, setStatusMessage,
         toasts, showToast,
-        isAnalysisOpen, setIsAnalysisOpen,
         isSettingsOpen, setIsSettingsOpen
     } = useAppUI();
 
@@ -112,8 +127,9 @@ export const App: React.FC = () => {
         history: history.records
     };
 
-    // AI & NN Hooks
-    const { aiPrompt, setAiPrompt, isAiLoading, aiFeedback, generateAiPattern, analyzeTerrain } = useGeminiAI();
+    // Map Manager Modal State
+    const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+    const [mapModalMode, setMapModalMode] = useState<'save' | 'load'>('save');
     const { nn, trainingStatus, trainNN, stopTraining, downloadModel, uploadModel, showVisualTraining, setShowVisualTraining, previewGrid, previewMowerPos, previewMowerDir, fitnessConfig, setFitnessConfig } = useNeuralNetwork(dockPos, showToast, orientation as 'horizontal' | 'vertical', speed);
 
     const {
@@ -208,17 +224,35 @@ export const App: React.FC = () => {
         drainTurnRef.current = drainTurn;
     }, [env, grid, brushType, isRunning, maxBattery, isDrawing, showVisualTraining, drainMove, drainTurn]);
 
-    const handleGenerateAiPattern = useCallback(() => {
-        generateAiPattern(dockPos, (newGrid) => {
-            const cleanGrid = prepareSimulationState(newGrid);
-            setEnv(prev => prev.withGrid(new DomainGrid(cleanGrid)));
-        });
-    }, [dockPos, generateAiPattern, prepareSimulationState, setEnv]);
+    const handleRandomizeMap = useCallback(() => {
+        stopSimulation(true);
+        const cleanGrid = randomizeObstacles(gridRef.current, dockPos);
+        prepareSimulationState(cleanGrid);
+        showToast("Map randomized with obstacles");
+    }, [dockPos, stopSimulation, prepareSimulationState, showToast]);
 
-    const handleAnalyzeTerrain = useCallback(() => {
-        analyzeTerrain(gridRef.current);
-        setIsAnalysisOpen(true);
-    }, [analyzeTerrain, setIsAnalysisOpen]);
+    const handleClearMap = useCallback(() => {
+        stopSimulation(true);
+        const cleanGrid = clearObstacles(gridRef.current);
+        prepareSimulationState(cleanGrid);
+        showToast("Map cleared of all obstacles");
+    }, [stopSimulation, prepareSimulationState, showToast]);
+
+    const handleLoadMap = useCallback((cells: GridType, cols: number, rows: number, dock: { x: number; y: number }) => {
+        stopSimulation(true);
+        setGridSize({ cols, rows });
+        prepareSimulationState(cells, dock);
+    }, [stopSimulation, prepareSimulationState]);
+
+    const handleOpenSaveModal = useCallback(() => {
+        setMapModalMode('save');
+        setIsMapModalOpen(true);
+    }, []);
+
+    const handleOpenLoadModal = useCallback(() => {
+        setMapModalMode('load');
+        setIsMapModalOpen(true);
+    }, []);
 
     const resetMowedOnly = useCallback(() => {
         stopSimulation(true);
@@ -346,11 +380,10 @@ export const App: React.FC = () => {
 
                 <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
                     <Sidebar
-                        aiPrompt={aiPrompt}
-                        setAiPrompt={setAiPrompt}
-                        isAiLoading={isAiLoading}
-                        onGenerateAi={handleGenerateAiPattern}
-                        onAnalyzeTerrain={handleAnalyzeTerrain}
+                        onRandomizeMap={handleRandomizeMap}
+                        onClearMap={handleClearMap}
+                        onOpenSaveModal={handleOpenSaveModal}
+                        onOpenLoadModal={handleOpenLoadModal}
                         selectedAlgo={algo}
                         setAlgo={handleSetAlgo}
                         speed={speed}
@@ -380,22 +413,22 @@ export const App: React.FC = () => {
 
                     <div className="flex flex-col items-center min-w-0 shrink-0 mt-2 lg:mt-0 mr-0 lg:mr-12">
                         <div className="relative">
-                            <SimulationGrid
+                             <SimulationGrid
                                 grid={showVisualTraining && previewGrid ? previewGrid : grid}
                                 mowerPos={showVisualTraining && previewMowerPos ? previewMowerPos : mowerPos}
                                 mowerDir={showVisualTraining && previewMowerDir ? previewMowerDir : env.mower.nav.dir}
-                                isAiLoading={isAiLoading}
+                                isAiLoading={false}
                                 onMouseDown={handleMouseDown}
                                 onCellClick={showVisualTraining ? undefined : handleCellClick}
                                 onCellMouseEnter={handleCellMouseEnter}
                                 onResize={isRunning || showVisualTraining ? undefined : handleResize}
+                                onMowerClick={handleOpenSettings}
                             />
 
                             <MapToolbar
                                 brushType={brushType}
                                 setBrushType={setBrushType}
                                 cellTypes={CELL_TYPES}
-                                onOpenSettings={handleOpenSettings}
                             />
                         </div>
 
@@ -436,27 +469,16 @@ export const App: React.FC = () => {
                 <Footer />
             </div>
 
-            {isAnalysisOpen && aiFeedback && (
-                <div className="modal-backdrop" onClick={() => setIsAnalysisOpen(false)}>
-                    <div className="modal-content border border-emerald-500/20" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-center mb-8">
-                            <div>
-                                <h2 className="text-2xl font-black text-white uppercase tracking-tight">AI Territory Analysis</h2>
-                                <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest mt-1">Created using Gemini Flash</p>
-                            </div>
-                            <button onClick={() => setIsAnalysisOpen(false)} className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 text-slate-500 hover:text-white transition-colors text-2xl flex items-center justify-center">&times;</button>
-                        </div>
-                        <div className="space-y-4 text-slate-300 text-sm leading-relaxed whitespace-pre-wrap bg-slate-950/80 p-8 rounded-[2rem] border border-slate-800 shadow-inner">
-                            {String(aiFeedback)}
-                        </div>
-                        <div className="mt-8">
-                            <Button variant="primary" size="lg" fullWidth onClick={() => setIsAnalysisOpen(false)}>
-                                UNDERSTAND ANALYSIS
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <MapManagerModal
+                isOpen={isMapModalOpen}
+                mode={mapModalMode}
+                onClose={() => setIsMapModalOpen(false)}
+                currentGrid={grid}
+                gridSize={gridSize}
+                dockPos={dockPos}
+                onLoadMap={handleLoadMap}
+                showToast={showToast}
+            />
 
             <div className="toast-container">
                 {toasts.map(t => (

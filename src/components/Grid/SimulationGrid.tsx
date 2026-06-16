@@ -244,6 +244,7 @@ interface GridProps {
     onCellMouseEnter?: (r: number, c: number) => void;
     onMouseDown: () => void;
     onResize?: (cols: number, rows: number) => void;
+    onMowerClick?: () => void;
 }
 
 export const SimulationGrid: React.FC<GridProps> = ({
@@ -254,7 +255,8 @@ export const SimulationGrid: React.FC<GridProps> = ({
     onCellClick,
     onCellMouseEnter,
     onMouseDown,
-    onResize
+    onResize,
+    onMowerClick
 }) => {
     const rows = grid.length;
     const cols = grid[0]?.length ?? 0;
@@ -374,7 +376,11 @@ export const SimulationGrid: React.FC<GridProps> = ({
 
                     {/* Robot mower — larger than a cell, rotated to its heading */}
                     <div
-                        className="mower"
+                        className="mower cursor-pointer hover:brightness-110 active:scale-95 transition-all"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onMowerClick?.();
+                        }}
                         style={{
                             left: mowerPos.x * CELL_PX + CELL_PX / 2,
                             top: mowerPos.y * CELL_PX + CELL_PX / 2,

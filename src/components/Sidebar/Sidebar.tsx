@@ -5,11 +5,10 @@ import { AlgorithmSelector } from './AlgorithmSelector';
 import type { TrainingStatus, FitnessConfig } from '../../types';
 
 interface SidebarProps {
-    aiPrompt: string;
-    setAiPrompt: (val: string) => void;
-    isAiLoading: boolean;
-    onGenerateAi: () => void;
-    onAnalyzeTerrain: () => void;
+    onRandomizeMap: () => void;
+    onClearMap: () => void;
+    onOpenSaveModal: () => void;
+    onOpenLoadModal: () => void;
     
     selectedAlgo: string;
     setAlgo: (val: string) => void;
@@ -85,43 +84,45 @@ export const Sidebar = memo<SidebarProps>((props) => {
                 </div>
 
                 <div className="space-y-6">
-                    {/* AI Generation Section */}
-                    <div className="bg-slate-950/40 p-4 rounded-2xl border border-slate-800/50 space-y-4">
-                        <label htmlFor="ai-prompt" className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block text-left ml-1 cursor-pointer">AI Park Design</label>
-                        <div className="relative group">
-                            <input 
-                                id="ai-prompt"
-                                name="ai-prompt"
-                                type="text" 
-                                placeholder="Create a park..." 
-                                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs outline-none focus:border-emerald-500 transition-all text-center pr-10" 
-                                value={props.aiPrompt} 
-                                onChange={(e) => props.setAiPrompt(e.target.value)} 
-                            />
-                            {props.isAiLoading && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                                </div>
-                            )}
-                        </div>
-                        <div className="flex gap-2">
+                    {/* Map Layout Section */}
+                    <div className="bg-slate-950/40 p-4 rounded-2xl border border-slate-800/50 space-y-3">
+                        <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block text-left ml-1">Map Layout</label>
+                        
+                        <div className="grid grid-cols-2 gap-2">
                             <Button 
                                 variant="primary" 
                                 size="sm" 
-                                fullWidth 
-                                onClick={props.onGenerateAi} 
-                                disabled={props.isAiLoading || !props.aiPrompt}
+                                onClick={props.onRandomizeMap} 
+                                disabled={props.isRunning || props.isTesting}
                             >
-                                GENERATE
+                                RANDOMIZE
                             </Button>
                             <Button 
                                 variant="outline" 
                                 size="sm" 
-                                fullWidth 
-                                onClick={props.onAnalyzeTerrain} 
-                                disabled={props.isAiLoading}
+                                onClick={props.onClearMap} 
+                                disabled={props.isRunning || props.isTesting}
                             >
-                                ANALYZE
+                                CLEAR MAP
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button 
+                                variant="secondary" 
+                                size="sm" 
+                                onClick={props.onOpenSaveModal}
+                                disabled={props.isRunning || props.isTesting}
+                            >
+                                SAVE MAP
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={props.onOpenLoadModal}
+                                disabled={props.isRunning || props.isTesting}
+                            >
+                                LOAD MAP
                             </Button>
                         </div>
                     </div>
@@ -198,7 +199,7 @@ export const Sidebar = memo<SidebarProps>((props) => {
                     
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" fullWidth onClick={props.onResetMap}>
-                            CLEAR
+                            CLEAR PATH
                         </Button>
                         <Button variant="ghost" size="sm" fullWidth onClick={props.onFullReset} className="text-slate-600">
                             RESET
