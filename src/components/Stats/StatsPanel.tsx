@@ -57,7 +57,13 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, duration, winnerI
                     </div>
 
                     <div className="space-y-3">
-                        {[...stats.history].reverse().map((record, i) => (
+                        {[...stats.history]
+                            .sort((a, b) => {
+                                if (a.penalty !== b.penalty) return a.penalty - b.penalty;
+                                if (a.duration !== b.duration) return a.duration - b.duration;
+                                return b.id - a.id;
+                            })
+                            .map((record) => (
                             <div 
                                 key={record.id} 
                                 className={`p-5 rounded-[1.5rem] border transition-all duration-300 flex flex-col md:flex-row gap-6 md:items-center justify-between
@@ -69,7 +75,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, duration, winnerI
                                 <div className="flex items-center gap-5 min-w-[200px]">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs
                                         ${record.id === winnerId ? 'bg-amber-500 text-amber-950' : 'bg-slate-800 text-slate-400'}`}>
-                                        #{stats.history.length - i}
+                                        #{stats.history.indexOf(record) + 1}
                                     </div>
                                     <div className="flex flex-col">
                                         <span className={`text-[11px] font-black uppercase tracking-wider ${record.id === winnerId ? 'text-amber-400' : 'text-emerald-400'}`}>

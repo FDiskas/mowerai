@@ -1,5 +1,6 @@
-import type { Grid, PositionType as Point, State } from '../types';
-import { findPathToTarget } from './pathfinding';
+import type { CELL_TYPES } from "../constants";
+import type { Grid, PositionType as Point, State } from "../types";
+import { findPathToTarget } from "./pathfinding";
 
 /**
  * Artificial Potential Fields (APF)
@@ -16,57 +17,71 @@ import { findPathToTarget } from './pathfinding';
  *     globally instead of greedily.
  */
 export const getPotentialFieldMove = (
-    state: State,
-    curGrid: Grid,
-    CELL_TYPES: any
+  state: State,
+  curGrid: Grid,
+  cellTypes: typeof CELL_TYPES,
 ): Point | null => {
-    const { pos } = state;
-    const prevDir = state.prevDir ?? { dx: 0, dy: 0 };
-    const rows = curGrid.length;
-    const cols = curGrid[0].length;
-    const dirs = [{ dx: 0, dy: 1 }, { dx: 0, dy: -1 }, { dx: 1, dy: 0 }, { dx: -1, dy: 0 }];
+  const { pos } = state;
+  const prevDir = state.prevDir ?? { dx: 0, dy: 0 };
+  const rows = curGrid.length;
+  const cols = curGrid[0].length;
+  const dirs = [
+    { dx: 0, dy: 1 },
+    { dx: 0, dy: -1 },
+    { dx: 1, dy: 0 },
+    { dx: -1, dy: 0 },
+  ];
 
-    const isFreshGrass = (x: number, y: number) =>
-        x >= 0 && x < cols && y >= 0 && y < rows && curGrid[y][x].type === CELL_TYPES.GRASS;
+  const isFreshGrass = (x: number, y: number) =>
+    x >= 0 &&
+    x < cols &&
+    y >= 0 &&
+    y < rows &&
+    curGrid[y][x].type === cellTypes.GRASS;
 
-    let bestMove: Point | null = null;
-    let minPotential = Infinity;
+  let bestMove: Point | null = null;
+  let minPotential = Infinity;
 
-    for (const d of dirs) {
-        const nx = pos.x + d.dx;
-        const ny = pos.y + d.dy;
+  for (const d of dirs) {
+    const nx = pos.x + d.dx;
+    const ny = pos.y + d.dy;
 
-        // Only fresh grass is a valid downhill step — this is what keeps the
-        // mower from settling into a mowed-cell oscillation.
-        if (!isFreshGrass(nx, ny)) continue;
+    // Only fresh grass is a valid downhill step — this is what keeps the
+    // mower from settling into a mowed-cell oscillation.
+    if (!isFreshGrass(nx, ny)) continue;
 
-        let potential = 0;
+    let potential = 0;
 
-        // Repulsive push from nearby obstacles.
-        const repulsiveK = 10.0;
-        for (let y = Math.max(0, ny - 2); y <= Math.min(rows - 1, ny + 2); y++) {
-            for (let x = Math.max(0, nx - 2); x <= Math.min(cols - 1, nx + 2); x++) {
-                if (curGrid[y][x].type === CELL_TYPES.OBSTACLE) {
-                    const dist = Math.sqrt((nx - x) ** 2 + (ny - y) ** 2);
-                    if (dist < 1.5) potential += repulsiveK / (dist + 0.1);
-                }
-            }
+    // Repulsive push from nearby obstacles.
+    const repulsiveK = 10.0;
+    for (let y = Math.max(0, ny - 2); y <= Math.min(rows - 1, ny + 2); y++) {
+      for (let x = Math.max(0, nx - 2); x <= Math.min(cols - 1, nx + 2); x++) {
+        if (curGrid[y][x].type === cellTypes.OBSTACLE) {
+          const dist = Math.sqrt((nx - x) ** 2 + (ny - y) ** 2);
+          if (dist < 1.5) potential += repulsiveK / (dist + 0.1);
         }
-
-        // Momentum: gently prefer keeping the current heading. This breaks the
-        // symmetric ties between equally-good grass tiles that otherwise made
-        // the mower spin in place at the start of a run.
-        if (d.dx === prevDir.dx && d.dy === prevDir.dy) potential -= 1.0;
-
-        if (potential < minPotential) {
-            minPotential = potential;
-            bestMove = { x: nx, y: ny };
-        }
+      }
     }
 
-    if (bestMove) return bestMove;
+    // Momentum: gently prefer keeping the current heading. This breaks the
+    // symmetric ties between equally-good grass tiles that otherwise made
+    // the mower spin in place at the start of a run.
+    if (d.dx === prevDir.dx && d.dy === prevDir.dy) potential -= 1.0;
 
-    // No adjacent grass left: follow the global attractive force to the nearest
-    // remaining grass instead of stalling in a local minimum.
-    return findPathToTarget(pos, curGrid, prevDir, (p) => curGrid[p.y][p.x].type === CELL_TYPES.GRASS);
+    if (potential < minPotential) {
+      minPotential = potential;
+      bestMove = { x: nx, y: ny };
+    }
+  }
+
+  if (bestMove) return bestMove;
+
+  // No adjacent grass left: follow the global attractive force to the nearest
+  // remaining grass instead of stalling in a local minimum.
+  return findPathToTarget(
+    pos,
+    curGrid,
+    prevDir,
+    (p) => curGrid[p.y][p.x].type === cellTypes.GRASS,
+  );
 };

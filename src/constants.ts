@@ -12,34 +12,26 @@ export const CELL_TYPES = {
 };
 
 export const ALGORITHMS_LIST = [
-    'smart_ai', 
-    'neural_network', 
-    'boustrophedon',
+    'smart_ai',
+    'neural_network',
     'potential_field',
+    'boustrophedon',
     'spiral',
+    'dfs_coverage',
     'rrt',
-    'stc',
-    'a_star', 
-    'dijkstra', 
-    'bfs', 
-    'greedy_bfs', 
-    'jps', 
-    'd_star_lite'
+    'a_star',
+    'energy_conservative_sweep',
 ];
 
-export const ALGORITHMS_NAMES = { 
-    smart_ai: 'Smart AI (Closest)', 
+export const ALGORITHMS_NAMES = {
+    smart_ai: 'Greedy (Nearest Grass)',
     neural_network: 'Neural Network (Evolved)',
-    boustrophedon: 'Boustrophedon (Sweep)',
     potential_field: 'Artificial Potential Fields',
+    boustrophedon: 'Boustrophedon (Sweep)',
     spiral: 'Spiral Coverage',
+    dfs_coverage: 'Snake Fill (DFS)',
     rrt: 'RRT Exploration',
-    stc: 'Spanning Tree Coverage',
-    a_star: 'A* (Optimal Path)', 
-    dijkstra: 'Dijkstra (Uniform)', 
-    bfs: 'BFS (Shortest)', 
-    greedy_bfs: 'Greedy BFS', 
-    jps: 'JPS (Jump Point)', 
-    d_star_lite: 'D* Lite (Incremental)'
+    a_star: 'A* (Optimal Path)',
+    energy_conservative_sweep: 'Energy-Conservative Sweep',
 };
 

@@ -167,23 +167,20 @@ export const useAppSimulation = (
             boustrophedon: (s: any, g: any, d: any) => algos.getBoustrophedonMove(s, g, d, CELL_TYPES),
             potential_field: (s: any, g: any) => algos.getPotentialFieldMove(s, g, CELL_TYPES),
             spiral: (s: any, g: any) => algos.getSpiralMove(s, g, CELL_TYPES),
+            dfs_coverage: (s: any, g: any, d: any) => algos.getDFSCoverageMove(s, g, d, CELL_TYPES),
             rrt: (s: any, g: any, d: any) => algos.getRRTMove(s, g, d, CELL_TYPES),
-            stc: (s: any, g: any, d: any) => algos.getSTCMove(s, g, d, CELL_TYPES),
             a_star: (s: any, g: any, d: any) => algos.aStarSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, d),
-            dijkstra: (s: any, g: any, d: any) => algos.dijkstraSearch(s.pos, (p: any) => g[p.y][p.x].type === CELL_TYPES.GRASS, g, d),
-            bfs: (s: any, g: any) => algos.bfsSearch(s.pos, (p: any) => g[p.y][p.x].type === CELL_TYPES.GRASS, g),
-            greedy_bfs: (s: any, g: any, d: any) => algos.greedyBestFirstSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, d),
-            jps: (s: any, g: any) => algos.aStarSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, { dx: 0, dy: 1 }),
-            d_star_lite: (s: any, g: any, d: any) => algos.dStarLiteSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, d),
             smart_ai: (s: any, g: any, d: any) => algos.getSmartAIMove(s, g, d, CELL_TYPES),
-            neural_network: (s: any, g: any, d: any) => algos.getNeuralNetworkMove(s, g, d, CELL_TYPES, nn)
+            neural_network: (s: any, g: any, d: any) => algos.getNeuralNetworkMove(s, g, d, CELL_TYPES, nn),
+            energy_conservative_sweep: (s: any, g: any, d: any) => algos.getEnergyConservativeSweepMove(s, g, d, CELL_TYPES)
         };
 
         if (fns[algo]) {
             move = fns[algo](simState.current, curGrid, prevDir);
         } else {
-            // Legacy mapping fallback
-            if (['zigzag', 'u_shape', 'slam_boustrophedon', 'cellular_boustrophedon'].includes(algo)) {
+            // Legacy/removed algorithm ids (e.g. a persisted 'stc' or old sweep
+            // names) fall back to the closest surviving behaviour.
+            if (['stc', 'zigzag', 'u_shape', 'slam_boustrophedon', 'cellular_boustrophedon'].includes(algo)) {
                 move = algos.getBoustrophedonMove(simState.current, curGrid, prevDir, CELL_TYPES);
             } else {
                 move = algos.getSmartAIMove(simState.current, curGrid, prevDir, CELL_TYPES);

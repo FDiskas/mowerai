@@ -11,15 +11,13 @@ export {
     findPathToTarget,
     getClosestGrass,
     aStarSearch,
-    dijkstraSearch,
-    bfsSearch,
-    greedyBestFirstSearch,
-    dStarLiteSearch,
 } from './pathfinding';
 export { getBoustrophedonMove } from './boustrophedon';
 export { getPotentialFieldMove } from './potentialField';
 export { getSpiralMove } from './spiral';
+export { getDFSCoverageMove } from './dfsCoverage';
 export { getSmartAIMove } from './smartAI';
 export { getRRTMove } from './rrt';
-export { getSTCMove } from './stc';
 export { getCellValue, prepareNNInputs, getNeuralNetworkMove } from './neuralNetwork';
+export { getEnergyConservativeSweepMove } from './energyConservativeSweep';
+

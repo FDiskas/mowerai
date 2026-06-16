@@ -14,15 +14,20 @@ const AlgoIcon: React.FC<{ algo: string }> = ({ algo }) => {
         case 'neural_network':
             return <svg {...common}><circle cx="12" cy="5" r="2" /><circle cx="5" cy="12" r="2" /><circle cx="19" cy="12" r="2" /><circle cx="12" cy="19" r="2" /><path d="M12 7v10M7 12h10M6.5 10.5l11 3M17.5 10.5l-11 3" /></svg>;
         case 'boustrophedon':
-        case 'spiral':
-        case 'stc':
-        case 'rrt':
             return <svg {...common}><path d="M4 6h16M4 12h16M4 18h16" /></svg>;
+        case 'energy_conservative_sweep':
+            return <svg {...common}><path d="M4 8h16M20 8v8M20 16H4" /></svg>;
+        case 'spiral':
+            return <svg {...common}><path d="M12 12a1.5 1.5 0 1 0 1.5 1.5M13.5 13.5A3.5 3.5 0 1 0 8.5 12M8.5 12A6 6 0 1 0 18 12" /></svg>;
+        case 'dfs_coverage':
+            return <svg {...common}><path d="M4 5h10a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h12" /></svg>;
+        case 'rrt':
+            return <svg {...common}><path d="M12 21v-6M12 15l-5-4M12 15l6-5M7 11V6M18 10V5" /><circle cx="7" cy="5" r="1.4" /><circle cx="18" cy="4" r="1.4" /></svg>;
         case 'smart_ai':
         case 'potential_field':
             return <svg {...common}><path d="M12 2v4M12 18v4M2 12h4M18 12h4" /><circle cx="12" cy="12" r="4" /></svg>;
         default:
-            // pathfinding (a_star, dijkstra, bfs, ...)
+            // pathfinding (a_star)
             return <svg {...common}><circle cx="6" cy="6" r="2" /><circle cx="18" cy="18" r="2" /><path d="M8 6h6a2 2 0 0 1 2 2v8" /></svg>;
     }
 };
@@ -36,8 +41,8 @@ export const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({
 
     const groups: Record<string, string[]> = {
         'AI & Autonomous': ['smart_ai', 'neural_network', 'potential_field'],
-        'Coverage & Sweep': ['boustrophedon', 'spiral', 'stc', 'rrt'],
-        'Pathfinding': ['a_star', 'dijkstra', 'bfs', 'greedy_bfs', 'jps', 'd_star_lite'],
+        'Coverage & Sweep': ['boustrophedon', 'energy_conservative_sweep', 'spiral', 'dfs_coverage', 'rrt'],
+        'Pathfinding': ['a_star'],
     };
 
     return (

@@ -3,7 +3,7 @@ import { CELL_TYPES } from '../constants';
 import type { Grid } from '../types';
 import {
     genericPathSearch, findFullPathToTarget, findPathToTarget,
-    getClosestGrass, aStarSearch, bfsSearch,
+    getClosestGrass, aStarSearch,
 } from './pathfinding';
 
 /** w×h grid of a single cell type, with optional obstacle coordinates. */
@@ -96,12 +96,5 @@ describe('search wrappers', () => {
         const g = grid(8, 6);
         const step = aStarSearch({ x: 0, y: 0 }, { x: 5, y: 0 }, g, { dx: 1, dy: 0 })!;
         expect(step).toEqual({ x: 1, y: 0 });
-    });
-
-    it('bfsSearch finds grass via a predicate', () => {
-        const g = grid(6, 6, CELL_TYPES.MOWED);
-        g[0][3] = { type: CELL_TYPES.GRASS, damage: 0, direction: null };
-        const step = bfsSearch({ x: 0, y: 0 }, p => g[p.y][p.x].type === CELL_TYPES.GRASS, g)!;
-        expect(manhattan(0, 0, step.x, step.y)).toBe(1);
     });
 });
