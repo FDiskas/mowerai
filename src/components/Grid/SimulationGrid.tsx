@@ -104,6 +104,32 @@ const mownColor = (damage: number) => {
     return `rgb(${m(0)}, ${m(1)}, ${m(2)})`;
 };
 
+const getPathDefinition = (
+    hasLeft: boolean,
+    hasRight: boolean,
+    hasTop: boolean,
+    hasBottom: boolean
+): string => {
+    const count = [hasLeft, hasRight, hasTop, hasBottom].filter(Boolean).length;
+
+    if (count === 2) {
+        if (hasLeft && hasRight) return 'M 0 12 L 24 12';
+        if (hasTop && hasBottom) return 'M 12 0 L 12 24';
+        if (hasLeft && hasBottom) return 'M 0 12 Q 12 12, 12 24';
+        if (hasLeft && hasTop) return 'M 0 12 Q 12 12, 12 0';
+        if (hasRight && hasBottom) return 'M 24 12 Q 12 12, 12 24';
+        if (hasRight && hasTop) return 'M 24 12 Q 12 12, 12 0';
+    }
+
+    const paths = [];
+    if (hasLeft) paths.push('M 0 12 L 12 12');
+    if (hasRight) paths.push('M 24 12 L 12 12');
+    if (hasTop) paths.push('M 12 0 L 12 12');
+    if (hasBottom) paths.push('M 12 24 L 12 12');
+
+    return paths.join(' ');
+};
+
 interface CellProps {
     r: number;
     c: number;
@@ -111,18 +137,17 @@ interface CellProps {
     isMower: boolean;
     isDock: boolean;
     obs: ObsToken | null;
+    hasLeft: boolean;
+    hasRight: boolean;
+    hasTop: boolean;
+    hasBottom: boolean;
     onCellClick?: (r: number, c: number) => void;
     onCellMouseEnter?: (r: number, c: number) => void;
 }
 
-const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, onCellClick, onCellMouseEnter }: CellProps) => {
+const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, hasLeft, hasRight, hasTop, hasBottom, onCellClick, onCellMouseEnter }: CellProps) => {
     const isMowed = cell.type === CELL_TYPES.MOWED;
-
-    let trailClass = 'trail-dot';
-    if (cell.direction) {
-        if (cell.direction.dx !== 0) trailClass = 'trail-h';
-        else if (cell.direction.dy !== 0) trailClass = 'trail-v';
-    }
+    const d = getPathDefinition(hasLeft, hasRight, hasTop, hasBottom);
 
     return (
         <div
@@ -143,10 +168,43 @@ const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, onCellClick, onCe
                         <div className="mown-overlap" style={{ opacity: Math.min(0.9, 0.4 + ((cell.passes || 2) - 2) * 0.2) }} />
                     )}
                     <div className="trail">
-                        <div
+                        <svg
                             key={`${cell.damage}-${cell.direction?.dx ?? 0}-${cell.direction?.dy ?? 0}`}
-                            className={`trail-seg ${trailClass}`}
-                        />
+                            className="trail-svg"
+                            viewBox="0 0 24 24"
+                        >
+                            {d && (
+                                <path
+                                    d={d}
+                                    fill="none"
+                                    stroke="rgba(34, 211, 238, 0.35)"
+                                    strokeWidth="7"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="trail-glow"
+                                />
+                            )}
+                            {d && (
+                                <path
+                                    d={d}
+                                    fill="none"
+                                    stroke="#2af0ff"
+                                    strokeWidth="3.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="trail-core"
+                                />
+                            )}
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="3.5"
+                                fill="#2af0ff"
+                                stroke="#ffffff"
+                                strokeWidth="1"
+                                className="trail-node"
+                            />
+                        </svg>
                     </div>
                 </>
             )}
@@ -246,19 +304,63 @@ export const SimulationGrid: React.FC<GridProps> = ({
                 <div className="relative field-grid">
                     {grid.map((row, r) => (
                         <div key={r} className="flex">
-                            {row.map((cell, c) => (
-                                <MemoizedCell
-                                    key={`${r}-${c}`}
-                                    r={r}
-                                    c={c}
-                                    cell={cell}
-                                    isMower={mowerPos.x === c && mowerPos.y === r}
-                                    isDock={cell.type === CELL_TYPES.DOCK}
-                                    obs={tokens[r]?.[c] ?? null}
-                                    onCellClick={onCellClick}
-                                    onCellMouseEnter={onCellMouseEnter}
-                                />
-                            ))}
+                            {row.map((cell, c) => {
+                                const isMowed = cell.type === CELL_TYPES.MOWED;
+                                let hasLeft = isMowed && (
+                                    (cell.direction?.dx === -1 && cell.direction?.dy === 0) ||
+                                    (c > 0 && grid[r][c - 1]?.direction?.dx === 1 && grid[r][c - 1]?.direction?.dy === 0)
+                                );
+                                let hasRight = isMowed && (
+                                    (cell.direction?.dx === 1 && cell.direction?.dy === 0) ||
+                                    (c < cols - 1 && grid[r][c + 1]?.direction?.dx === -1 && grid[r][c + 1]?.direction?.dy === 0)
+                                );
+                                let hasTop = isMowed && (
+                                    (cell.direction?.dx === 0 && cell.direction?.dy === -1) ||
+                                    (r > 0 && grid[r - 1][c]?.direction?.dx === 0 && grid[r - 1][c]?.direction?.dy === 1)
+                                );
+                                let hasBottom = isMowed && (
+                                    (cell.direction?.dx === 0 && cell.direction?.dy === 1) ||
+                                    (r < rows - 1 && grid[r + 1][c]?.direction?.dx === 0 && grid[r + 1][c]?.direction?.dy === -1)
+                                );
+
+                                // Filter out redundant stubs from previous perpendicular passes
+                                const isHorizontalDir = cell.direction?.dx !== 0;
+                                const isVerticalDir = cell.direction?.dy !== 0;
+
+                                if (hasLeft && hasRight && hasTop && hasBottom) {
+                                    if (isVerticalDir) {
+                                        hasLeft = false;
+                                        hasRight = false;
+                                    } else {
+                                        hasTop = false;
+                                        hasBottom = false;
+                                    }
+                                } else if (hasLeft && hasRight) {
+                                    hasTop = false;
+                                    hasBottom = false;
+                                } else if (hasTop && hasBottom) {
+                                    hasLeft = false;
+                                    hasRight = false;
+                                }
+
+                                return (
+                                    <MemoizedCell
+                                        key={`${r}-${c}`}
+                                        r={r}
+                                        c={c}
+                                        cell={cell}
+                                        isMower={mowerPos.x === c && mowerPos.y === r}
+                                        isDock={cell.type === CELL_TYPES.DOCK}
+                                        obs={tokens[r]?.[c] ?? null}
+                                        hasLeft={hasLeft}
+                                        hasRight={hasRight}
+                                        hasTop={hasTop}
+                                        hasBottom={hasBottom}
+                                        onCellClick={onCellClick}
+                                        onCellMouseEnter={onCellMouseEnter}
+                                    />
+                                );
+                            })}
                         </div>
                     ))}
 

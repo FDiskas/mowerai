@@ -168,13 +168,10 @@ body {
   pointer-events: none;
   z-index: 5;
 }
-.trail-seg {
-  background: #2af0ff;
-  border-radius: 999px;
-  box-shadow:
-    0 0 6px rgba(42, 240, 255, 0.9),
-    0 0 14px rgba(34, 211, 238, 0.75),
-    0 0 26px rgba(34, 211, 238, 0.45);
+.trail-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
   /* glow brightly behind the mower, then fade out shortly after */
   animation: trail-fade 2.6s ease-out forwards;
 }
@@ -183,11 +180,15 @@ body {
   55%  { opacity: 1; }
   100% { opacity: 0; }
 }
-/* horizontal travel → slim horizontal bar that bridges to neighbours */
-.trail-h { width: 118%; height: 28%; }
-.trail-v { width: 28%; height: 118%; }
-/* turn / endpoint joint */
-.trail-dot { width: 40%; height: 40%; }
+.trail-glow {
+  filter: blur(2px);
+}
+.trail-core {
+  filter: drop-shadow(0 0 3px rgba(42, 240, 255, 0.8));
+}
+.trail-node {
+  filter: drop-shadow(0 0 2px rgba(42, 240, 255, 0.8));
+}
 
 /* ============================================================
    MOWN GRASS — directional cut stripes + multi-pass wear
