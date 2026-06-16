@@ -1,7 +1,7 @@
 import { CELL_TYPES, DEFAULT_MAX_BATTERY } from '../constants';
 import { NeuralNetwork } from '../NeuralNetwork';
 import type { Grid, PositionType as Point, Direction, State } from '../types';
-import { getClosestGrass, findPathToTarget } from './pathfinding';
+import { getClosestGrass, findPathToTarget, findFullPathToTarget } from './pathfinding';
 import { getSmartAIMove } from './smartAI';
 
 const castRay = (startX: number, startY: number, dx: number, dy: number, grid: Grid, CELL_TYPES: any) => {
@@ -15,10 +15,12 @@ const castRay = (startX: number, startY: number, dx: number, dy: number, grid: G
     while (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length) {
         const cellType = grid[y][x].type;
         if (cellType === CELL_TYPES.GRASS && grassDist === -1) grassDist = dist;
-        if (cellType === CELL_TYPES.OBSTACLE && obstacleDist === -1) obstacleDist = dist;
+        if (cellType === CELL_TYPES.OBSTACLE) {
+            obstacleDist = dist;
+            break; // Obstacle blocks the ray completely!
+        }
         if (cellType === CELL_TYPES.MOWED && mowedDist === -1) mowedDist = dist;
 
-        if (grassDist !== -1 && obstacleDist !== -1 && mowedDist !== -1) break;
         x += dx;
         y += dy;
         dist++;
@@ -53,10 +55,31 @@ export const prepareNNInputs = (state: State, curGrid: Grid, CELL_TYPES: any): n
 
     const maxBat = state.maxBattery || DEFAULT_MAX_BATTERY;
     const isLowBattery = (battery / maxBat) * 100 < 20;
-    const target = (isReturningForCharge || isLowBattery)
-        ? (dockPos || pos)
-        : (getClosestGrass(pos, curGrid, CELL_TYPES) || pos);
+    const needsDocking = isReturningForCharge || isLowBattery;
 
+    // Use A* pathfinding to find the actual next step towards target to guide the NN around obstacles
+    let targetPath = null;
+    if (needsDocking) {
+        targetPath = findFullPathToTarget(
+            pos,
+            curGrid,
+            prevDir,
+            (p: Point) => p.x === dockPos.x && p.y === dockPos.y
+        );
+    } else {
+        targetPath = findFullPathToTarget(
+            pos,
+            curGrid,
+            prevDir,
+            (p: Point) => curGrid[p.y][p.x].type === CELL_TYPES.GRASS
+        );
+    }
+
+    const nextStep = (targetPath && targetPath.length > 0) ? targetPath[0] : pos;
+    const targetDirX = nextStep.x - pos.x;
+    const targetDirY = nextStep.y - pos.y;
+
+    const target = needsDocking ? (dockPos || pos) : (getClosestGrass(pos, curGrid, CELL_TYPES) || pos);
     const distToDock = (Math.abs(pos.x - dockPos.x) + Math.abs(pos.y - dockPos.y)) / (rows + cols);
     const distToTarget = (Math.abs(pos.x - target.x) + Math.abs(pos.y - target.y)) / (rows + cols);
 
@@ -72,9 +95,9 @@ export const prepareNNInputs = (state: State, curGrid: Grid, CELL_TYPES: any): n
         isCharging ? 1 : 0,
         isReturningForCharge || isLowBattery ? 1 : 0,
 
-        // Enhanced Target Vector
-        Math.sign(target.x - pos.x),
-        Math.sign(target.y - pos.y),
+        // Path-based Target Vector (compass)
+        targetDirX,
+        targetDirY,
 
         // Enhanced Previous Direction (Inertia)
         prevDir.dx,
@@ -186,7 +209,7 @@ export const getNeuralNetworkMove = (
 
         // Orientation preference ONLY when mowing grass
         const isAligned = orientation === 'horizontal' ? (m.dx !== 0) : (m.dy !== 0);
-        if (targetIsGrass && isAligned) score += 0.4;
+        if (targetIsGrass && isAligned) score += 0.8;
 
         // Penalize revisiting mowed cells more strictly to encourage direct paths
         const visits = visitCounts?.[`${m.x},${m.y}`] || 0;
@@ -199,8 +222,23 @@ export const getNeuralNetworkMove = (
 
     for (const move of scoredMoves) {
         if (!isValid(move.x, move.y)) continue;
-        // Don't go back immediately if possible
-        if (move.x === prevX && move.y === prevY && scoredMoves.some(sm => sm !== move && isValid(sm.x, sm.y))) continue;
+        
+        // Refined anti-ping-pong: avoid going back immediately unless the previous cell is grass 
+        // and we have no other grass options, or it is the only valid move.
+        if (move.x === prevX && move.y === prevY) {
+            const hasOtherValidGrass = scoredMoves.some(sm => 
+                sm !== move && isValid(sm.x, sm.y) && isGrass(sm.x, sm.y)
+            );
+            if (hasOtherValidGrass) continue;
+            
+            const isPrevCellGrass = isGrass(prevX, prevY);
+            if (!isPrevCellGrass) {
+                const hasOtherValidMove = scoredMoves.some(sm => 
+                    sm !== move && isValid(sm.x, sm.y)
+                );
+                if (hasOtherValidMove) continue;
+            }
+        }
         return { x: move.x, y: move.y };
     }
 

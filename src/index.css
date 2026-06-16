@@ -508,3 +508,19 @@ body {
   100% { transform: translateX(100%); }
 }
 
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.55);
+    border-color: rgba(59, 130, 246, 0.8);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s infinite ease-in-out;
+}
+
+

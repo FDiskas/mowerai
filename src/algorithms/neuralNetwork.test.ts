@@ -26,7 +26,7 @@ describe("Neural Network Pathfinder Fallback", () => {
     } as unknown as State;
 
     // A mock network with layers (not strictly used since hasAdjacentGrass is false)
-    const nn = new NeuralNetwork([46, 16, 4]);
+    const nn = new NeuralNetwork([47, 16, 4]);
 
     const move = getNeuralNetworkMove(state, grid, { dx: 0, dy: -1 }, CELL_TYPES, nn);
     expect(move).not.toBeNull();
@@ -50,7 +50,7 @@ describe("Neural Network Pathfinder Fallback", () => {
       grid,
     } as unknown as State;
 
-    const nn = new NeuralNetwork([46, 16, 4]);
+    const nn = new NeuralNetwork([47, 16, 4]);
     const move = getNeuralNetworkMove(state, grid, { dx: 0, dy: -1 }, CELL_TYPES, nn);
     expect(move).toBeNull();
   });

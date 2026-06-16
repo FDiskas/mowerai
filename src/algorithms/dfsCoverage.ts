@@ -29,18 +29,24 @@ export const getDFSCoverageMove = (
     y < rows &&
     curGrid[y][x].type === cellTypes.GRASS;
 
+  const sideA = { dx: -prevDir.dy, dy: prevDir.dx };
+  const sideB = { dx: prevDir.dy, dy: -prevDir.dx };
+
+  // Prioritize the side turn that aligns with our preferred orientation
+  const isAligned = (d: Direction) => state.orientation === 'horizontal' ? d.dx !== 0 : d.dy !== 0;
+  const turns = isAligned(sideA) ? [sideA, sideB] : [sideB, sideA];
+
   // Prefer straight, then a perpendicular turn, then reverse — relative to the
   // current heading, so the mower keeps snaking instead of darting around.
   const candidates: Direction[] = [
     prevDir,
-    { dx: -prevDir.dy, dy: prevDir.dx },
-    { dx: prevDir.dy, dy: -prevDir.dx },
+    ...turns,
     { dx: -prevDir.dx, dy: -prevDir.dy },
     // Absolute fallback order for the first move (prevDir may be a no-op).
-    { dx: 1, dy: 0 },
-    { dx: 0, dy: 1 },
-    { dx: -1, dy: 0 },
-    { dx: 0, dy: -1 },
+    state.orientation === 'horizontal' ? { dx: 1, dy: 0 } : { dx: 0, dy: 1 },
+    state.orientation === 'horizontal' ? { dx: -1, dy: 0 } : { dx: 0, dy: -1 },
+    state.orientation === 'horizontal' ? { dx: 0, dy: 1 } : { dx: 1, dy: 0 },
+    state.orientation === 'horizontal' ? { dx: 0, dy: -1 } : { dx: -1, dy: 0 },
   ];
 
   for (const d of candidates) {

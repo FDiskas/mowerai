@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo } from 'react';
 import { CELL_TYPES } from '../../constants';
 
 interface MapToolbarProps {
@@ -8,7 +8,7 @@ interface MapToolbarProps {
     onOpenSettings: () => void;
 }
 
-export const MapToolbar: React.FC<MapToolbarProps> = ({ brushType, setBrushType, cellTypes, onOpenSettings }) => {
+export const MapToolbar = memo<MapToolbarProps>(({ brushType, setBrushType, cellTypes, onOpenSettings }) => {
     return (
         <div className="absolute -right-16 top-1/2 -translate-y-1/2 flex flex-col gap-3 bg-slate-950/60 backdrop-blur-2xl p-2.5 rounded-[2rem] border border-slate-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-30 ring-1 ring-white/5">
             <div className="text-[7px] font-black text-slate-600 uppercase tracking-[0.2em] text-center mb-1 select-none">Map</div>
@@ -71,4 +71,6 @@ export const MapToolbar: React.FC<MapToolbarProps> = ({ brushType, setBrushType,
             </button>
         </div>
     );
-};
+});
+MapToolbar.displayName = 'MapToolbar';
+

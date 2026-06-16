@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { AlgorithmSelector } from './AlgorithmSelector';
@@ -37,9 +37,12 @@ interface SidebarProps {
     onTestAll: () => void;
     onResetMap: () => void;
     onFullReset: () => void;
+
+    hasNn?: boolean;
+    onReplayWithNN?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = (props) => {
+export const Sidebar = memo<SidebarProps>((props) => {
     const [showFitness, setShowFitness] = useState(false);
 
     const updateCfg = (key: keyof FitnessConfig, val: number) => {
@@ -52,20 +55,25 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
         step?: number;
         min?: number;
         max?: number;
-    }) => (
-        <div className="flex items-center justify-between gap-2">
-            <span className="text-[9px] text-slate-400 flex-1 truncate" title={label}>{label}</span>
-            <input
-                type="number"
-                step={step}
-                min={min}
-                max={max}
-                value={props.fitnessConfig[cfgKey] as number}
-                onChange={e => updateCfg(cfgKey, parseFloat(e.target.value) || 0)}
-                className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-right font-mono text-indigo-300 focus:outline-none focus:border-indigo-500"
-            />
-        </div>
-    );
+    }) => {
+        const rowId = `fitness-${cfgKey}`;
+        return (
+            <div className="flex items-center justify-between gap-2">
+                <label htmlFor={rowId} className="text-[9px] text-slate-400 flex-1 truncate cursor-pointer" title={label}>{label}</label>
+                <input
+                    id={rowId}
+                    name={rowId}
+                    type="number"
+                    step={step}
+                    min={min}
+                    max={max}
+                    value={props.fitnessConfig[cfgKey] as number}
+                    onChange={e => updateCfg(cfgKey, parseFloat(e.target.value) || 0)}
+                    className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-right font-mono text-indigo-300 focus:outline-none focus:border-indigo-500"
+                />
+            </div>
+        );
+    };
 
     return (
         <div className="w-full lg:w-80 flex flex-col gap-6">
@@ -79,9 +87,11 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                 <div className="space-y-6">
                     {/* AI Generation Section */}
                     <div className="bg-slate-950/40 p-4 rounded-2xl border border-slate-800/50 space-y-4">
-                        <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block text-left ml-1">AI Park Design</label>
+                        <label htmlFor="ai-prompt" className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block text-left ml-1 cursor-pointer">AI Park Design</label>
                         <div className="relative group">
                             <input 
+                                id="ai-prompt"
+                                name="ai-prompt"
                                 type="text" 
                                 placeholder="Create a park..." 
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs outline-none focus:border-emerald-500 transition-all text-center pr-10" 
@@ -127,12 +137,14 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                     {/* Speed control */}
                     <div className="space-y-2">
                         <div className="flex justify-between items-center px-1">
-                            <label className="text-[11px] font-medium text-slate-400 tracking-wide">Speed</label>
+                            <label htmlFor="simulation-speed" className="text-[11px] font-medium text-slate-400 tracking-wide cursor-pointer">Speed</label>
                             <span className="text-[11px] font-semibold text-cyan-400 font-display tabular-nums">
                                 {((1000 / Math.max(10, 140 - props.speed)) * 0.045).toFixed(1)} m/s
                             </span>
                         </div>
                         <input
+                            id="simulation-speed"
+                            name="simulation-speed"
                             type="range"
                             min={10}
                             max={135}
@@ -161,6 +173,18 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                     >
                         {props.isTesting ? 'STOP TEST ALL' : props.isRunning ? 'STOP' : 'START WORK'}
                     </Button>
+
+                    {props.hasNn && props.selectedAlgo !== 'neural_network' && !props.isRunning && !props.isTesting && (
+                        <Button
+                            variant="indigo"
+                            size="md"
+                            fullWidth
+                            onClick={props.onReplayWithNN}
+                            className="text-xs py-3 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)] hover:shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all font-bold animate-pulse"
+                        >
+                            ⚡ REPLAY WITH EVOLVED NN
+                        </Button>
+                    )}
                     
                     <Button 
                         variant="secondary" 
@@ -236,9 +260,9 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                         <Button variant="outline" size="sm" fullWidth onClick={props.onDownloadModel} disabled={props.trainingStatus.isTraining}>
                             EXPORT
                         </Button>
-                        <label className={`flex-1 bg-transparent border border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white py-2 rounded-xl text-[10px] font-black tracking-widest cursor-pointer text-center flex items-center justify-center transition-all ${props.trainingStatus.isTraining ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <label htmlFor="import-model" className={`flex-1 bg-transparent border border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white py-2 rounded-xl text-[10px] font-black tracking-widest cursor-pointer text-center flex items-center justify-center transition-all ${props.trainingStatus.isTraining ? 'opacity-50 pointer-events-none' : ''}`}>
                             IMPORT
-                            <input type="file" className="hidden" onChange={props.onUploadModel} accept=".json" />
+                            <input id="import-model" name="import-model" type="file" className="hidden" onChange={props.onUploadModel} accept=".json" />
                         </label>
                     </div>
 
@@ -287,4 +311,5 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
 
         </div>
     );
-};
+});
+Sidebar.displayName = 'Sidebar';

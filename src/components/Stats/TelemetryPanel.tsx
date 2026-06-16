@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 interface TelemetryPanelProps {
     coverage: number;       // 0-100
@@ -30,7 +30,7 @@ const Metric: React.FC<{ label: string; children: React.ReactNode }> = ({ label,
     </div>
 );
 
-export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({
+export const TelemetryPanel = memo<TelemetryPanelProps>(({
     coverage, durationSec, batteryPct, speedLabel, complexity
 }) => {
     return (
@@ -65,4 +65,6 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({
             </Metric>
         </aside>
     );
-};
+});
+TelemetryPanel.displayName = 'TelemetryPanel';
+

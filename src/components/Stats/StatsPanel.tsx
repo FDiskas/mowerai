@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo } from 'react';
 import { Card } from '../ui/Card';
 import type { Stats as StatsType } from '../../types';
 import { ALGORITHMS_NAMES } from '../../constants';
@@ -8,9 +8,99 @@ interface StatsPanelProps {
     duration: number;
     winnerId: number | null;
     currentDamage: number;
+    onClearHistory?: () => void;
 }
 
-export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, duration, winnerId, currentDamage }) => {
+interface HistoryListProps {
+    history: any[];
+    winnerId: number | null;
+    onClearHistory?: () => void;
+}
+
+const HistoryList = memo<HistoryListProps>(({ history, winnerId, onClearHistory }) => {
+    const latestId = history.length > 0 ? Math.max(...history.map(r => r.id)) : null;
+
+    return (
+        <div className="mt-16 space-y-6">
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Session History</h3>
+                    <div className="h-[1px] flex-1 bg-slate-800"></div>
+                </div>
+                <button
+                    onClick={onClearHistory}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-500/30 transition-all text-[9px] font-black tracking-widest uppercase select-none"
+                >
+                    Clear Logs
+                </button>
+            </div>
+
+            <div className="space-y-3">
+                {[...history]
+                    .sort((a, b) => {
+                        if (a.penalty !== b.penalty) return a.penalty - b.penalty;
+                        if (a.duration !== b.duration) return a.duration - b.duration;
+                        return b.id - a.id;
+                    })
+                    .map((record, index) => (
+                    <div 
+                        key={record.id} 
+                        className={`p-5 rounded-[1.5rem] border transition-all duration-300 flex flex-col md:flex-row gap-6 md:items-center justify-between
+                            ${record.id === latestId
+                                ? 'border-blue-500 bg-blue-950/15 shadow-[0_0_20px_rgba(59,130,246,0.35)] animate-pulse-subtle'
+                                : record.id === winnerId 
+                                    ? 'border-amber-500/50 bg-amber-500/5 shadow-[0_0_30px_rgba(245,158,11,0.1)]' 
+                                    : 'bg-slate-950/30 border-slate-800/50 hover:border-slate-700'
+                            }`}
+                    >
+                        <div className="flex items-center gap-5 min-w-[200px]">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs
+                                ${record.id === latestId 
+                                    ? 'bg-blue-500 text-blue-950 shadow-[0_0_12px_rgba(59,130,246,0.5)]' 
+                                    : record.id === winnerId 
+                                        ? 'bg-amber-500 text-amber-950' 
+                                        : 'bg-slate-800 text-slate-400'}`}>
+                                #{index + 1}
+                            </div>
+                            <div className="flex flex-col">
+                                <span className={`text-[11px] font-black uppercase tracking-wider ${
+                                    record.id === latestId 
+                                        ? 'text-blue-400' 
+                                        : record.id === winnerId 
+                                            ? 'text-amber-400' 
+                                            : 'text-emerald-400'}`}>
+                                    {ALGORITHMS_NAMES[record.algo as keyof typeof ALGORITHMS_NAMES] || record.algo}
+                                </span>
+                                {record.id === winnerId && (
+                                    <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
+                                        <span>👑</span> Best Result
+                                    </span>
+                                )}
+                                {record.id === latestId && (
+                                    <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span>⚡</span> Latest Run
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 md:flex md:gap-8 flex-1 text-right md:text-center">
+                            <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Runtime</span><span className="text-slate-200 text-xs font-mono">{record.duration}s</span></div>
+                            <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Mow</span><span className="text-slate-200 text-xs font-mono">{record.mowedCount}</span></div>
+                            <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Meters</span><span className="text-slate-200 text-xs font-mono">{record.distance}m</span></div>
+                            <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Turns</span><span className="text-slate-200 text-xs font-mono">{record.turns}</span></div>
+                            <div className="flex flex-col"><span className="text-rose-500 text-[7px] font-black uppercase">Damage</span><span className="text-rose-400 text-xs font-mono">{record.damagedGrass}</span></div>
+                            <div className="flex flex-col bg-slate-900/50 px-3 py-1 rounded-lg border border-slate-800"><span className="text-amber-500 text-[7px] font-black uppercase">Points</span><span className="text-amber-400 text-xs font-black font-mono">{record.penalty}</span></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+});
+HistoryList.displayName = 'HistoryList';
+
+export const StatsPanel = memo<StatsPanelProps>(({ stats, duration, winnerId, currentDamage, onClearHistory }) => {
     const coverage = stats.totalGrass > 0 ? ((stats.mowedCount / stats.totalGrass) * 100).toFixed(1) : "0";
     const efficiency = stats.distance > 0 ? (stats.mowedCount / stats.distance).toFixed(2) : "0";
 
@@ -50,58 +140,13 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({ stats, duration, winnerI
 
             {/* History Section */}
             {stats.history && stats.history.length > 0 && (
-                <div className="mt-16 space-y-6">
-                    <div className="flex items-center gap-4">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Session History</h3>
-                        <div className="h-[1px] flex-1 bg-slate-800"></div>
-                    </div>
-
-                    <div className="space-y-3">
-                        {[...stats.history]
-                            .sort((a, b) => {
-                                if (a.penalty !== b.penalty) return a.penalty - b.penalty;
-                                if (a.duration !== b.duration) return a.duration - b.duration;
-                                return b.id - a.id;
-                            })
-                            .map((record) => (
-                            <div 
-                                key={record.id} 
-                                className={`p-5 rounded-[1.5rem] border transition-all duration-300 flex flex-col md:flex-row gap-6 md:items-center justify-between
-                                    ${record.id === winnerId 
-                                        ? 'border-amber-500/50 bg-amber-500/5 shadow-[0_0_30px_rgba(245,158,11,0.1)]' 
-                                        : 'bg-slate-950/30 border-slate-800/50 hover:border-slate-700'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-5 min-w-[200px]">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs
-                                        ${record.id === winnerId ? 'bg-amber-500 text-amber-950' : 'bg-slate-800 text-slate-400'}`}>
-                                        #{stats.history.indexOf(record) + 1}
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className={`text-[11px] font-black uppercase tracking-wider ${record.id === winnerId ? 'text-amber-400' : 'text-emerald-400'}`}>
-                                            {ALGORITHMS_NAMES[record.algo as keyof typeof ALGORITHMS_NAMES] || record.algo}
-                                        </span>
-                                        {record.id === winnerId && (
-                                            <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
-                                                <span>👑</span> Best Result
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-3 md:flex md:gap-8 flex-1 text-right md:text-center">
-                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Runtime</span><span className="text-slate-200 text-xs font-mono">{record.duration}s</span></div>
-                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Mow</span><span className="text-slate-200 text-xs font-mono">{record.mowedCount}</span></div>
-                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Meters</span><span className="text-slate-200 text-xs font-mono">{record.distance}m</span></div>
-                                    <div className="flex flex-col"><span className="text-slate-500 text-[7px] font-black uppercase">Turns</span><span className="text-slate-200 text-xs font-mono">{record.turns}</span></div>
-                                    <div className="flex flex-col"><span className="text-rose-500 text-[7px] font-black uppercase">Damage</span><span className="text-rose-400 text-xs font-mono">{record.damagedGrass}</span></div>
-                                    <div className="flex flex-col bg-slate-900/50 px-3 py-1 rounded-lg border border-slate-800"><span className="text-amber-500 text-[7px] font-black uppercase">Points</span><span className="text-amber-400 text-xs font-black font-mono">{record.penalty}</span></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <HistoryList
+                    history={stats.history}
+                    winnerId={winnerId}
+                    onClearHistory={onClearHistory}
+                />
             )}
         </Card>
     );
-};
+});
+StatsPanel.displayName = 'StatsPanel';

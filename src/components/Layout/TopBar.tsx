@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 interface Chip {
     label: string;
@@ -23,7 +23,7 @@ const InfoChip: React.FC<Chip> = ({ label, value, accent }) => (
     </div>
 );
 
-export const TopBar: React.FC<TopBarProps> = ({ lawnName, algorithmName, status, isActive, time }) => {
+export const TopBar = memo<TopBarProps>(({ lawnName, algorithmName, status, isActive, time }) => {
     return (
         <header className="w-full flex items-center justify-between gap-4 px-5 py-3 mb-6
             rounded-[1.5rem] bg-slate-900/50 border border-white/5 backdrop-blur-xl
@@ -69,4 +69,6 @@ export const TopBar: React.FC<TopBarProps> = ({ lawnName, algorithmName, status,
             </div>
         </header>
     );
-};
+});
+TopBar.displayName = 'TopBar';
+

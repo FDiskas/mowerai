@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { CELL_TYPES } from '../constants';
 import { GoogleGenAI } from "@google/genai";
 import type { Grid } from '../types';
@@ -11,7 +11,7 @@ export const useGeminiAI = () => {
     // Cache models to avoid repeated listing calls
     const [cachedModels, setCachedModels] = useState<string[]>([]);
 
-    const callGemini = async (prompt: string, systemPrompt: string, isJson = false) => {
+    const callGemini = useCallback(async (prompt: string, systemPrompt: string, isJson = false) => {
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
         if (!apiKey) throw new Error("API key missing. Add VITE_GEMINI_API_KEY to .env file.");
 
@@ -77,9 +77,9 @@ export const useGeminiAI = () => {
             }
         }
         throw lastError || new Error("Failed to find a free AI model.");
-    };
+    }, [cachedModels]);
 
-    const generateAiPattern = async (dockPos: {x: number, y: number}, applyGrid: (newGrid: Grid) => void) => {
+    const generateAiPattern = useCallback(async (dockPos: {x: number, y: number}, applyGrid: (newGrid: Grid) => void) => {
         if (!aiPrompt) return;
         setIsAiLoading(true);
         setAiFeedback("✨ Generating design...");
@@ -99,9 +99,9 @@ export const useGeminiAI = () => {
             console.error("AI Generation Error:", err);
             setAiFeedback("❌ Error generating.");
         } finally { setIsAiLoading(false); }
-    };
+    }, [aiPrompt, callGemini]);
 
-    const analyzeTerrain = async (grid: Grid) => {
+    const analyzeTerrain = useCallback(async (grid: Grid) => {
         setIsAiLoading(true);
         const flatGrid = grid.map(row => row.map((c: any) => c.type === CELL_TYPES.OBSTACLE ? "X" : (c.type === CELL_TYPES.DOCK ? "H" : ".")).join("")).join("\n");
         const prompt = `Analyze the grid (X-obstacle, .-grass, H-dock). Which algorithm is better? Answer briefly in English US.\n${flatGrid}`;
@@ -112,7 +112,7 @@ export const useGeminiAI = () => {
             console.error("AI Analysis Error:", err);
             setAiFeedback("❌ Analysis error."); 
         } finally { setIsAiLoading(false); }
-    };
+    }, [callGemini]);
 
     return { aiPrompt, setAiPrompt, isAiLoading, aiFeedback, generateAiPattern, analyzeTerrain };
 };

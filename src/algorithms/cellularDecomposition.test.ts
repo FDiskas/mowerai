@@ -62,6 +62,56 @@ describe("Cellular Decomposition Algorithm", () => {
       expect(bottomCellId).not.toBe(leftCellId);
       expect(topCellId).not.toBe(bottomCellId);
     });
+
+    it("decomposes a simple horizontal U-shape lawn into distinct cell IDs when orientation is horizontal", () => {
+      // 3 rows, 4 columns:
+      // Row 0: Grass, Grass, Grass, Grass
+      // Row 1: Grass, Obstacle, Obstacle, Grass
+      // Row 2: Grass, Grass, Grass, Grass
+      const grid: Grid = [
+        [
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+        ],
+        [
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+          { type: CELL_TYPES.OBSTACLE, damage: 0, direction: null },
+          { type: CELL_TYPES.OBSTACLE, damage: 0, direction: null },
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+        ],
+        [
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+          { type: CELL_TYPES.GRASS, damage: 0, direction: null },
+        ],
+      ];
+
+      const cellGrid = decomposeGrid(grid, CELL_TYPES, 'horizontal');
+
+      // Obstacles must have cell ID 0
+      expect(cellGrid[1][1]).toBe(0);
+      expect(cellGrid[1][2]).toBe(0);
+
+      // Verify that splitting has occurred:
+      // Row 0 columns 0,1,2,3 should be a single contiguous cell
+      const topCellId = cellGrid[0][0];
+      expect(topCellId).toBeGreaterThan(0);
+      expect(cellGrid[0][1]).toBe(topCellId);
+      expect(cellGrid[0][2]).toBe(topCellId);
+      expect(cellGrid[0][3]).toBe(topCellId);
+
+      // Column 0 Row 1 and Row 2 must be different cells due to split event
+      const leftCellId = cellGrid[1][0];
+      const bottomCellId = cellGrid[2][0];
+      expect(leftCellId).toBeGreaterThan(0);
+      expect(bottomCellId).toBeGreaterThan(0);
+      expect(leftCellId).not.toBe(topCellId);
+      expect(bottomCellId).not.toBe(topCellId);
+      expect(leftCellId).not.toBe(bottomCellId);
+    });
   });
 
   describe("getCellularDecompositionMove", () => {

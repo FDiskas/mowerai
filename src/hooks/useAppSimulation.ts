@@ -36,7 +36,6 @@ export const useAppSimulation = (
     const sessionStartStats = useRef<any>(null);
     const pendingAlgosRef = useRef<string[]>([]);
     const isTestingAllRef = useRef(false);
-    const currentSessionMoves = useRef<any[]>([]);
     // Pristine lawn captured at the start of a "Test All" run; each algorithm is
     // replayed against it so the map and stats reset between models.
     const testGridRef = useRef<GridType | null>(null);
@@ -112,7 +111,7 @@ export const useAppSimulation = (
             damagedGrass: damagedGrassCount - startDamaged,
             chargeCycles: domainStatsRef.current.impact.chargeCycles - (sessionStartStats.current?.chargeCycles || 0),
             penalty: 0,
-            moves: [...currentSessionMoves.current]
+            moves: []
         };
 
         record.penalty = (record.damagedGrass * 100) + (record.chargeCycles * 5000) + (record.turns * 10);
@@ -218,8 +217,6 @@ export const useAppSimulation = (
             damagedGrassSnapshot: envRef.current.grid.cells.flat().filter((c: any) => c.type === CELL_TYPES.MOWED && c.damage > 0).length
         };
 
-        currentSessionMoves.current = [];
-
         // Start each session with a clean algorithm state so the contour/sweep
         // and spiral phases restart instead of resuming a previous run.
         simState.current.orientation = configRef.current.orientation as 'horizontal' | 'vertical';
@@ -323,20 +320,11 @@ export const useAppSimulation = (
                 return;
             }
 
-            const inputs = algos.prepareNNInputs(legacyState, domainGrid.cells, CELL_TYPES);
-            const targets = [0, 0, 0, 0];
-            const dir = result.env.mower.nav.dir;
-            if (dir.dy === -1) targets[0] = 1;
-            if (dir.dy === 1) targets[1] = 1;
-            if (dir.dx === -1) targets[2] = 1;
-            if (dir.dx === 1) targets[3] = 1;
-            currentSessionMoves.current.push({ inputs, targets });
-
         }, Math.max(10, 140 - configRef.current.speed));
     }, [stopSimulation, getNextStep, setEnv, setDomainStats, setStatusMessage]);
 
-    const prepareSimulationState = useCallback((sourceGrid: GridType) => {
-        const dockPos = envRef.current.dockPos.toObject();
+    const prepareSimulationState = useCallback((sourceGrid: GridType, dockPosOverride?: { x: number; y: number }) => {
+        const dockPos = dockPosOverride || envRef.current.dockPos.toObject();
         const cleanGrid: GridType = resetLawn(sourceGrid);
 
         resetSimulation(cleanGrid, dockPos, configRef.current.maxBattery);

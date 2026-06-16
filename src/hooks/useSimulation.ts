@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Mower } from '../domain/Mower';
 import { SimulationGrid } from '../domain/SimulationGrid';
 import { SimulationEnvironment } from '../domain/SimulationEnvironment';
@@ -23,7 +23,26 @@ export const useSimulation = (initialGrid: GridType, dock: PositionType, maxBat:
         new ImpactMetrics(0, 0)
     ));
 
-    const [history, setHistory] = useState(() => new SimulationHistory());
+    const [history, setHistory] = useState(() => {
+        try {
+            const saved = localStorage.getItem('mowerai_history');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return new SimulationHistory(parsed);
+            }
+        } catch (e) {
+            console.error("Failed to load history from localStorage", e);
+        }
+        return new SimulationHistory();
+    });
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('mowerai_history', JSON.stringify(history.records));
+        } catch (e) {
+            console.error("Failed to save history to localStorage", e);
+        }
+    }, [history]);
 
     const reset = useCallback((grid: GridType, dockPos: PositionType, batteryVal: number) => {
         setEnv(new SimulationEnvironment(

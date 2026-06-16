@@ -10,83 +10,88 @@ import { genericPathSearch } from "./pathfinding";
 export const decomposeGrid = (
   curGrid: Grid,
   cellTypes: typeof CELL_TYPES,
+  orientation: 'horizontal' | 'vertical' = 'vertical'
 ): number[][] => {
   const rows = curGrid.length;
   const cols = curGrid[0].length;
 
   interface Segment {
-    x: number;
-    yStart: number;
-    yEnd: number;
+    index: number;
+    start: number;
+    end: number;
     cellId: number | null;
   }
 
-  const segmentsByCol: Segment[][] = [];
+  const isVert = orientation === 'vertical';
+  const segmentsByLine: Segment[][] = [];
+  const linesCount = isVert ? cols : rows;
+  const lineLength = isVert ? rows : cols;
 
-  // 1. Extract vertical segments of traversable (non-obstacle) cells
-  for (let x = 0; x < cols; x++) {
-    const colSegs: Segment[] = [];
+  // 1. Extract contiguous segments of traversable (non-obstacle) cells
+  for (let i = 0; i < linesCount; i++) {
+    const lineSegs: Segment[] = [];
     let inSegment = false;
-    let yStart = 0;
+    let start = 0;
 
-    for (let y = 0; y < rows; y++) {
-      const isTraversable = curGrid[y][x].type !== cellTypes.OBSTACLE;
+    for (let j = 0; j < lineLength; j++) {
+      const cell = isVert ? curGrid[j][i] : curGrid[i][j];
+      const isTraversable = cell.type !== cellTypes.OBSTACLE;
       if (isTraversable) {
         if (!inSegment) {
-          yStart = y;
+          start = j;
           inSegment = true;
         }
       } else {
         if (inSegment) {
-          colSegs.push({ x, yStart, yEnd: y - 1, cellId: null });
+          lineSegs.push({ index: i, start, end: j - 1, cellId: null });
           inSegment = false;
         }
       }
     }
     if (inSegment) {
-      colSegs.push({ x, yStart, yEnd: rows - 1, cellId: null });
+      lineSegs.push({ index: i, start, end: lineLength - 1, cellId: null });
     }
-    segmentsByCol.push(colSegs);
+    segmentsByLine.push(lineSegs);
   }
 
   let nextCellId = 1;
 
-  // Initialize first column segments
-  if (cols > 0) {
-    for (const seg of segmentsByCol[0]) {
+  // Initialize first line segments
+  if (linesCount > 0) {
+    for (const seg of segmentsByLine[0]) {
       seg.cellId = nextCellId++;
     }
   }
 
-  // 2. Propagate cell IDs column-by-column, detecting split and merge events
-  for (let x = 0; x < cols - 1; x++) {
-    const colA = segmentsByCol[x];
-    const colB = segmentsByCol[x + 1];
+  // 2. Propagate cell IDs line-by-line, detecting split and merge events
+  for (let i = 0; i < linesCount - 1; i++) {
+    const lineA = segmentsByLine[i];
+    const lineB = segmentsByLine[i + 1];
 
-    for (const segB of colB) {
-      const overlapsA = colA.filter(segA =>
-        Math.max(segA.yStart, segB.yStart) <= Math.min(segA.yEnd, segB.yEnd)
+    for (const segB of lineB) {
+      const overlapsA = lineA.filter(segA =>
+        Math.max(segA.start, segB.start) <= Math.min(segA.end, segB.end)
       );
 
       if (overlapsA.length === 0) {
-        // Start event: no overlapping segment in previous column
+        // Start event
         segB.cellId = nextCellId++;
       } else if (overlapsA.length === 1) {
         const segA = overlapsA[0];
-        // Check if segA splits into multiple segments in colB
-        const overlapsB = colB.filter(sB =>
-          Math.max(segA.yStart, sB.yStart) <= Math.min(segA.yEnd, sB.yEnd)
+        // Check if segA splits into multiple segments in lineB
+        const overlapsB = lineB.filter(sB =>
+          Math.max(segA.start, sB.start) <= Math.min(segA.end, sB.end)
         );
 
         if (overlapsB.length === 1) {
-          // Simple propagation: 1-to-1 match
+          // Simple propagation
           segB.cellId = segA.cellId;
         } else {
-          // Split event: 1-to-many match
+          // Split event
           segB.cellId = nextCellId++;
         }
       } else {
-        // Merge event: many-to-1 match
+        // Merge event
         segB.cellId = nextCellId++;
       }
     }
@@ -94,10 +99,14 @@ export const decomposeGrid = (
 
   // 3. Fill the 2D cell ID map
   const cellIdGrid = Array.from({ length: rows }, () => Array(cols).fill(0));
-  for (let x = 0; x < cols; x++) {
-    for (const seg of segmentsByCol[x]) {
-      for (let y = seg.yStart; y <= seg.yEnd; y++) {
-        cellIdGrid[y][x] = seg.cellId || 0;
+  for (let i = 0; i < linesCount; i++) {
+    for (const seg of segmentsByLine[i]) {
+      for (let j = seg.start; j <= seg.end; j++) {
+        if (isVert) {
+          cellIdGrid[j][i] = seg.cellId || 0;
+        } else {
+          cellIdGrid[i][j] = seg.cellId || 0;
+        }
       }
     }
   }
@@ -122,7 +131,7 @@ export const getCellularDecompositionMove = (
 
   // 1. Initialize Cell ID Grid if not present
   if (!state.cellIdGrid) {
-    state.cellIdGrid = decomposeGrid(curGrid, cellTypes);
+    state.cellIdGrid = decomposeGrid(curGrid, cellTypes, state.orientation);
     state.activeCellId = state.cellIdGrid[pos.y][pos.x];
   }
 
@@ -159,10 +168,10 @@ export const getCellularDecompositionMove = (
     }
 
     // B. Check perpendicular turns
-    const turnDirs = [
-      { dx: -currentDir.dy, dy: currentDir.dx },
-      { dx: currentDir.dy, dy: -currentDir.dx }
-    ];
+    const sideA = { dx: -currentDir.dy, dy: currentDir.dx };
+    const sideB = { dx: currentDir.dy, dy: -currentDir.dx };
+    const isAligned = (d: Direction) => state.orientation === 'horizontal' ? d.dx !== 0 : d.dy !== 0;
+    const turnDirs = isAligned(sideA) ? [sideA, sideB] : [sideB, sideA];
 
     for (const d of turnDirs) {
       const turnPos = { x: pos.x + d.dx, y: pos.y + d.dy };

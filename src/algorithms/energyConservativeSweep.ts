@@ -57,10 +57,10 @@ export const getEnergyConservativeSweepMove = (
 
   // 2. Evaluate turn options (perpendicular to current direction)
   // If currentDir is {dx, dy}, perpendiculars are {-dy, dx} and {dy, -dx}
-  const turnDirs = [
-    { dx: -currentDir.dy, dy: currentDir.dx },
-    { dx: currentDir.dy, dy: -currentDir.dx }
-  ];
+  const sideA = { dx: -currentDir.dy, dy: currentDir.dx };
+  const sideB = { dx: currentDir.dy, dy: -currentDir.dx };
+  const isAligned = (d: Direction) => state.orientation === 'horizontal' ? d.dx !== 0 : d.dy !== 0;
+  const turnDirs = isAligned(sideA) ? [sideA, sideB] : [sideB, sideA];
 
   let bestTurnPos: Point | null = null;
   let maxNeighbors = -1;

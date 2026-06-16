@@ -68,6 +68,10 @@ export const getPotentialFieldMove = (
     // the mower spin in place at the start of a run.
     if (d.dx === prevDir.dx && d.dy === prevDir.dy) potential -= 1.0;
 
+    // Orientation bias: gently prefer moves aligned with the preferred orientation.
+    const isAligned = state.orientation === 'horizontal' ? (d.dx !== 0) : (d.dy !== 0);
+    if (isAligned) potential -= 0.5;
+
     if (potential < minPotential) {
       minPotential = potential;
       bestMove = { x: nx, y: ny };

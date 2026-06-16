@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { NeuralNetwork } from '../NeuralNetwork';
 import type { Grid, Point, FitnessConfig } from '../types';
 import { DEFAULT_FITNESS_CONFIG } from '../types';
@@ -41,7 +41,7 @@ export const useNeuralNetwork = (
     }, [nn]);
 
     useEffect(() => {
-        setNn(new NeuralNetwork([46, 64, 32, 4]));
+        setNn(new NeuralNetwork([47, 64, 32, 4]));
     }, []);
 
     // Start/stop preview loop on the main map
@@ -148,7 +148,7 @@ export const useNeuralNetwork = (
         };
     }, [showVisualTraining, trainingStatus.isTraining, dockPos, orientation, speed]);
 
-    const trainOnData = (sessionData: any[]) => {
+    const trainOnData = useCallback((sessionData: any[]) => {
         if (!nn || !sessionData || sessionData.length === 0) return;
 
         // Copying data so we can shuffle
@@ -169,7 +169,7 @@ export const useNeuralNetwork = (
         
         setNn(nn.copy());
         setStatusMessage(`AI learned from your drive (${sessionData.length} steps)`);
-    };
+    }, [nn, setNn, setStatusMessage]);
 
 
     const generateTrainingMaps = (width: number, height: number, dock: Point): Grid[] => {
@@ -213,7 +213,7 @@ export const useNeuralNetwork = (
         return [empty, obstacles, maze, longCorridor, cluttered];
     };
 
-    const trainNN = async (userGrid?: Grid, drainMove?: number, drainTurn?: number) => {
+    const trainNN = useCallback(async (userGrid?: Grid, drainMove?: number, drainTurn?: number) => {
         // Store user grid for preview simulation
         if (userGrid) userGridRef.current = userGrid;
 
@@ -241,9 +241,13 @@ export const useNeuralNetwork = (
         }
 
         let population = Array(popSize).fill(null).map((_, i) => {
-            const n = new NeuralNetwork([46, 64, 32, 4]);
-            if (bestNnRef.current && bestNnRef.current.layers[0] === 46) {
+            const n = new NeuralNetwork([47, 64, 32, 4]);
+            if (bestNnRef.current && bestNnRef.current.layers[0] === 47) {
                 n.setWeights(bestNnRef.current.getWeights());
+                // Keep the original best NN intact at index 0 without initial mutation
+                if (i === 0) {
+                    return { id: i, nn: n };
+                }
             }
             // More aggressive initial mutation for diversity
             n.mutate(0.3, 0.5);
@@ -278,7 +282,7 @@ export const useNeuralNetwork = (
                             const workerResults = e.data.results.map((res: any) => {
                                 const parent = population.find(p => p.id === res.id);
                                 return {
-                                    nn: parent ? parent.nn : new NeuralNetwork([46, 64, 32, 4]),
+                                    nn: parent ? parent.nn : new NeuralNetwork([47, 64, 32, 4]),
                                     fitness: res.fitness
                                 };
                             });
@@ -356,7 +360,7 @@ export const useNeuralNetwork = (
 
                     if (rand < 0.1) {
                         // 10% Random Immigrants for diversity
-                        childNn = new NeuralNetwork([46, 64, 32, 4], 0.001);
+                        childNn = new NeuralNetwork([47, 64, 32, 4], 0.001);
                     } else if (rand < 0.6) {
                         // 50% Crossover
                         const p1 = tournamentSelection(4);
@@ -388,12 +392,17 @@ export const useNeuralNetwork = (
             setTrainingStatus(prev => ({ ...prev, isTraining: false }));
             setStatusMessage("NN Optimization stopped.");
         }
-    };
+    }, [dockPos, orientation, fitnessConfig, trainingStatus.epoch, trainingStatus.bestFitness, setStatusMessage, setTrainingStatus, setNn]);
 
-    const downloadModel = () => {
+    const downloadModel = useCallback(() => {
         if (!nn) return;
         try {
-            const data = nn.save();
+            // Save the model with metadata (epoch and bestFitness)
+            const modelObj = JSON.parse(nn.save());
+            modelObj.epoch = trainingStatus.epoch;
+            modelObj.bestFitness = trainingStatus.bestFitness;
+            const data = JSON.stringify(modelObj, null, 2);
+            
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             
@@ -416,10 +425,10 @@ export const useNeuralNetwork = (
             console.error(err);
             setStatusMessage("ERROR: Failed to generate file.");
         }
-    };
+    }, [nn, trainingStatus.epoch, trainingStatus.bestFitness, setStatusMessage]);
 
 
-    const uploadModel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadModel = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
@@ -428,26 +437,36 @@ export const useNeuralNetwork = (
                 const contents = event.target?.result as string;
                 const data = JSON.parse(contents);
                 
-                // Does the model fit current code (46 inputs)?
-                if (!data.layers || data.layers[0] !== 46) {
-                    setStatusMessage(`ERROR: Model incompatible! Expected 46 sensors (8-way mowed rays added), found ${data.layers ? data.layers[0] : 'unknown'}.`);
+                // Does the model fit current code (47 inputs)?
+                if (!data.layers || data.layers[0] !== 47) {
+                    setStatusMessage(`ERROR: Model incompatible! Expected 47 sensors (8-way mowed rays added), found ${data.layers ? data.layers[0] : 'unknown'}.`);
                     return;
                 }
 
                 const loadedNn = NeuralNetwork.load(contents);
                 setNn(loadedNn);
+
+                // Update training status if metadata is present in the imported file
+                if (typeof data.epoch === 'number' || typeof data.bestFitness === 'number') {
+                    setTrainingStatus(prev => ({
+                        ...prev,
+                        epoch: data.epoch ?? 0,
+                        bestFitness: data.bestFitness ?? -Infinity
+                    }));
+                }
+
                 setStatusMessage("Model successfully loaded!");
             } catch (err) {
                 setStatusMessage("ERROR: Failed to read file.");
             }
         };
         reader.readAsText(file);
-    };
+    }, [setNn, setTrainingStatus, setStatusMessage]);
 
 
-    const stopTraining = () => {
+    const stopTraining = useCallback(() => {
         isTrainingRef.current = false;
-    };
+    }, []);
 
     return {
         nn,

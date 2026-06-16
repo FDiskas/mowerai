@@ -102,9 +102,10 @@ export class FitnessEvaluator {
                 totalDiscoveryReward += cfg.discoveryReward;
             }
 
-            // Critical limit: if a NON-DOCK cell is visited too many times - disqualification
+            // Critical limit: if a NON-DOCK cell is visited too many times - stop evaluation early
             if (visitCount >= cfg.visitLimit && !(move.x === dockPos.x && move.y === dockPos.y)) {
-                return -999999999;
+                penaltyPoints += 10000;
+                break;
             }
 
             let grassMowedThisStep = false;

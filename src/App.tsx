@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useGeminiAI } from './hooks/useGeminiAI';
 import { useNeuralNetwork } from './hooks/useNeuralNetwork';
 import {
@@ -6,6 +6,7 @@ import {
     ALGORITHMS_LIST,
 } from './constants';
 import type { Grid as GridType, Stats } from './types';
+import { resetLawn } from './utils/simUtils';
 
 // UI Components
 import { Sidebar } from './components/Sidebar/Sidebar';
@@ -23,6 +24,7 @@ import { useSimulation } from './hooks/useSimulation';
 import { Position } from './domain/Position';
 import { SimulationGrid as DomainGrid } from './domain/SimulationGrid';
 import { SimulationStats, EfficiencyMetrics } from './domain/SimulationStats';
+import { SimulationHistory } from './domain/SimulationHistory';
 
 // Hooks
 import { useAppSettings } from './hooks/useAppSettings';
@@ -129,11 +131,45 @@ export const App: React.FC = () => {
         nn, showToast, setStatusMessage
     );
 
+    // Persist Grid Layout in localStorage
+    useEffect(() => {
+        if (env && env.grid && env.grid.cells && env.grid.cells.length > 0) {
+            try {
+                const layout = {
+                    cols: gridSize.cols,
+                    rows: gridSize.rows,
+                    dockPos: env.dockPos.toObject(),
+                    cells: env.grid.cells.map(row => row.map(cell => ({
+                        type: cell.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : cell.type,
+                        damage: 0,
+                        direction: null
+                    })))
+                };
+                localStorage.setItem('mowerai_saved_map', JSON.stringify(layout));
+            } catch (e) {
+                console.error("Failed to save map to localStorage", e);
+            }
+        }
+    }, [env.grid.cells, env.dockPos, gridSize]);
+
     const initGrid = useCallback(() => {
+        const saved = localStorage.getItem('mowerai_saved_map');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                setGridSize({ cols: parsed.cols, rows: parsed.rows });
+                const cleanGrid = resetLawn(parsed.cells);
+                prepareSimulationState(cleanGrid, parsed.dockPos);
+                setStatusMessage("Ready for work");
+                return;
+            } catch (e) {
+                console.error("Failed to load saved map", e);
+            }
+        }
         const newGrid = buildGrid(gridSize.cols, gridSize.rows, dockPos);
         prepareSimulationState(newGrid);
         setStatusMessage("Ready for work");
-    }, [gridSize, dockPos, prepareSimulationState, setStatusMessage]);
+    }, [gridSize.cols, gridSize.rows, dockPos, prepareSimulationState, setStatusMessage]);
 
     const handleResize = useCallback((cols: number, rows: number) => {
         stopSimulation(true);
@@ -148,55 +184,138 @@ export const App: React.FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const handleGenerateAiPattern = () => {
+    // Keep refs of frequently changing states so callbacks can remain reference-stable
+    const envRef = useRef(env);
+    const gridRef = useRef(grid);
+    const brushTypeRef = useRef(brushType);
+    const isRunningRef = useRef(isRunning);
+    const maxBatteryRef = useRef(maxBattery);
+    const isDrawingRef = useRef(isDrawing);
+    const showVisualTrainingRef = useRef(showVisualTraining);
+    const drainMoveRef = useRef(drainMove);
+    const drainTurnRef = useRef(drainTurn);
+
+    useEffect(() => {
+        envRef.current = env;
+        gridRef.current = grid;
+        brushTypeRef.current = brushType;
+        isRunningRef.current = isRunning;
+        maxBatteryRef.current = maxBattery;
+        isDrawingRef.current = isDrawing;
+        showVisualTrainingRef.current = showVisualTraining;
+        drainMoveRef.current = drainMove;
+        drainTurnRef.current = drainTurn;
+    }, [env, grid, brushType, isRunning, maxBattery, isDrawing, showVisualTraining, drainMove, drainTurn]);
+
+    const handleGenerateAiPattern = useCallback(() => {
         generateAiPattern(dockPos, (newGrid) => {
             const cleanGrid = prepareSimulationState(newGrid);
             setEnv(prev => prev.withGrid(new DomainGrid(cleanGrid)));
         });
-    };
+    }, [dockPos, generateAiPattern, prepareSimulationState, setEnv]);
 
-    const handleAnalyzeTerrain = () => {
-        analyzeTerrain(grid);
+    const handleAnalyzeTerrain = useCallback(() => {
+        analyzeTerrain(gridRef.current);
         setIsAnalysisOpen(true);
-    };
+    }, [analyzeTerrain, setIsAnalysisOpen]);
 
-    const resetMowedOnly = () => {
+    const resetMowedOnly = useCallback(() => {
         stopSimulation(true);
-        prepareSimulationState(grid);
+        prepareSimulationState(gridRef.current);
         showToast("Map cleared");
-    };
+    }, [stopSimulation, prepareSimulationState, showToast]);
 
-    const resetFull = () => {
+    const resetFull = useCallback(() => {
         stopSimulation(true);
+        // Clear localStorage on full reset so it returns to initial seeded obstacles
+        localStorage.removeItem('mowerai_saved_map');
         initGrid();
         showToast("System reboot successful", 'indigo');
-    };
+    }, [stopSimulation, initGrid, showToast]);
 
-    const updateCell = (r: number, c: number) => {
-        if (isRunning) return;
+    const handleSetAlgo = useCallback((newAlgo: string) => {
+        setAlgo(newAlgo);
+        if (!isRunningRef.current) {
+            stopSimulation(true);
+            prepareSimulationState(gridRef.current);
+            showToast(`Switched to ${ALGORITHMS_NAMES[newAlgo as keyof typeof ALGORITHMS_NAMES] || newAlgo}. Lawn cleared.`);
+        }
+    }, [setAlgo, stopSimulation, prepareSimulationState, showToast]);
 
+    const handleReplayWithNN = useCallback(() => {
+        setAlgo('neural_network');
+        stopSimulation(true);
+        prepareSimulationState(gridRef.current);
+        setTimeout(() => {
+            runSimulation();
+        }, 50);
+    }, [setAlgo, stopSimulation, prepareSimulationState, runSimulation]);
+
+    const handleCellClick = useCallback((r: number, c: number) => {
+        if (isRunningRef.current) return;
+
+        const currentEnv = envRef.current;
+        const currentBrushType = brushTypeRef.current;
         const pos = new Position(c, r);
-        const currentCell = env.grid.getCell(pos.toObject());
+        const currentCell = currentEnv.grid.getCell(pos.toObject());
 
-        if (brushType === CELL_TYPES.DOCK) {
+        if (currentBrushType === CELL_TYPES.DOCK) {
             if (currentCell.type === CELL_TYPES.OBSTACLE) return;
 
-            const newGridCells = env.grid.cells.map((row, rIdx) => row.map((cell, cIdx) => {
+            const newGridCells = currentEnv.grid.cells.map((row: any, rIdx: number) => row.map((cell: any, cIdx: number) => {
                 if (cell.type === CELL_TYPES.DOCK) return { ...cell, type: CELL_TYPES.GRASS };
                 if (rIdx === r && cIdx === c) return { ...cell, type: CELL_TYPES.DOCK, damage: 0 };
                 return cell;
             }));
 
-            resetSimulation(newGridCells, { x: c, y: r }, maxBattery);
+            resetSimulation(newGridCells, { x: c, y: r }, maxBatteryRef.current);
             return;
         }
 
-        const newType = currentCell.type === brushType ? CELL_TYPES.GRASS : brushType as any;
-        const nextGrid = env.grid.updateCell(pos.toObject(), { type: newType, damage: 0, direction: null });
+        const newType = currentCell.type === currentBrushType ? CELL_TYPES.GRASS : currentBrushType as any;
+        const nextGrid = currentEnv.grid.updateCell(pos.toObject(), { type: newType, damage: 0, direction: null });
 
         setEnv(prev => prev.withGrid(nextGrid));
         setDomainStats(s => new SimulationStats(s.movement, new EfficiencyMetrics(s.efficiency.mowedCount, nextGrid.countGrass()), s.impact));
-    };
+    }, [resetSimulation, setEnv, setDomainStats]);
+
+    const handleCellMouseEnter = useCallback((r: number, c: number) => {
+        if (!showVisualTrainingRef.current && isDrawingRef.current) {
+            handleCellClick(r, c);
+        }
+    }, [handleCellClick]);
+
+    const handleToggleVisualTraining = useCallback(() => {
+        setShowVisualTraining(v => !v);
+    }, [setShowVisualTraining]);
+
+    const handleTrainNN = useCallback(() => {
+        trainNN(gridRef.current, drainMoveRef.current, drainTurnRef.current);
+    }, [trainNN]);
+
+    const handleStopSimulation = useCallback(() => {
+        stopSimulation(true);
+    }, [stopSimulation]);
+
+    const handleTestAll = useCallback(() => {
+        testAll(ALGORITHMS_LIST as string[], gridRef.current);
+    }, [testAll]);
+
+    const handleOpenSettings = useCallback(() => {
+        setIsSettingsOpen(true);
+    }, [setIsSettingsOpen]);
+
+    const handleCloseSettings = useCallback(() => {
+        setIsSettingsOpen(false);
+    }, [setIsSettingsOpen]);
+
+    const handleClearHistory = useCallback(() => {
+        setHistory(new SimulationHistory([]));
+    }, [setHistory]);
+
+    const handleMouseDown = useCallback(() => {
+        setIsDrawing(true);
+    }, []);
 
     // Note: duration is calculated based on accumulated time when session is not running.
     const duration = Math.round((stats.accumulatedDuration || 0) / 1000);
@@ -232,7 +351,7 @@ export const App: React.FC = () => {
                         onGenerateAi={handleGenerateAiPattern}
                         onAnalyzeTerrain={handleAnalyzeTerrain}
                         selectedAlgo={algo}
-                        setAlgo={setAlgo}
+                        setAlgo={handleSetAlgo}
                         speed={speed}
                         setSpeed={setSpeed}
                         brushType={brushType}
@@ -242,18 +361,20 @@ export const App: React.FC = () => {
                         fitnessConfig={fitnessConfig}
                         setFitnessConfig={setFitnessConfig}
                         showVisualTraining={showVisualTraining}
-                        onToggleVisualTraining={() => setShowVisualTraining(!showVisualTraining)}
-                        onTrainNN={() => trainNN(grid, drainMove, drainTurn)}
+                        onToggleVisualTraining={handleToggleVisualTraining}
+                        onTrainNN={handleTrainNN}
                         onStopTrainNN={stopTraining}
                         onDownloadModel={downloadModel}
                         onUploadModel={uploadModel}
                         isRunning={isRunning}
                         isTesting={isTesting}
                         onRunSimulation={runSimulation}
-                        onStopSimulation={() => stopSimulation(true)}
-                        onTestAll={() => testAll(ALGORITHMS_LIST as string[], grid)}
+                        onStopSimulation={handleStopSimulation}
+                        onTestAll={handleTestAll}
                         onResetMap={resetMowedOnly}
                         onFullReset={resetFull}
+                        hasNn={!!nn}
+                        onReplayWithNN={handleReplayWithNN}
                     />
 
                     <div className="flex flex-col items-center min-w-0 shrink-0 mt-2 lg:mt-0 mr-0 lg:mr-12">
@@ -263,9 +384,9 @@ export const App: React.FC = () => {
                                 mowerPos={showVisualTraining && previewMowerPos ? previewMowerPos : mowerPos}
                                 mowerDir={showVisualTraining && previewMowerDir ? previewMowerDir : env.mower.nav.dir}
                                 isAiLoading={isAiLoading}
-                                onMouseDown={() => setIsDrawing(true)}
-                                onCellClick={showVisualTraining ? undefined : updateCell}
-                                onCellMouseEnter={(r, c) => !showVisualTraining && isDrawing && updateCell(r, c)}
+                                onMouseDown={handleMouseDown}
+                                onCellClick={showVisualTraining ? undefined : handleCellClick}
+                                onCellMouseEnter={handleCellMouseEnter}
                                 onResize={isRunning || showVisualTraining ? undefined : handleResize}
                             />
 
@@ -273,13 +394,13 @@ export const App: React.FC = () => {
                                 brushType={brushType}
                                 setBrushType={setBrushType}
                                 cellTypes={CELL_TYPES}
-                                onOpenSettings={() => setIsSettingsOpen(true)}
+                                onOpenSettings={handleOpenSettings}
                             />
                         </div>
 
                         <SettingsModal
                             isOpen={isSettingsOpen}
-                            onClose={() => setIsSettingsOpen(false)}
+                            onClose={handleCloseSettings}
                             maxBattery={maxBattery}
                             setMaxBattery={setMaxBattery}
                             drainMove={drainMove}
@@ -308,6 +429,7 @@ export const App: React.FC = () => {
                     duration={duration}
                     winnerId={winnerId}
                     currentDamage={currentDamage}
+                    onClearHistory={handleClearHistory}
                 />
             </div>
 
