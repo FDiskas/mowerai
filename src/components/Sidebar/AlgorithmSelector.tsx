@@ -17,6 +17,8 @@ const AlgoIcon: React.FC<{ algo: string }> = ({ algo }) => {
             return <svg {...common}><path d="M4 6h16M4 12h16M4 18h16" /></svg>;
         case 'energy_conservative_sweep':
             return <svg {...common}><path d="M4 8h16M20 8v8M20 16H4" /></svg>;
+        case 'cellular_decomposition':
+            return <svg {...common}><path d="M4 6h16M4 12h16M4 18h16M10 6v12M14 6v12" /></svg>;
         case 'spiral':
             return <svg {...common}><path d="M12 12a1.5 1.5 0 1 0 1.5 1.5M13.5 13.5A3.5 3.5 0 1 0 8.5 12M8.5 12A6 6 0 1 0 18 12" /></svg>;
         case 'dfs_coverage':
@@ -41,7 +43,7 @@ export const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({
 
     const groups: Record<string, string[]> = {
         'AI & Autonomous': ['smart_ai', 'neural_network', 'potential_field'],
-        'Coverage & Sweep': ['boustrophedon', 'energy_conservative_sweep', 'spiral', 'dfs_coverage', 'rrt'],
+        'Coverage & Sweep': ['boustrophedon', 'energy_conservative_sweep', 'cellular_decomposition', 'spiral', 'dfs_coverage', 'rrt'],
         'Pathfinding': ['a_star'],
     };
 

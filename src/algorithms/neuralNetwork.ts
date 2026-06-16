@@ -1,7 +1,7 @@
 import { CELL_TYPES, DEFAULT_MAX_BATTERY } from '../constants';
 import { NeuralNetwork } from '../NeuralNetwork';
 import type { Grid, PositionType as Point, Direction, State } from '../types';
-import { getClosestGrass } from './pathfinding';
+import { getClosestGrass, findPathToTarget } from './pathfinding';
 import { getSmartAIMove } from './smartAI';
 
 const castRay = (startX: number, startY: number, dx: number, dy: number, grid: Grid, CELL_TYPES: any) => {
@@ -144,6 +144,22 @@ export const getNeuralNetworkMove = (
 
     const isGrass = (x: number, y: number) =>
         isValid(x, y) && curGrid[y][x].type === cellTypes.GRASS;
+
+    // Fallback to A* pathfinding when there is no adjacent grass to prevent wandering
+    const hasAdjacentGrass =
+        isGrass(pos.x, pos.y - 1) ||
+        isGrass(pos.x, pos.y + 1) ||
+        isGrass(pos.x - 1, pos.y) ||
+        isGrass(pos.x + 1, pos.y);
+
+    if (!hasAdjacentGrass) {
+        return findPathToTarget(
+            pos,
+            curGrid,
+            prevDir,
+            (p) => curGrid[p.y][p.x].type === cellTypes.GRASS
+        );
+    }
 
     // Only block the immediate previous cell (anti-ping-pong)
     const prevX = pos.x - prevDir.dx;

@@ -67,6 +67,8 @@ export const useAppSimulation = (
         spiralStep: undefined as number | undefined,
         spiralCenter: undefined as { x: number; y: number } | undefined,
         stcPath: undefined as any[] | undefined,
+        activeCellId: undefined as number | undefined,
+        cellIdGrid: undefined as number[][] | undefined,
     });
 
     const configRef = useRef(config);
@@ -172,7 +174,8 @@ export const useAppSimulation = (
             a_star: (s: any, g: any, d: any) => algos.aStarSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, d),
             smart_ai: (s: any, g: any, d: any) => algos.getSmartAIMove(s, g, d, CELL_TYPES),
             neural_network: (s: any, g: any, d: any) => algos.getNeuralNetworkMove(s, g, d, CELL_TYPES, nn),
-            energy_conservative_sweep: (s: any, g: any, d: any) => algos.getEnergyConservativeSweepMove(s, g, d, CELL_TYPES)
+            energy_conservative_sweep: (s: any, g: any, d: any) => algos.getEnergyConservativeSweepMove(s, g, d, CELL_TYPES),
+            cellular_decomposition: (s: any, g: any, d: any) => algos.getCellularDecompositionMove(s, g, d, CELL_TYPES)
         };
 
         if (fns[algo]) {
@@ -224,6 +227,8 @@ export const useAppSimulation = (
         simState.current.spiralStep = undefined;
         simState.current.spiralCenter = undefined;
         simState.current.stcPath = undefined;
+        simState.current.activeCellId = undefined;
+        simState.current.cellIdGrid = undefined;
         simState.current.hasNotifiedFinished = false;
         simState.current.isReturningForCharge = false;
         simState.current.returnPath = [];
@@ -357,6 +362,8 @@ export const useAppSimulation = (
             spiralStep: undefined,
             spiralCenter: undefined,
             stcPath: undefined,
+            activeCellId: undefined,
+            cellIdGrid: undefined,
         };
         return cleanGrid;
     }, [resetSimulation]);

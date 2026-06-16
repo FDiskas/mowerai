@@ -74,6 +74,8 @@ export interface State {
     spiralStep?: number;
     spiralCenter?: PositionType;
     stcPath?: PositionType[];
+    activeCellId?: number;
+    cellIdGrid?: number[][];
     dockPos: PositionType;
     isCharging: boolean;
     isReturningForCharge: boolean;

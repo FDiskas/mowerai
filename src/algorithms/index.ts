@@ -20,4 +20,6 @@ export { getSmartAIMove } from './smartAI';
 export { getRRTMove } from './rrt';
 export { getCellValue, prepareNNInputs, getNeuralNetworkMove } from './neuralNetwork';
 export { getEnergyConservativeSweepMove } from './energyConservativeSweep';
+export { getCellularDecompositionMove } from './cellularDecomposition';
+
 

@@ -21,6 +21,7 @@ export const ALGORITHMS_LIST = [
     'rrt',
     'a_star',
     'energy_conservative_sweep',
+    'cellular_decomposition',
 ];
 
 export const ALGORITHMS_NAMES = {
@@ -33,5 +34,6 @@ export const ALGORITHMS_NAMES = {
     rrt: 'RRT Exploration',
     a_star: 'A* (Optimal Path)',
     energy_conservative_sweep: 'Energy-Conservative Sweep',
+    cellular_decomposition: 'Cell Decomposition Sweep',
 };
 
