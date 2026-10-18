@@ -135,8 +135,10 @@ export const getCellularDecompositionMove = (
   const heading = prevDir.dx !== 0 || prevDir.dy !== 0 ? prevDir : { dx: 0, dy: 1 };
   const turnCost = turnCostOf(state);
 
-  if (!state.cellIdGrid) {
+  // Newly found obstacles split cells, so the decomposition is rebuilt from the current map.
+  if (!state.cellIdGrid || state.cellIdGridVersion !== state.mapVersion) {
     state.cellIdGrid = decomposeGrid(curGrid, cellTypes, state.orientation);
+    state.cellIdGridVersion = state.mapVersion;
     state.activeCellId = state.cellIdGrid[pos.y][pos.x];
   }
   const cellIdGrid = state.cellIdGrid;

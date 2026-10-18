@@ -1,7 +1,7 @@
 ---
 name: work-analytics-review
 description: "Work Analytics" panel (StatsPanel) — where work time, coverage and run ranking (coverage first) come from, and the defects still open
-keywords: [StatsPanel, Work Analytics, workTimeMs, duration, totalGrass, coverage, EfficiencyMetrics.fromGrid, compareRuns, getWinnerId, penalty, countDamaged]
+keywords: [StatsPanel, Work Analytics, workTimeMs, duration, totalGrass, coverage, EfficiencyMetrics.fromGrid, compareRuns, getWinnerId, cost, costPerTile, countDamaged]
 updated: 2026-10-18
 ---
 
@@ -9,9 +9,9 @@ updated: 2026-10-18
 
 How the panel gets its values (fixed 2026-10-18):
 
-- Work time: `useSimulation` owns `workTimeMs`; each tick in `useAppSimulation.runSimulation` adds the real time since the last tick; `reset` sets it to 0. `Stats` has no duration fields any more.
-- Coverage: `EfficiencyMetrics.fromGrid` counts MOWED + GRASS tiles from the grid. Map edits (`handleCellClick`) and `reset` use it, so coverage cannot pass 100%.
-- Ranking (user decision 2026-10-18: "coverage first"): `compareRuns` in `src/domain/SimulationHistory.ts` sorts the history list AND picks the winner (`getWinnerId`, needs coverage > 0). Order: highest `coverage`, lowest `penalty`, shortest `duration`, newest. `penalty` itself is unchanged.
+- Work time: `useSimulation` owns `workTimeMs`; each tick in `useAppSimulation.runSimulation` adds the real time since the last tick; a new job or `reset` sets it to 0.
+- Coverage while a job runs: `tally.mowed / tally.reachableGrass` from the `Episode` (reachable grass only). Map edits (`handleCellClick`) and `reset` use `EfficiencyMetrics.fromGrid`.
+- Ranking (user decision 2026-10-18: "coverage first"): `compareRuns` in `src/domain/SimulationHistory.ts` sorts the history list AND picks the winner (`getWinnerId`, needs coverage > 0). Order: highest `coverage`, lowest `cost`, shortest `duration`, newest. Since 2026-10-18 `cost` = benchmark `costPerTile` of the run (the old `penalty` points are gone); records without it load as `cost: null` and rank after scored runs.
 - `HistoryRecord.coverage` = this run's `mowedCount / totalGrass` in %, rounded to 0.1 — a run that only finishes a lawn gets a low value. Records saved before this load via `SimulationHistory.fromSaved` with coverage 0, so they rank last.
 - Damage card and history damage both use `SimulationGrid.countDamaged()`.
 

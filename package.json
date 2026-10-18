@@ -8,7 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "cli:build": "vite build -c vite.cli.config.ts",
+    "train": "npm run cli:build && node dist-cli/train.js",
+    "benchmark": "npm run cli:build && node dist-cli/benchmark.js"
   },
   "dependencies": {
     "react": "^19.2.5",

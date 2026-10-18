@@ -23,3 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Command-line tool bundles
+dist-cli
+
+# Local training checkpoints (npm run train)
+training

@@ -1,26 +1,25 @@
 ---
 name: nn-training-persistence
-description: DECISION 2026-10-18 — NN training progress (champion + full population + GA counters + fitnessConfig) is saved to IndexedDB after every generation and restored on page load; no package; export holds only the best network
-keywords: [indexeddb, persistence, page reload, trainingStore, snapshot, population, resume training, clear training, export, import, Float64Array]
-updated: 2026-10-18
+description: DECISION 2026-10-18 — browser NN training state (evolution-strategy params + Adam moments + best validated network) is saved to IndexedDB every validation and restored on load; else the shipped public/models/policy.json loads; export = best network as a model file
+keywords: [indexeddb, persistence, page reload, trainingStore, snapshot, resume training, clear training, export, import, Float32Array, policy.json]
+updated: 2026-10-19
 ---
 
 ### Rule / Fact
 
-- `src/utils/trainingStore.ts`: IndexedDB `mowerai` → store `training` → key `latest`. No package (user asked for zero or minimal packages). The record holds `Float64Array` weights by structured clone, not JSON (~2.6 MB for 60 × 5 284 weights).
-- Saved after every generation in `trainNN` (`useNeuralNetwork.ts`), fire and forget. Restored in a mount effect; the snapshot is ignored when `layers` or weight lengths do not match `NN_LAYERS`, and the population is dropped when its size is not `POPULATION_SIZE`.
-- `breedingRef` holds the last population, so a stop/start in the same session also continues the population (before: it reseeded from the champion).
-- Import saves the imported net as the champion with `breeding: null` (next run seeds from it). CLEAR TRAINING (Sidebar, with `window.confirm`) deletes the record and gives a fresh untrained net (next run does the warm start again). `fitnessConfig` stays in memory after clear.
-- EXPORT writes only `layers, weights, biases, learningRate, epoch, bestFitness` — no population, no Adam state.
+- `src/utils/trainingStore.ts`: IndexedDB `mowerai` → store `training` → key `latest`. No package. The snapshot holds `Float32Array`s by structured clone: ES `params`, `m`, `v`, `generation`, and the best network (`bestParams`, `bestGeneration`, `bestValidationCost`).
+- `useNeuralNetwork` saves after every validation (every 10 generations), fire and forget. On load: IndexedDB snapshot if its shape fits `NETWORK_LAYERS`; otherwise the shipped `/models/policy.json` (only parsed when the response is JSON — Vite answers a missing file with `index.html`); otherwise an untrained network (seed 1).
+- The best network (lowest mean validation cost) is the one the app drives with; the ES state can be worse.
+- Browser training stops by itself after `STOP_AFTER_GENERATIONS_WITHOUT_IMPROVEMENT` (50) generations with no better validated network, counted from the start of the current run (a restored ES generation does not count). The sidebar shows the counter.
+- Import replaces the model and starts a fresh ES state from it. CLEAR TRAINING deletes the record and gives an untrained network.
+- Snapshots of the old GA format (`championWeights`) are ignored by `fromSnapshot`.
 
 ### Why
 
-User wanted training to survive a reload and to continue where it stopped. `localStorage` is synchronous and has a 5 MB limit shared with maps and history.
+The user wanted training to survive a reload and continue where it stopped (2026-10-18, kept for the ES rewrite).
 
 ### How to apply
 
-- The save must run before the map refresh in the loop: `bestFitness` and `idealFitness` must come from the same maps ([[nn-progress-bar]]).
-- When `NN_LAYERS` or `POPULATION_SIZE` changes, old snapshots are dropped on load, by design.
-- New `FitnessConfig` fields get defaults on load (`{ ...DEFAULT_FITNESS_CONFIG, ...saved }`).
+- A change of `NETWORK_LAYERS` drops old snapshots on load, by design.
 
-Related: [[nn-training-review]], [[simulation-paths-and-nn]]
+Related: [[simulation-paths-and-nn]], [[real-nn-vs-algorithms-plan]]

@@ -4,7 +4,6 @@ import { useNeuralNetwork } from './hooks/useNeuralNetwork';
 import { CELL_TYPES, ALGORITHMS_LIST, ALGORITHMS_NAMES } from './constants';
 import type { Cell, Grid as GridType, PositionType, Stats } from './types';
 import { resetLawn } from './utils/simUtils';
-import { turnCostInSteps } from './algorithms';
 import { speedLabel } from './utils/speed';
 
 // UI Components
@@ -13,17 +12,18 @@ import { SimulationGrid } from './components/Grid/SimulationGrid';
 import { MapToolbar } from './components/Grid/MapToolbar';
 import { SettingsModal } from './components/Sidebar/SettingsModal';
 import { StatsPanel } from './components/Stats/StatsPanel';
+import { BenchmarkModal } from './components/Stats/BenchmarkModal';
 import { TopBar } from './components/Layout/TopBar';
 import { Footer } from './components/Layout/Footer';
 import { TelemetryPanel } from './components/Stats/TelemetryPanel';
 
 // Domain
-import { useSimulation } from './hooks/useSimulation';
 import { Position } from './domain/Position';
 import { SimulationStats, EfficiencyMetrics } from './domain/SimulationStats';
 import { SimulationHistory } from './domain/SimulationHistory';
 
 // Hooks
+import { useSimulation } from './hooks/useSimulation';
 import { useAppSettings } from './hooks/useAppSettings';
 import { useAppUI } from './hooks/useAppUI';
 import { useAppSimulation } from './hooks/useAppSimulation';
@@ -93,6 +93,14 @@ const randomizeObstacles = (cells: GridType, dock: PositionType): GridType =>
 
 const algorithmName = (id: string): string => ALGORITHMS_NAMES[id as keyof typeof ALGORITHMS_NAMES] ?? id;
 
+const TOAST_LOOKS = {
+    success: { toastClass: '', iconClass: 'bg-emerald-500/20 text-emerald-500', icon: '✓' },
+    error: { toastClass: 'error', iconClass: 'bg-rose-500/20 text-rose-500', icon: '!' },
+    indigo: { toastClass: 'indigo', iconClass: 'bg-indigo-500/20 text-indigo-500', icon: '⚡' },
+};
+
+const toastLookOf = (type: string) => TOAST_LOOKS[type as keyof typeof TOAST_LOOKS] ?? TOAST_LOOKS.success;
+
 const clearObstacles = (cells: GridType): GridType =>
     cells.map(row => row.map(cell =>
         cell.type === CELL_TYPES.DOCK ? cell : freshCellOfType(cell, CELL_TYPES.GRASS)
@@ -150,23 +158,29 @@ export const App: React.FC = () => {
     // Map Manager Modal State
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
     const [mapModalMode, setMapModalMode] = useState<'save' | 'load'>('save');
-    const { nn, trainingStatus, trainNN, stopTraining, downloadModel, uploadModel, clearModel, showVisualTraining, setShowVisualTraining, previewGrid, previewMowerPos, previewMowerDir, fitnessConfig, setFitnessConfig } = useNeuralNetwork(dockPos, showToast, orientation, speed);
+    const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
+    const { model, trainingStatus, trainNN, stopTraining, downloadModel, uploadModel, clearModel, showVisualTraining, setShowVisualTraining, previewGrid, previewMowerPos, previewMowerDir } = useNeuralNetwork(dockPos, showToast, speed);
 
+    const simulationConfig = useMemo(
+        () => ({ algo, orientation, speed, maxBattery, drainMove, drainTurn }),
+        [algo, orientation, speed, maxBattery, drainMove, drainTurn],
+    );
     const {
         isRunning,
         isTesting,
+        seenTiles,
         prepareSimulationState,
         runSimulation,
         stopSimulation,
         testAll,
     } = useAppSimulation(
         env, setEnv,
-        domainStats, setDomainStats,
+        setDomainStats,
         setWorkTimeMs,
         setHistory, resetSimulation,
         setAlgo,
-        { algo, orientation, speed, maxBattery, drainMove, drainTurn, turnCost: turnCostInSteps(fitnessConfig) },
-        nn, showToast, setStatusMessage
+        simulationConfig,
+        model.network, showToast, setStatusMessage
     );
 
     // Persist Grid Layout in localStorage
@@ -195,8 +209,6 @@ export const App: React.FC = () => {
     const maxBatteryRef = useRef(maxBattery);
     const isDrawingRef = useRef(isDrawing);
     const showVisualTrainingRef = useRef(showVisualTraining);
-    const drainMoveRef = useRef(drainMove);
-    const drainTurnRef = useRef(drainTurn);
 
     useEffect(() => {
         envRef.current = env;
@@ -206,9 +218,7 @@ export const App: React.FC = () => {
         maxBatteryRef.current = maxBattery;
         isDrawingRef.current = isDrawing;
         showVisualTrainingRef.current = showVisualTraining;
-        drainMoveRef.current = drainMove;
-        drainTurnRef.current = drainTurn;
-    }, [env, grid, brushType, isRunning, maxBattery, isDrawing, showVisualTraining, drainMove, drainTurn]);
+    }, [env, grid, brushType, isRunning, maxBattery, isDrawing, showVisualTraining]);
 
     const handleRandomizeMap = useCallback(() => {
         stopSimulation(true);
@@ -311,7 +321,7 @@ export const App: React.FC = () => {
     }, [setShowVisualTraining]);
 
     const handleTrainNN = useCallback(() => {
-        trainNN(gridRef.current, drainMoveRef.current, drainTurnRef.current);
+        trainNN(gridRef.current);
     }, [trainNN]);
 
     const handleStopSimulation = useCallback(() => {
@@ -329,6 +339,9 @@ export const App: React.FC = () => {
     const handleCloseSettings = useCallback(() => {
         setIsSettingsOpen(false);
     }, [setIsSettingsOpen]);
+
+    const handleOpenBenchmark = useCallback(() => setIsBenchmarkOpen(true), []);
+    const handleCloseBenchmark = useCallback(() => setIsBenchmarkOpen(false), []);
 
     const handleClearHistory = useCallback(() => {
         setHistory(new SimulationHistory());
@@ -367,12 +380,9 @@ export const App: React.FC = () => {
                         setAlgo={handleSetAlgo}
                         speed={speed}
                         setSpeed={setSpeed}
-                        brushType={brushType}
-                        setBrushType={setBrushType}
-                        cellTypes={CELL_TYPES}
                         trainingStatus={trainingStatus}
-                        fitnessConfig={fitnessConfig}
-                        setFitnessConfig={setFitnessConfig}
+                        model={model}
+                        onOpenBenchmark={handleOpenBenchmark}
                         showVisualTraining={showVisualTraining}
                         onToggleVisualTraining={handleToggleVisualTraining}
                         onTrainNN={handleTrainNN}
@@ -396,6 +406,7 @@ export const App: React.FC = () => {
                                 grid={showVisualTraining && previewGrid ? previewGrid : grid}
                                 mowerPos={showVisualTraining && previewMowerPos ? previewMowerPos : mowerPos}
                                 mowerDir={showVisualTraining && previewMowerDir ? previewMowerDir : env.mower.nav.dir}
+                                seenTiles={showVisualTraining ? null : seenTiles}
                                 onMouseDown={handleMouseDown}
                                 onCellClick={showVisualTraining ? undefined : handleCellClick}
                                 onCellMouseEnter={handleCellMouseEnter}
@@ -448,6 +459,12 @@ export const App: React.FC = () => {
                 <Footer />
             </div>
 
+            <BenchmarkModal
+                isOpen={isBenchmarkOpen}
+                onClose={handleCloseBenchmark}
+                network={model.network}
+            />
+
             <MapManagerModal
                 isOpen={isMapModalOpen}
                 mode={mapModalMode}
@@ -460,15 +477,18 @@ export const App: React.FC = () => {
             />
 
             <div className="toast-container">
-                {toasts.map(t => (
-                    <div key={t.id} className={`toast ${t.type === 'error' ? 'error' : t.type === 'indigo' ? 'indigo' : ''}`}>
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm
-                            ${t.type === 'error' ? 'bg-rose-500/20 text-rose-500' : t.type === 'indigo' ? 'bg-indigo-500/20 text-indigo-500' : 'bg-emerald-500/20 text-emerald-500'}`}>
-                            {t.type === 'error' ? '!' : t.type === 'indigo' ? '⚡' : '✓'}
+                {toasts.map(t => {
+                    const look = toastLookOf(t.type);
+                    return (
+                        <div key={t.id} className={`toast ${look.toastClass}`}>
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm
+                                ${look.iconClass}`}>
+                                {look.icon}
+                            </div>
+                            {t.msg}
                         </div>
-                        {t.msg}
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

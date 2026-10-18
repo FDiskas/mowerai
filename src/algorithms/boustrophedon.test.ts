@@ -42,10 +42,7 @@ describe("getBoustrophedonMove", () => {
       pos: { x: 4, y: 4 },
       prevDir: { dx: 0, dy: 1 },
       orientation: "horizontal",
-      visitCounts: {},
       dockPos: { x: 0, y: 0 },
-      isCharging: false,
-      isReturningForCharge: false,
       battery: Infinity,
       grid,
     } as unknown as State;
@@ -60,10 +57,7 @@ describe("getBoustrophedonMove", () => {
       pos: { x: 5, y: 5 },
       prevDir: { dx: 0, dy: 1 },
       orientation: "vertical",
-      visitCounts: {},
       dockPos: { x: 0, y: 0 },
-      isCharging: false,
-      isReturningForCharge: false,
       battery: Infinity,
       grid,
     } as unknown as State;

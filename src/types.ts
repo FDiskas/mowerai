@@ -46,15 +46,8 @@ export interface HistoryRecord {
     duration: number;
     damagedGrass: number;
     chargeCycles: number;
-    penalty: number;
-}
-
-export interface TrainingStatus {
-    isTraining: boolean;
-    epoch: number;
-    bestFitness: number;
-    /** Average `idealFitness` of the maps that scored `bestFitness`: the 100 % mark of the progress bar. */
-    idealFitness: number;
+    /** Benchmark cost per reachable tile (`costPerTile`); null for runs saved before the fixed score. */
+    cost: number | null;
 }
 
 export interface State {
@@ -75,49 +68,13 @@ export interface State {
     goal?: PositionType;
     activeCellId?: number;
     cellIdGrid?: number[][];
+    /** `mapVersion` that `cellIdGrid` was built from. */
+    cellIdGridVersion?: number;
     dockPos: PositionType;
-    isCharging: boolean;
-    isReturningForCharge: boolean;
-    visitCounts: { [key: string]: number };
     orientation?: Orientation;
     maxBattery?: number;
-    /** Price of one heading change in path steps (see `turnCostInSteps`); unset means the default. */
+    /** Price of one heading change in path steps; unset means the default. */
     turnCost?: number;
+    /** Goes up each time the sensor finds an obstacle: maps derived from `grid` before that are stale. */
+    mapVersion?: number;
 }
-
-export interface FitnessConfig {
-    // Rewards (positive = good)
-    discoveryReward: number;       // Bonus for a new cell (default: 500)
-    orientationBonus: number;      // Bonus for the correct direction (default: 100)
-    completionBonus: number;       // Bonus for mowing all areas and returning (default: 10000)
-    straightLineBonus: number;     // Bonus for a straight line (default: 500)
-    batteryEfficiencyWeight: number; // Weight for battery efficiency bonus (default: 30000)
-
-    // Penalties (negative values are understood as penalties)
-    mowedRevisitPenalty: number;   // Penalty for overrunning mowed grass (default: 50)
-    oscillationPenalty: number;    // Penalty for cyclic movement (default: 5000)
-    turnPenalty: number;           // Penalty for a turn (default: 100)
-    batteryOutPenalty: number;     // Penalty for battery running out outside the dock (default: 2000)
-    damageWeight: number;          // Weight for grass damage penalty (default: 10000)
-    chargeCycleWeight: number;     // Weight for charging cycle penalty (default: 20000)
-
-    // Hard Limits
-    visitLimit: number;            // Visit limit before disqualification (default: 5)
-    maxMowedRevisitRatio: number;  // Max ratio of mowed grass overruns (default: 0.25)
-}
-
-export const DEFAULT_FITNESS_CONFIG: FitnessConfig = {
-    discoveryReward: 500,
-    orientationBonus: 100,
-    completionBonus: 10000,
-    straightLineBonus: 500,
-    batteryEfficiencyWeight: 30000,
-    mowedRevisitPenalty: 50,
-    oscillationPenalty: 5000,
-    turnPenalty: 100,
-    batteryOutPenalty: 2000,
-    damageWeight: 10000,
-    chargeCycleWeight: 20000,
-    visitLimit: 5,
-    maxMowedRevisitRatio: 0.25,
-};

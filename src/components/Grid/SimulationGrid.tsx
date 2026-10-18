@@ -172,12 +172,14 @@ interface CellProps extends TrailSides {
     cell: Cell;
     isMower: boolean;
     isDock: boolean;
+    /** The mower's sensor has not seen this tile yet in the current job. */
+    isUnseen: boolean;
     obs: ObsToken | null;
     onCellClick?: (r: number, c: number) => void;
     onCellMouseEnter?: (r: number, c: number) => void;
 }
 
-const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, hasLeft, hasRight, hasTop, hasBottom, onCellClick, onCellMouseEnter }: CellProps) => {
+const MemoizedCell = memo(({ r, c, cell, isMower, isDock, isUnseen, obs, hasLeft, hasRight, hasTop, hasBottom, onCellClick, onCellMouseEnter }: CellProps) => {
     const isMowed = cell.type === CELL_TYPES.MOWED;
     const passes = cell.passes ?? 0;
     const d = getPathDefinition(hasLeft, hasRight, hasTop, hasBottom);
@@ -260,6 +262,8 @@ const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, hasLeft, hasRight
                 </div>
             )}
 
+            {isUnseen && <div className="absolute inset-0 bg-slate-950/45 pointer-events-none" />}
+
             {/* Hover affordance (editable cells only) */}
             {!isMower && !obs && (
                 <div className="absolute inset-0 bg-white/0 group-hover:bg-white/15 transition-colors pointer-events-none" />
@@ -272,6 +276,8 @@ interface GridProps {
     grid: GridType;
     mowerPos: Position;
     mowerDir?: Direction;
+    /** Tiles the mower has seen (row-major); null shows the whole lawn as known. */
+    seenTiles?: Uint8Array | null;
     onCellClick?: (r: number, c: number) => void;
     onCellMouseEnter?: (r: number, c: number) => void;
     onMouseDown: () => void;
@@ -283,6 +289,7 @@ export const SimulationGrid: React.FC<GridProps> = ({
     grid,
     mowerPos,
     mowerDir,
+    seenTiles,
     onCellClick,
     onCellMouseEnter,
     onMouseDown,
@@ -344,6 +351,7 @@ export const SimulationGrid: React.FC<GridProps> = ({
                                     cell={cell}
                                     isMower={mowerPos.x === c && mowerPos.y === r}
                                     isDock={cell.type === CELL_TYPES.DOCK}
+                                    isUnseen={seenTiles ? seenTiles[r * cols + c] === 0 : false}
                                     obs={tokens[r][c]}
                                     {...trailSides(grid, r, c)}
                                     onCellClick={onCellClick}

@@ -8,8 +8,7 @@ const move = (s: State, g: Grid, d: Direction) => getSmartAIMove(s, g, d, CELL_T
 
 const stateAt = (x: number, y: number, grid: Grid): State => ({
     pos: { x, y }, prevDir: { dx: 0, dy: 1 }, orientation: 'horizontal',
-    visitCounts: {}, dockPos: { x: 0, y: 0 }, isCharging: false,
-    isReturningForCharge: false, battery: Infinity, grid,
+    dockPos: { x: 0, y: 0 }, battery: Infinity, grid,
 } as unknown as State);
 
 describe('getSmartAIMove', () => {
