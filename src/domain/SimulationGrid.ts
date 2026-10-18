@@ -30,6 +30,19 @@ export class SimulationGrid {
     }
 
     countGrass(): number {
-        return this._cells.flat().filter(c => c.type === CELL_TYPES.GRASS).length;
+        return this.countOfType(CELL_TYPES.GRASS);
+    }
+
+    countMowed(): number {
+        return this.countOfType(CELL_TYPES.MOWED);
+    }
+
+    /** Mowed tiles that carry wear from turns or repeated passes. */
+    countDamaged(): number {
+        return this._cells.flat().filter(c => c.type === CELL_TYPES.MOWED && c.damage > 0).length;
+    }
+
+    private countOfType(type: Cell['type']): number {
+        return this._cells.flat().filter(c => c.type === type).length;
     }
 }

@@ -1,5 +1,6 @@
 import { CELL_TYPES } from "../constants";
-import type { Grid, PositionType as Point, Direction } from "../types";
+import type { Grid, PositionType as Point, Direction, State } from "../types";
+import { DEFAULT_TURN_COST, minTurnsTo, turnCostOf } from "./turnCost";
 
 /**
  * Binary min-heap keyed by priority. O(log n) push/pop, unlike a sort-on-every-
@@ -73,7 +74,7 @@ export const genericPathSearch = (
   currentDir: Direction,
   targetPredicate: (p: Point) => boolean,
   heuristic: (p: Point) => number = () => 0,
-  turnPenalty: number = 5,
+  turnPenalty = DEFAULT_TURN_COST,
 ): Point[] | null => {
   const rows = currentGrid.length;
   const cols = currentGrid[0].length;
@@ -153,40 +154,45 @@ export const findFullPathToTarget = (
   currentGrid: Grid,
   currentDir: Direction,
   targetPredicate: (p: Point) => boolean,
-): Point[] | null => {
-  return genericPathSearch(start, currentGrid, currentDir, targetPredicate);
-};
+  turnCost = DEFAULT_TURN_COST,
+): Point[] | null =>
+  genericPathSearch(start, currentGrid, currentDir, targetPredicate, () => 0, turnCost);
 
 export const findPathToTarget = (
   start: Point,
   currentGrid: Grid,
   currentDir: Direction,
   targetPredicate: (p: Point) => boolean,
-): Point | null => {
-  const path = findFullPathToTarget(
-    start,
-    currentGrid,
-    currentDir,
-    targetPredicate,
-  );
-  return path ? path[0] : null;
-};
+  turnCost = DEFAULT_TURN_COST,
+): Point | null =>
+  findFullPathToTarget(start, currentGrid, currentDir, targetPredicate, turnCost)?.[0] ?? null;
 
+const STILL: Direction = { dx: 0, dy: 0 };
+
+/**
+ * Cheapest grass by manhattan distance plus `turnCost` per heading change
+ * needed from `heading` (no heading: distance only). The tile under the mower
+ * is never a target: it is cut when the mower leaves it.
+ */
 export const getClosestGrass = (
   pos: Point,
   grid: Grid,
   cellTypes: typeof CELL_TYPES,
+  heading: Direction = STILL,
+  turnCost = 0,
 ): Point | null => {
   let closest: Point | null = null;
-  let minDist = Infinity;
+  let minCost = Infinity;
   for (let y = 0; y < grid.length; y++) {
     for (let x = 0; x < grid[0].length; x++) {
-      if (grid[y][x].type === cellTypes.GRASS) {
-        const dist = Math.abs(x - pos.x) + Math.abs(y - pos.y);
-        if (dist < minDist) {
-          minDist = dist;
-          closest = { x, y };
-        }
+      const isOwnTile = x === pos.x && y === pos.y;
+      if (grid[y][x].type !== cellTypes.GRASS || isOwnTile) continue;
+      const tile = { x, y };
+      const cost =
+        Math.abs(x - pos.x) + Math.abs(y - pos.y) + turnCost * minTurnsTo(pos, heading, tile);
+      if (cost < minCost) {
+        minCost = cost;
+        closest = tile;
       }
     }
   }
@@ -206,7 +212,10 @@ export const aStarSearch = (
   target: Point,
   currentGrid: Grid,
   currentDir: Direction,
+  turnCost = DEFAULT_TURN_COST,
 ): Point | null => {
+  // The search never treats the start as a goal; skip the full-grid flood.
+  if (start.x === target.x && start.y === target.y) return null;
   const heuristic = (p: Point) =>
     Math.abs(p.x - target.x) + Math.abs(p.y - target.y);
   const path = genericPathSearch(
@@ -215,6 +224,42 @@ export const aStarSearch = (
     currentDir,
     (p) => p.x === target.x && p.y === target.y,
     heuristic,
+    turnCost,
   );
   return path ? path[0] : null;
+};
+
+/**
+ * The goal in `state.goal` while it is uncut grass other than the tile under
+ * the mower; otherwise a new goal from `choose`. The choice cost depends on the
+ * heading, so choosing again on every step would let two goals take turns at
+ * being cheapest and the mower would move back and forth between them.
+ */
+export const committedGoal = (
+  state: State,
+  grid: Grid,
+  cellTypes: typeof CELL_TYPES,
+  choose: () => Point | null,
+): Point | null => {
+  const { goal, pos } = state;
+  const isOnGoal = goal?.x === pos.x && goal?.y === pos.y;
+  if (goal && !isOnGoal && grid[goal.y][goal.x].type === cellTypes.GRASS) return goal;
+  state.goal = choose() ?? undefined;
+  return state.goal ?? null;
+};
+
+/** A* algorithm: commit to the cheapest grass (distance plus turns), then A* to it. */
+export const getAStarMove = (
+  state: State,
+  curGrid: Grid,
+  prevDir: Direction,
+  cellTypes: typeof CELL_TYPES,
+): Point | null => {
+  const turnCost = turnCostOf(state);
+  const goal = committedGoal(state, curGrid, cellTypes, () =>
+    getClosestGrass(state.pos, curGrid, cellTypes, prevDir, turnCost),
+  );
+  const step = goal && aStarSearch(state.pos, goal, curGrid, prevDir, turnCost);
+  if (!step) state.goal = undefined;
+  return step;
 };

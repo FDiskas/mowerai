@@ -1,216 +1,266 @@
-import { 
-    CELL_TYPES, 
-    DEFAULT_MAX_BATTERY, 
-    DEFAULT_DRAIN_MOVE, 
-    DEFAULT_DRAIN_TURN, 
-    DAMAGE_PER_PASS, 
-    DAMAGE_PER_TURN 
-} from '../constants';
+import { CELL_TYPES, DEFAULT_MAX_BATTERY, DEFAULT_DRAIN_MOVE, DEFAULT_DRAIN_TURN, DAMAGE_PER_PASS, DAMAGE_PER_TURN } from '../constants';
 import type { Grid, Point, State, FitnessConfig } from '../types';
 import { DEFAULT_FITNESS_CONFIG } from '../types';
-import { getNeuralNetworkMove } from '../algorithms';
-import { NeuralNetwork } from '../NeuralNetwork';
+import { findFullPathToTarget, findPathToTarget, getNeuralNetworkMove, hasAdjacentGrass, turnCostInSteps } from '../algorithms';
+import type { NeuralNetwork } from '../NeuralNetwork';
+import { advanceMower, countReachableGrass, startEpisode } from './episode';
+import { resetLawn } from './simUtils';
 
-export class FitnessEvaluator {
-    static async evaluate(
-        nn: NeuralNetwork, 
-        initialGrid: Grid, 
-        dockPos: Point, 
-        maxSteps: number,
-        orientation: 'horizontal' | 'vertical' = 'horizontal',
-        drainMove: number = DEFAULT_DRAIN_MOVE,
-        drainTurn: number = DEFAULT_DRAIN_TURN,
-        cfg: FitnessConfig = DEFAULT_FITNESS_CONFIG
-    ): Promise<number> {
-        const rows = initialGrid.length;
-        const cols = initialGrid[0].length;
-        
-        // Fast grid clone
-        const workingGrid: Grid = new Array(rows);
-        let totalGrass = 0;
-        for (let r = 0; r < rows; r++) {
-            workingGrid[r] = new Array(cols);
-            for (let c = 0; c < cols; c++) {
-                const cell = initialGrid[r][c];
-                const isGrass = cell.type === CELL_TYPES.GRASS || cell.type === CELL_TYPES.MOWED;
-                if (isGrass) totalGrass++;
-                workingGrid[r][c] = {
-                    type: cell.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : cell.type,
-                    damage: 0,
-                    direction: null
-                };
-            }
-        }
+/** Chooses the next tile while the mower is mowing (not on its way home). */
+export type MovePolicy = (state: State) => Point | null;
 
-        const state: State = {
-            pos: { ...dockPos },
-            prevDir: { dx: 0, dy: 1 },
-            battery: DEFAULT_MAX_BATTERY,
-            grid: workingGrid,
-            dockPos: { ...dockPos },
-            isCharging: false,
-            isReturningForCharge: false,
-            visitCounts: {},
-            orientation: orientation,
-            maxBattery: DEFAULT_MAX_BATTERY
-        };
-
-        let mowed = 0;
-        let turns = 0;
-        let distance = 0;
-        let totalDamage = 0;
-        let chargeCycles = 0;
-        let penaltyPoints = 0;
-        let totalDiscoveryReward = 0;
-        let straightLineSteps = 0;
-        let totalOrientationBonus = 0;
-        let mowedRevisits = 0;
-        let batteryUsed = 0;
-        const maxAllowedRevisits = Math.floor(maxSteps * cfg.maxMowedRevisitRatio);
-        
-        const posHistory: string[] = [];
-
-        for (let step = 0; step < maxSteps; step++) {
-            const isLowBattery = (state.battery / DEFAULT_MAX_BATTERY) < 0.2;
-            
-            if (isLowBattery || state.isReturningForCharge) {
-                state.isReturningForCharge = true;
-                if (state.pos.x === state.dockPos.x && state.pos.y === state.dockPos.y) {
-                    state.battery = DEFAULT_MAX_BATTERY;
-                    state.isReturningForCharge = false;
-                    chargeCycles++;
-                }
-            }
-
-            const move = getNeuralNetworkMove(state, workingGrid, state.prevDir, CELL_TYPES, nn);
-            if (!move) break;
-
-            const dx = move.x - state.pos.x;
-            const dy = move.y - state.pos.y;
-            const isTurn = dx !== state.prevDir.dx || dy !== state.prevDir.dy;
-
-            if (isTurn) turns++;
-            else straightLineSteps++;
-            
-            distance++;
-
-            const posKey = `${move.x},${move.y}`;
-            const visitCount = (state.visitCounts[posKey] || 0) + 1;
-            state.visitCounts[posKey] = visitCount;
-
-            if (visitCount === 1) {
-                totalDiscoveryReward += cfg.discoveryReward;
-            }
-
-            // Critical limit: if a NON-DOCK cell is visited too many times - stop evaluation early
-            if (visitCount >= cfg.visitLimit && !(move.x === dockPos.x && move.y === dockPos.y)) {
-                penaltyPoints += 10000;
-                break;
-            }
-
-            let grassMowedThisStep = false;
-            const cell = workingGrid[move.y][move.x];
-            if (cell.type === CELL_TYPES.GRASS) {
-                cell.type = CELL_TYPES.MOWED;
-                mowed++;
-                grassMowedThisStep = true;
-            } else if (cell.type === CELL_TYPES.MOWED) {
-                mowedRevisits++;
-                const stepDamage = isTurn ? DAMAGE_PER_TURN : DAMAGE_PER_PASS;
-                const currentDamage = cell.damage || 0;
-                totalDamage += stepDamage * (1 + currentDamage * 200); 
-                cell.damage = currentDamage + stepDamage;
-                
-                // Significantly increased penalty for revisiting to force "corner cutting" (shortest path)
-                penaltyPoints += cfg.mowedRevisitPenalty * (1 + mowedRevisits * 0.5);
-                
-                if (mowedRevisits > maxAllowedRevisits) {
-                    penaltyPoints += 50000;
-                    break;
-                }
-            }
-
-            state.pos = move;
-            state.prevDir = { dx, dy };
-
-            const isCorrectOrientation = 
-                (orientation === 'horizontal' && dy === 0 && dx !== 0) ||
-                (orientation === 'vertical' && dx === 0 && dy !== 0);
-            
-            // CRITICAL: Only reward orientation if we actually mowed grass!
-            // This prevents "zigzagging" patterns on already mowed areas.
-            if (isCorrectOrientation && !isTurn && grassMowedThisStep) {
-                totalOrientationBonus += cfg.orientationBonus;
-            }
-
-            const stepDrain = drainMove + (isTurn ? drainTurn : 0);
-            state.battery -= stepDrain;
-            batteryUsed += stepDrain;
-
-            posHistory.push(posKey);
-            if (posHistory.length > 8) {
-                posHistory.shift();
-                const unique = new Set(posHistory);
-                if (unique.size <= 3) {
-                    penaltyPoints += cfg.oscillationPenalty;
-                }
-            }
-
-            if (state.battery <= 0) {
-                if (state.pos.x === state.dockPos.x && state.pos.y === state.dockPos.y) {
-                    state.battery = DEFAULT_MAX_BATTERY;
-                    chargeCycles++;
-                } else {
-                    penaltyPoints += cfg.batteryOutPenalty;
-                    break;
-                }
-            }
-
-            if (mowed === totalGrass && state.pos.x === state.dockPos.x && state.pos.y === state.dockPos.y) {
-                penaltyPoints -= cfg.completionBonus;
-                break;
-            }
-        }
-
-        // Final Scores Calculation
-        if (totalGrass === 0) return 0;
-
-        // Coverage: 0 to 50,000 (scaled by percentage)
-        const coverageScore = (mowed / totalGrass) * 50000;
-        
-        // Efficiency: (Mowed / Distance) * weight. Ideal is 1.0.
-        const efficiencyScore = (distance > 0) ? (mowed / distance) * 20000 : 0;
-        
-        // Straight line bonus helps with systematic patterns
-        const straightLineBonus = straightLineSteps * cfg.straightLineBonus;
-
-        // Battery efficiency: (Ideal battery / Actual battery) * weight
-        const batteryPerMow = mowed > 0 ? batteryUsed / mowed : 999;
-        const idealBatteryPerMow = drainMove;
-        const batteryEfficiencyBonus = mowed > 0
-            ? Math.min(2, (idealBatteryPerMow / batteryPerMow)) * cfg.batteryEfficiencyWeight
-            : 0;
-
-        // Total Penalties
-        const turnPenaltyWeight = cfg.turnPenalty + (drainTurn / drainMove) * 10;
-        const totalPenalty = (turns * turnPenaltyWeight) + 
-                             (totalDamage * cfg.damageWeight) + 
-                             (chargeCycles * cfg.chargeCycleWeight) + 
-                             (penaltyPoints);
-
-        // Docking bonus
-        const distToDock = Math.abs(state.pos.x - state.dockPos.x) + Math.abs(state.pos.y - state.dockPos.y);
-        const dockBonus = distToDock === 0 ? 10000 : (1 / (distToDock + 1)) * 2000;
-
-        const fitness = coverageScore + 
-                        efficiencyScore + 
-                        dockBonus + 
-                        totalDiscoveryReward + 
-                        straightLineBonus + 
-                        totalOrientationBonus + 
-                        batteryEfficiencyBonus - 
-                        totalPenalty;
-
-        return isNaN(fitness) ? -1000000 : fitness;
-    }
+export interface FitnessOptions {
+    dockPos: Point;
+    maxSteps: number;
+    orientation?: 'horizontal' | 'vertical';
+    drainMove?: number;
+    drainTurn?: number;
+    fitnessConfig?: FitnessConfig;
 }
+
+export interface EpisodeReport {
+    fitness: number;
+    mowed: number;
+    reachableGrass: number;
+    steps: number;
+    turns: number;
+    chargeCycles: number;
+    /** All reachable grass was cut and the mower is back at the dock. */
+    completed: boolean;
+}
+
+/** The live simulation sends the mower home below this battery share... */
+const LOW_BATTERY_SHARE = 0.2;
+/** ...and lets it leave the dock again once charged to this share. */
+const RECHARGED_SHARE = 0.8;
+const OSCILLATION_WINDOW = 8;
+const OSCILLATION_MAX_UNIQUE = 3;
+const VISIT_LIMIT_PENALTY = 10000;
+const REVISIT_LIMIT_PENALTY = 50000;
+
+const scoreOf = (report: Omit<EpisodeReport, 'fitness'>, terms: {
+    distance: number;
+    totalDamage: number;
+    penaltyPoints: number;
+    discoveryReward: number;
+    straightLineSteps: number;
+    orientationBonus: number;
+    batteryUsed: number;
+    distToDock: number;
+}, drainMove: number, drainTurn: number, cfg: FitnessConfig): number => {
+    const { mowed, reachableGrass, turns, chargeCycles, completed } = report;
+    const coverageScore = (mowed / reachableGrass) * 50000;
+    const efficiencyScore = terms.distance > 0 ? (mowed / terms.distance) * 20000 : 0;
+    const straightLineBonus = terms.straightLineSteps * cfg.straightLineBonus;
+    const batteryEfficiencyBonus = mowed > 0
+        ? Math.min(2, drainMove / (terms.batteryUsed / mowed)) * cfg.batteryEfficiencyWeight
+        : 0;
+    const turnPenaltyWeight = cfg.turnPenalty + (drainTurn / drainMove) * 10;
+    const totalPenalty = turns * turnPenaltyWeight +
+        terms.totalDamage * cfg.damageWeight +
+        chargeCycles * cfg.chargeCycleWeight +
+        terms.penaltyPoints -
+        (completed ? cfg.completionBonus : 0);
+    const dockBonus = terms.distToDock === 0 ? 10000 : (1 / (terms.distToDock + 1)) * 2000;
+
+    const fitness = coverageScore + efficiencyScore + dockBonus + terms.discoveryReward +
+        straightLineBonus + terms.orientationBonus + batteryEfficiencyBonus - totalPenalty;
+    return isNaN(fitness) ? -1000000 : fitness;
+};
+
+/**
+ * Runs a policy on one lawn under the live simulation's rules: the tile being left is cut,
+ * a low battery or a finished lawn sends the mower home along a planned route, and
+ * charging happens at the dock. Rewards and penalties for choices (visits, overlaps, wear,
+ * straight lines) only see decision steps: the policy moves while fresh grass is next to
+ * the mower. Trips home and transits to the next grass would otherwise pile up wear on the
+ * same corridors; they still cost turns, distance and battery.
+ */
+export const runFitnessEpisode = (policy: MovePolicy, lawn: Grid, options: FitnessOptions): EpisodeReport => {
+    const {
+        dockPos,
+        maxSteps,
+        orientation = 'horizontal',
+        drainMove = DEFAULT_DRAIN_MOVE,
+        drainTurn = DEFAULT_DRAIN_TURN,
+        fitnessConfig: cfg = DEFAULT_FITNESS_CONFIG,
+    } = options;
+    const state: State = startEpisode(lawn, dockPos, {
+        battery: DEFAULT_MAX_BATTERY,
+        orientation,
+        turnCost: turnCostInSteps(cfg),
+    });
+    const grid = state.grid;
+    const cols = grid[0].length;
+    const decisionVisits = new Uint16Array(grid.length * cols);
+    const decisionWear = new Float64Array(grid.length * cols);
+    const reachableGrass = countReachableGrass(grid, dockPos);
+    const isDock = (p: Point) => p.x === dockPos.x && p.y === dockPos.y;
+    const isBatteryLow = () => state.battery / DEFAULT_MAX_BATTERY < LOW_BATTERY_SHARE;
+    const maxAllowedRevisits = Math.floor(maxSteps * cfg.maxMowedRevisitRatio);
+
+    let mowed = 0;
+    let turns = 0;
+    let distance = 0;
+    let totalDamage = 0;
+    let chargeCycles = 0;
+    let penaltyPoints = 0;
+    let discoveryReward = 0;
+    let straightLineSteps = 0;
+    let orientationBonus = 0;
+    let mowedRevisits = 0;
+    let batteryUsed = 0;
+    let completed = false;
+    let routeHome: Point[] = [];
+    const posHistory: string[] = [];
+
+    const planRouteHome = () => {
+        routeHome = findFullPathToTarget(state.pos, grid, state.prevDir, isDock, state.turnCost) ?? [];
+    };
+    const followRouteHome = () =>
+        routeHome.shift() ?? findPathToTarget(state.pos, grid, state.prevDir, isDock, state.turnCost);
+
+    for (let step = 0; step < maxSteps; step++) {
+        const atDock = isDock(state.pos);
+        const lawnDone = mowed >= reachableGrass;
+
+        if (lawnDone && atDock) {
+            completed = true;
+            break;
+        }
+        if (atDock && (state.isReturningForCharge || isBatteryLow())) {
+            state.battery = Math.max(state.battery, DEFAULT_MAX_BATTERY * RECHARGED_SHARE);
+            state.isReturningForCharge = false;
+            chargeCycles++;
+        }
+
+        let move: Point | null;
+        let isDecision = false;
+        if (lawnDone) {
+            if (routeHome.length === 0) planRouteHome();
+            move = followRouteHome();
+        } else if (state.isReturningForCharge || isBatteryLow()) {
+            if (!state.isReturningForCharge) {
+                state.isReturningForCharge = true;
+                planRouteHome();
+            }
+            move = followRouteHome();
+        } else {
+            isDecision = hasAdjacentGrass(state.pos, grid, CELL_TYPES);
+            move = policy(state);
+            // Only unreachable grass is left in the policy's view: head home like the live simulation.
+            move ??= atDock ? null : followRouteHome();
+        }
+        if (!move) break;
+
+        const leftTile = state.pos.y * cols + state.pos.x;
+        const { isTurn, outcome } = advanceMower(state, move);
+        distance++;
+        if (isTurn) turns++;
+        if (outcome.cutFreshGrass) mowed++;
+
+        const stepDrain = drainMove + (isTurn ? drainTurn : 0);
+        state.battery -= stepDrain;
+        batteryUsed += stepDrain;
+
+        if (isDecision) {
+            const enteredTile = move.y * cols + move.x;
+            const visitCount = ++decisionVisits[enteredTile];
+            if (!isTurn) straightLineSteps++;
+            if (visitCount === 1) discoveryReward += cfg.discoveryReward;
+
+            if (visitCount >= cfg.visitLimit && !isDock(move)) {
+                penaltyPoints += VISIT_LIMIT_PENALTY;
+                break;
+            }
+            if (outcome.overlapped) {
+                // Wear compounds on tiles the policy keeps driving over.
+                const wear = isTurn ? DAMAGE_PER_TURN : DAMAGE_PER_PASS;
+                totalDamage += wear * (1 + decisionWear[leftTile] * 200);
+                decisionWear[leftTile] += wear;
+
+                mowedRevisits++;
+                // Grows with every overlap to push the network towards the shortest path.
+                penaltyPoints += cfg.mowedRevisitPenalty * (1 + mowedRevisits * 0.5);
+                if (mowedRevisits > maxAllowedRevisits) {
+                    penaltyPoints += REVISIT_LIMIT_PENALTY;
+                    break;
+                }
+            }
+
+            const isAligned = orientation === 'horizontal' ? state.prevDir.dx !== 0 : state.prevDir.dy !== 0;
+            // Only reward orientation on fresh grass, so zigzags over mowed tiles earn nothing.
+            if (isAligned && !isTurn && outcome.cutFreshGrass) orientationBonus += cfg.orientationBonus;
+        }
+
+        posHistory.push(`${move.x},${move.y}`);
+        if (posHistory.length > OSCILLATION_WINDOW) {
+            posHistory.shift();
+            if (new Set(posHistory).size <= OSCILLATION_MAX_UNIQUE) penaltyPoints += cfg.oscillationPenalty;
+        }
+
+        if (state.battery <= 0 && !isDock(state.pos)) {
+            penaltyPoints += cfg.batteryOutPenalty;
+            break;
+        }
+    }
+
+    const report = { mowed, reachableGrass, steps: distance, turns, chargeCycles, completed };
+    if (reachableGrass === 0) return { ...report, fitness: 0 };
+
+    const distToDock = Math.abs(state.pos.x - dockPos.x) + Math.abs(state.pos.y - dockPos.y);
+    const fitness = scoreOf(report, {
+        distance,
+        totalDamage,
+        penaltyPoints,
+        discoveryReward,
+        straightLineSteps,
+        orientationBonus,
+        batteryUsed,
+        distToDock,
+    }, drainMove, drainTurn, cfg);
+    return { ...report, fitness };
+};
+
+/**
+ * Score of a perfect run, as if the lawn had no obstacles in the way: every reachable tile
+ * is cut once in straight lanes along `orientation`, each lane change costs the minimum two
+ * turns, nothing is damaged, the battery never needs a charge and the mower ends at the dock.
+ * Real runs stay below it, so it is the 100 % mark for training progress.
+ */
+export const idealFitness = (lawn: Grid, options: FitnessOptions): number => {
+    const {
+        dockPos,
+        orientation = 'horizontal',
+        drainMove = DEFAULT_DRAIN_MOVE,
+        drainTurn = DEFAULT_DRAIN_TURN,
+        fitnessConfig: cfg = DEFAULT_FITNESS_CONFIG,
+    } = options;
+    const grass = countReachableGrass(resetLawn(lawn), dockPos);
+    if (grass === 0) return 0;
+
+    const lanes = orientation === 'horizontal' ? lawn.length : lawn[0].length;
+    const turns = Math.min(grass, 2 * (lanes - 1));
+    const straightSteps = grass - turns;
+    const report = { mowed: grass, reachableGrass: grass, steps: grass, turns, chargeCycles: 0, completed: true };
+    return scoreOf(report, {
+        distance: grass,
+        totalDamage: 0,
+        penaltyPoints: 0,
+        discoveryReward: grass * cfg.discoveryReward,
+        straightLineSteps: straightSteps,
+        orientationBonus: straightSteps * cfg.orientationBonus,
+        batteryUsed: grass * drainMove + turns * drainTurn,
+        distToDock: 0,
+    }, drainMove, drainTurn, cfg);
+};
+
+/** How close `fitness` is to `ideal`, from 0 to 1. */
+export const shareOfIdeal = (fitness: number, ideal: number): number =>
+    ideal > 0 ? Math.min(1, Math.max(0, fitness / ideal)) : 0;
+
+export const networkPolicy = (nn: NeuralNetwork): MovePolicy =>
+    state => getNeuralNetworkMove(state, state.grid, state.prevDir, CELL_TYPES, nn);
+
+export const evaluateFitness = (nn: NeuralNetwork, lawn: Grid, options: FitnessOptions): number =>
+    runFitnessEpisode(networkPolicy(nn), lawn, options).fitness;

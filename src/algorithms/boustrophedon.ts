@@ -1,6 +1,7 @@
 import type { CELL_TYPES } from "../constants";
 import type { Grid, PositionType as Point, Direction, State } from "../types";
 import { findPathToTarget } from "./pathfinding";
+import { turnCostOf } from "./turnCost";
 
 const NEIGHBORS_4 = [
   { dx: 1, dy: 0 },
@@ -50,6 +51,7 @@ export const getBoustrophedonMove = (
   cellTypes: typeof CELL_TYPES,
 ): Point | null => {
   const { pos } = state;
+  const turnCost = turnCostOf(state);
   const rows = curGrid.length;
   const cols = curGrid[0].length;
 
@@ -101,8 +103,12 @@ export const getBoustrophedonMove = (
     }
 
     // No adjacent border grass: route to the nearest remaining contour cell.
-    const toBorder = findPathToTarget(pos, curGrid, prevDir, (p) =>
-      isBorderGrass(p.x, p.y),
+    const toBorder = findPathToTarget(
+      pos,
+      curGrid,
+      prevDir,
+      (p) => isBorderGrass(p.x, p.y),
+      turnCost,
     );
     if (toBorder) return toBorder;
 
@@ -142,6 +148,7 @@ export const getBoustrophedonMove = (
     curGrid,
     prevDir,
     (p) => curGrid[p.y][p.x].type === cellTypes.GRASS,
+    turnCost,
   );
   if (closest) {
     const dx = closest.x - pos.x;

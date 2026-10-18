@@ -1,3 +1,5 @@
+import type { SimulationGrid } from './SimulationGrid';
+
 export class MovementMetrics {
     constructor(
         public readonly distance: number,
@@ -19,6 +21,12 @@ export class EfficiencyMetrics {
         public readonly totalGrass: number
     ) {}
 
+    /** Counts taken from the lawn itself, so they stay true after the map is edited. */
+    static fromGrid(grid: SimulationGrid): EfficiencyMetrics {
+        const mowed = grid.countMowed();
+        return new EfficiencyMetrics(mowed, mowed + grid.countGrass());
+    }
+
     get coveragePercentage(): number {
         if (this.totalGrass === 0) return 0;
         return (this.mowedCount / this.totalGrass) * 100;
@@ -31,16 +39,11 @@ export class EfficiencyMetrics {
 
 export class ImpactMetrics {
     constructor(
-        public readonly chargeCycles: number,
-        public readonly damagedGrass: number
+        public readonly chargeCycles: number
     ) {}
 
     addChargeCycle(): ImpactMetrics {
-        return new ImpactMetrics(this.chargeCycles + 1, this.damagedGrass);
-    }
-
-    setDamagedGrass(count: number): ImpactMetrics {
-        return new ImpactMetrics(this.chargeCycles, count);
+        return new ImpactMetrics(this.chargeCycles + 1);
     }
 }
 
@@ -50,6 +53,4 @@ export class SimulationStats {
         public readonly efficiency: EfficiencyMetrics,
         public readonly impact: ImpactMetrics
     ) {}
-    // Note: I'm using 3 here because 2 is extremely restrictive for a top-level stats object.
-    // However, I've encapsulated the related metrics into their own small objects.
 }

@@ -1,26 +1,30 @@
 import { NeuralNetwork } from './NeuralNetwork';
-import { FitnessEvaluator } from './utils/fitness';
+import { evaluateFitness, type FitnessOptions } from './utils/fitness';
+import type { Grid } from './types';
 
-// This file runs in a separate processor thread
-self.onmessage = async (e: MessageEvent) => {
-    const { populationData, trainingMaps, dockPos, maxSteps, workerId, orientation, drainMove, drainTurn, fitnessConfig } = e.data;
-    
-    const results = [];
-    
-    for (const data of populationData) {
-        const nn = new NeuralNetwork(data.layers);
-        nn.setWeights(data.weights);
-        
-        let totalFitness = 0;
-        for (const map of trainingMaps) {
-            totalFitness += await FitnessEvaluator.evaluate(nn, map, dockPos, maxSteps, orientation, drainMove, drainTurn, fitnessConfig);
-        }
-        
-        results.push({
-            id: data.id,
-            fitness: totalFitness / trainingMaps.length
-        });
-    }
-    
-    self.postMessage({ workerId, results });
+export interface TrainingRequest {
+    workerId: number;
+    populationData: { id: number; weights: number[]; layers: number[] }[];
+    trainingMaps: Grid[];
+    fitnessOptions: FitnessOptions;
+}
+
+export interface TrainingResponse {
+    workerId: number;
+    results: { id: number; fitness: number }[];
+}
+
+// Scores a slice of the population on every training map, off the UI thread.
+self.onmessage = (e: MessageEvent<TrainingRequest>) => {
+    const { populationData, trainingMaps, fitnessOptions, workerId } = e.data;
+
+    const results = populationData.map(({ id, weights, layers }) => {
+        const nn = new NeuralNetwork(layers);
+        nn.setWeights(weights);
+        const totalFitness = trainingMaps.reduce((sum, map) => sum + evaluateFitness(nn, map, fitnessOptions), 0);
+        return { id, fitness: totalFitness / trainingMaps.length };
+    });
+
+    const response: TrainingResponse = { workerId, results };
+    self.postMessage(response);
 };

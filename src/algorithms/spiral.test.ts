@@ -55,6 +55,15 @@ describe("getSpiralMove", () => {
     expect(r.grassLeft).toBe(total - reachable);
   });
 
+  it("keeps spiralling past the grid edge instead of restarting (dock in a corner)", () => {
+    const dock = { x: 1, y: 1 };
+    const grid = buildLawn(20, 12, dock, false);
+    const r = runCoverage(grid, dock, (s, g) => getSpiralMove(s, g, CELL_TYPES), fallback);
+    expect(r.grassLeft).toBe(0);
+    // A full restart at every edge contact used to cost ~1.4x the lawn size.
+    expect(r.steps).toBeLessThan(countGrass(buildLawn(20, 12, dock, false)) * 1.15);
+  });
+
   it("returns null when no grass is left", () => {
     const grid: Grid = buildLawn(8, 8, { x: 0, y: 0 }, false).map((row) =>
       row.map((c) =>

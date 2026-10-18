@@ -30,9 +30,6 @@ export interface Stats {
     totalGrass: number;
     turns: number;
     chargeCycles: number;
-    startTime: number | null;
-    endTime: number | null;
-    accumulatedDuration: number;
     history: HistoryRecord[];
 }
 
@@ -42,17 +39,20 @@ export interface HistoryRecord {
     distance: number;
     turns: number;
     mowedCount: number;
+    /** Share of the lawn this run mowed, in percent with one decimal. */
+    coverage: number;
     duration: number;
     damagedGrass: number;
     chargeCycles: number;
     penalty: number;
-    moves?: PositionType[];
 }
 
 export interface TrainingStatus {
     isTraining: boolean;
     epoch: number;
     bestFitness: number;
+    /** Average `idealFitness` of the maps that scored `bestFitness`: the 100 % mark of the progress bar. */
+    idealFitness: number;
 }
 
 export interface State {
@@ -60,9 +60,6 @@ export interface State {
     prevDir: Direction;
     battery: number;
     grid: Grid;
-    zigzagIdx?: number;
-    uShapeIdx?: number;
-    slamDir?: number;
     cellData?: {
         sweepDir: number;
         cellScanDir: number;
@@ -71,9 +68,9 @@ export interface State {
         /** State machine phase: contour pass first, then parallel sweep. */
         phase?: 'edge' | 'zigzag';
     };
-    spiralStep?: number;
     spiralCenter?: PositionType;
-    stcPath?: PositionType[];
+    /** Grass tile the mower drives to; kept until it is cut (see `committedGoal`). */
+    goal?: PositionType;
     activeCellId?: number;
     cellIdGrid?: number[][];
     dockPos: PositionType;
@@ -82,6 +79,8 @@ export interface State {
     visitCounts: { [key: string]: number };
     orientation?: 'horizontal' | 'vertical';
     maxBattery?: number;
+    /** Price of one heading change in path steps (see `turnCostInSteps`); unset means the default. */
+    turnCost?: number;
 }
 
 export interface FitnessConfig {

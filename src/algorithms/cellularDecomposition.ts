@@ -1,11 +1,14 @@
 import type { CELL_TYPES } from "../constants";
 import type { Grid, PositionType as Point, Direction, State } from "../types";
+import { nextLaneSweepStep } from "./laneSweep";
 import { genericPathSearch } from "./pathfinding";
+import { turnCostOf } from "./turnCost";
 
 /**
  * Boustrophedon Cellular Decomposition Grid Partitioning
- * 
- * Partitions the grid into vertical sweep cells based on connectivity splits/merges.
+ *
+ * Partitions the grid into sweep cells along the given orientation, based on
+ * connectivity splits/merges between neighbouring lines.
  */
 export const decomposeGrid = (
   curGrid: Grid,
@@ -16,7 +19,6 @@ export const decomposeGrid = (
   const cols = curGrid[0].length;
 
   interface Segment {
-    index: number;
     start: number;
     end: number;
     cellId: number | null;
@@ -41,15 +43,13 @@ export const decomposeGrid = (
           start = j;
           inSegment = true;
         }
-      } else {
-        if (inSegment) {
-          lineSegs.push({ index: i, start, end: j - 1, cellId: null });
-          inSegment = false;
-        }
+      } else if (inSegment) {
+        lineSegs.push({ start, end: j - 1, cellId: null });
+        inSegment = false;
       }
     }
     if (inSegment) {
-      lineSegs.push({ index: i, start, end: lineLength - 1, cellId: null });
+      lineSegs.push({ start, end: lineLength - 1, cellId: null });
     }
     segmentsByLine.push(lineSegs);
   }
@@ -103,9 +103,9 @@ export const decomposeGrid = (
     for (const seg of segmentsByLine[i]) {
       for (let j = seg.start; j <= seg.end; j++) {
         if (isVert) {
-          cellIdGrid[j][i] = seg.cellId || 0;
+          cellIdGrid[j][i] = seg.cellId ?? 0;
         } else {
-          cellIdGrid[i][j] = seg.cellId || 0;
+          cellIdGrid[i][j] = seg.cellId ?? 0;
         }
       }
     }
@@ -114,8 +114,16 @@ export const decomposeGrid = (
   return cellIdGrid;
 };
 
+/** Turn cost factor (x shared turn cost) for routes inside the active cell; modest, as these are short local manoeuvres. */
+const LOCAL_TURN_COST_FACTOR = 2;
+/** Turn cost factor (x shared turn cost) for routes that cross into another cell. */
+const TRANSIT_TURN_COST_FACTOR = 3;
+
 /**
  * Cell Decomposition Sweep Algorithm
+ *
+ * Mows one decomposition cell at a time in lanes along the selected
+ * orientation, then routes to the nearest grass and adopts that tile's cell.
  */
 export const getCellularDecompositionMove = (
   state: State,
@@ -124,94 +132,32 @@ export const getCellularDecompositionMove = (
   cellTypes: typeof CELL_TYPES,
 ): Point | null => {
   const { pos } = state;
-  const rows = curGrid.length;
-  const cols = curGrid[0].length;
+  const heading = prevDir.dx !== 0 || prevDir.dy !== 0 ? prevDir : { dx: 0, dy: 1 };
+  const turnCost = turnCostOf(state);
 
-  const currentDir = prevDir && (prevDir.dx !== 0 || prevDir.dy !== 0) ? prevDir : { dx: 0, dy: 1 };
-
-  // 1. Initialize Cell ID Grid if not present
   if (!state.cellIdGrid) {
     state.cellIdGrid = decomposeGrid(curGrid, cellTypes, state.orientation);
     state.activeCellId = state.cellIdGrid[pos.y][pos.x];
   }
+  const cellIdGrid = state.cellIdGrid;
 
-  // Helper to check if a cell is grass and belongs to the active cell
-  const isActiveCellGrass = (x: number, y: number): boolean => {
-    return (
-      x >= 0 &&
-      x < cols &&
-      y >= 0 &&
-      y < rows &&
-      state.cellIdGrid![y][x] === state.activeCellId &&
-      curGrid[y][x].type === cellTypes.GRASS
-    );
-  };
+  const isGrass = (p: Point) => curGrid[p.y]?.[p.x]?.type === cellTypes.GRASS;
+  const isActiveCellGrass = (p: Point) =>
+    isGrass(p) && cellIdGrid[p.y][p.x] === state.activeCellId;
+  const hasGrassInActiveCell = () =>
+    curGrid.some((row, y) => row.some((_, x) => isActiveCellGrass({ x, y })));
 
-  // Helper to check if there is any grass remaining in the active cell
-  const hasGrassInActiveCell = (): boolean => {
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        if (state.cellIdGrid![y][x] === state.activeCellId && curGrid[y][x].type === cellTypes.GRASS) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
-
-  // 2. Systematic Sweep inside the active cell
   if (hasGrassInActiveCell()) {
-    // A. Continue straight if possible
-    const straight = { x: pos.x + currentDir.dx, y: pos.y + currentDir.dy };
-    if (isActiveCellGrass(straight.x, straight.y)) {
-      return straight;
-    }
-
-    // B. Check perpendicular turns
-    const sideA = { dx: -currentDir.dy, dy: currentDir.dx };
-    const sideB = { dx: currentDir.dy, dy: -currentDir.dx };
-    const isAligned = (d: Direction) => state.orientation === 'horizontal' ? d.dx !== 0 : d.dy !== 0;
-    const turnDirs = isAligned(sideA) ? [sideA, sideB] : [sideB, sideA];
-
-    for (const d of turnDirs) {
-      const turnPos = { x: pos.x + d.dx, y: pos.y + d.dy };
-      if (isActiveCellGrass(turnPos.x, turnPos.y)) {
-        return turnPos;
-      }
-    }
-
-    // C. Route to the nearest grass tile *within the same cell*
-    const localPath = genericPathSearch(
-      pos,
-      curGrid,
-      currentDir,
-      (p) => curGrid[p.y][p.x].type === cellTypes.GRASS && state.cellIdGrid![p.y][p.x] === state.activeCellId,
-      () => 0,
-      10 // modest turn penalty for local maneuvers
-    );
-
-    if (localPath && localPath.length > 0) {
-      return localPath[0];
-    }
+    const sweepStep =
+      nextLaneSweepStep(pos, prevDir, state.orientation, curGrid, cellTypes, isActiveCellGrass) ??
+      genericPathSearch(pos, curGrid, heading, isActiveCellGrass, () => 0, LOCAL_TURN_COST_FACTOR * turnCost)?.[0];
+    if (sweepStep) return sweepStep;
   }
 
-  // 3. Current cell is fully mowed. Transition to the next nearest cell containing grass.
-  const globalPath = genericPathSearch(
-    pos,
-    curGrid,
-    currentDir,
-    (p) => curGrid[p.y][p.x].type === cellTypes.GRASS,
-    () => 0,
-    15 // standard turn penalty for cross-cell transit
-  );
-
-  if (globalPath && globalPath.length > 0) {
-    const nextStep = globalPath[0];
-    // Find the final target of this path to set the new active cell ID
-    const targetCellGrass = globalPath[globalPath.length - 1];
-    state.activeCellId = state.cellIdGrid[targetCellGrass.y][targetCellGrass.x];
-    return nextStep;
-  }
-
-  return null;
+  // Active cell is done: route to the nearest grass and make its cell active.
+  const globalPath = genericPathSearch(pos, curGrid, heading, isGrass, () => 0, TRANSIT_TURN_COST_FACTOR * turnCost);
+  if (!globalPath) return null;
+  const target = globalPath[globalPath.length - 1];
+  state.activeCellId = cellIdGrid[target.y][target.x];
+  return globalPath[0];
 };

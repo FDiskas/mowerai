@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { CELL_TYPES } from '../constants';
-import type { Grid } from '../types';
+import type { Grid, State } from '../types';
 import {
     genericPathSearch, findFullPathToTarget, findPathToTarget,
-    getClosestGrass, aStarSearch,
+    getClosestGrass, aStarSearch, committedGoal, getAStarMove,
 } from './pathfinding';
 
 /** w×h grid of a single cell type, with optional obstacle coordinates. */
@@ -89,6 +89,24 @@ describe('getClosestGrass', () => {
     it('returns null when there is no grass left', () => {
         expect(getClosestGrass({ x: 0, y: 0 }, grid(4, 4, CELL_TYPES.MOWED), CELL_TYPES)).toBeNull();
     });
+
+    it('adds the turn cost: equal distance, the tile straight ahead wins', () => {
+        const g = grid(7, 7, CELL_TYPES.MOWED);
+        g[1][3] = { type: CELL_TYPES.GRASS, damage: 0, direction: null }; // aside (north)
+        g[3][5] = { type: CELL_TYPES.GRASS, damage: 0, direction: null }; // ahead (east)
+        const east = { dx: 1, dy: 0 };
+        expect(getClosestGrass({ x: 3, y: 3 }, g, CELL_TYPES, east, 2)).toEqual({ x: 5, y: 3 });
+        // A turn worth less than the extra distance: the nearer side tile wins.
+        g[2][3] = { type: CELL_TYPES.GRASS, damage: 0, direction: null };
+        expect(getClosestGrass({ x: 3, y: 3 }, g, CELL_TYPES, east, 0.5)).toEqual({ x: 3, y: 2 });
+    });
+
+    it('skips the grass tile under the mower (it is cut on departure)', () => {
+        const g = grid(5, 5, CELL_TYPES.MOWED);
+        g[2][2] = { type: CELL_TYPES.GRASS, damage: 0, direction: null };
+        g[2][4] = { type: CELL_TYPES.GRASS, damage: 0, direction: null };
+        expect(getClosestGrass({ x: 2, y: 2 }, g, CELL_TYPES)).toEqual({ x: 4, y: 2 });
+    });
 });
 
 describe('search wrappers', () => {
@@ -96,5 +114,43 @@ describe('search wrappers', () => {
         const g = grid(8, 6);
         const step = aStarSearch({ x: 0, y: 0 }, { x: 5, y: 0 }, g, { dx: 1, dy: 0 })!;
         expect(step).toEqual({ x: 1, y: 0 });
+    });
+
+    it('aStarSearch returns null at once when the target is the start', () => {
+        expect(aStarSearch({ x: 2, y: 2 }, { x: 2, y: 2 }, grid(5, 5), { dx: 1, dy: 0 })).toBeNull();
+    });
+});
+
+describe('committedGoal', () => {
+    const stateAt = (x: number, y: number, goal?: { x: number; y: number }) =>
+        ({ pos: { x, y }, prevDir: { dx: 1, dy: 0 }, goal }) as unknown as State;
+
+    it('keeps an uncut goal instead of choosing again', () => {
+        const state = stateAt(0, 0, { x: 4, y: 4 });
+        expect(committedGoal(state, grid(5, 5), CELL_TYPES, () => ({ x: 1, y: 0 }))).toEqual({ x: 4, y: 4 });
+    });
+
+    it('chooses again once the goal is cut or reached', () => {
+        const g = grid(5, 5);
+        g[4][4] = { type: CELL_TYPES.MOWED, damage: 0, direction: null };
+        const cut = stateAt(0, 0, { x: 4, y: 4 });
+        expect(committedGoal(cut, g, CELL_TYPES, () => ({ x: 1, y: 0 }))).toEqual({ x: 1, y: 0 });
+        expect(cut.goal).toEqual({ x: 1, y: 0 });
+
+        const reached = stateAt(2, 2, { x: 2, y: 2 });
+        expect(committedGoal(reached, grid(5, 5), CELL_TYPES, () => ({ x: 3, y: 2 }))).toEqual({ x: 3, y: 2 });
+    });
+});
+
+describe('getAStarMove', () => {
+    it('uses the state turn cost when it picks its goal', () => {
+        // Grass 3 tiles ahead (east) and 1 tile aside (north); the mower faces east.
+        const g = grid(7, 5, CELL_TYPES.MOWED);
+        g[1][1] = { type: CELL_TYPES.GRASS, damage: 0, direction: null };
+        g[2][4] = { type: CELL_TYPES.GRASS, damage: 0, direction: null };
+        const state = (turnCost: number) =>
+            ({ pos: { x: 1, y: 2 }, prevDir: { dx: 1, dy: 0 }, turnCost }) as unknown as State;
+        expect(getAStarMove(state(5), g, { dx: 1, dy: 0 }, CELL_TYPES)).toEqual({ x: 2, y: 2 });
+        expect(getAStarMove(state(0), g, { dx: 1, dy: 0 }, CELL_TYPES)).toEqual({ x: 1, y: 1 });
     });
 });

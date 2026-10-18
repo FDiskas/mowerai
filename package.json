@@ -11,7 +11,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@google/genai": "^1.51.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
@@ -31,5 +30,8 @@
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.10",
     "vitest": "^4.1.8"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }

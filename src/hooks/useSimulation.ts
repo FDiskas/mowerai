@@ -7,29 +7,29 @@ import { Battery } from '../domain/Battery';
 import { NavigationState } from '../domain/NavigationState';
 import { MovementMetrics, EfficiencyMetrics, ImpactMetrics, SimulationStats } from '../domain/SimulationStats';
 import type { Grid as GridType, PositionType } from '../types';
-
 import { SimulationHistory } from '../domain/SimulationHistory';
 
-export const useSimulation = (initialGrid: GridType, dock: PositionType, maxBat: number) => {
-    const [env, setEnv] = useState(() => new SimulationEnvironment(
-        new Mower(new Battery(maxBat, maxBat), new NavigationState(Position.fromObject(dock), { dx: 0, dy: 1 })),
-        new SimulationGrid(initialGrid),
-        Position.fromObject(dock)
-    ));
+const createEnvironment = (grid: SimulationGrid, dock: PositionType, battery: number) => new SimulationEnvironment(
+    new Mower(new Battery(battery, battery), new NavigationState(Position.fromObject(dock), { dx: 0, dy: 1 })),
+    grid,
+    Position.fromObject(dock)
+);
 
-    const [stats, setStats] = useState(() => new SimulationStats(
-        new MovementMetrics(0, 0),
-        new EfficiencyMetrics(0, 0),
-        new ImpactMetrics(0, 0)
-    ));
+const createStats = (grid: SimulationGrid) => new SimulationStats(
+    new MovementMetrics(0, 0),
+    EfficiencyMetrics.fromGrid(grid),
+    new ImpactMetrics(0)
+);
+
+export const useSimulation = (initialGrid: GridType, dock: PositionType, maxBat: number) => {
+    const [env, setEnv] = useState(() => createEnvironment(new SimulationGrid(initialGrid), dock, maxBat));
+    const [stats, setStats] = useState(() => createStats(env.grid));
+    const [workTimeMs, setWorkTimeMs] = useState(0);
 
     const [history, setHistory] = useState(() => {
         try {
             const saved = localStorage.getItem('mowerai_history');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                return new SimulationHistory(parsed);
-            }
+            if (saved) return SimulationHistory.fromSaved(JSON.parse(saved));
         } catch (e) {
             console.error("Failed to load history from localStorage", e);
         }
@@ -45,17 +45,11 @@ export const useSimulation = (initialGrid: GridType, dock: PositionType, maxBat:
     }, [history]);
 
     const reset = useCallback((grid: GridType, dockPos: PositionType, batteryVal: number) => {
-        setEnv(new SimulationEnvironment(
-            new Mower(new Battery(batteryVal, batteryVal), new NavigationState(Position.fromObject(dockPos), { dx: 0, dy: 1 })),
-            new SimulationGrid(grid),
-            Position.fromObject(dockPos)
-        ));
-        setStats(new SimulationStats(
-            new MovementMetrics(0, 0),
-            new EfficiencyMetrics(0, grid.flat().filter(c => c.type === 'grass').length),
-            new ImpactMetrics(0, 0)
-        ));
+        const simulationGrid = new SimulationGrid(grid);
+        setEnv(createEnvironment(simulationGrid, dockPos, batteryVal));
+        setStats(createStats(simulationGrid));
+        setWorkTimeMs(0);
     }, []);
 
-    return { env, setEnv, stats, setStats, history, setHistory, reset };
+    return { env, setEnv, stats, setStats, workTimeMs, setWorkTimeMs, history, setHistory, reset };
 };

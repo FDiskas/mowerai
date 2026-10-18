@@ -1,183 +1,138 @@
-/**
- * A Multi-Layer Perceptron (MLP) implementation.
- * Optimized for the MowerAI project with Adam Optimizer, He initialization, and L2 regularization.
- */
-export class NeuralNetwork {
-    layers: number[];
-    weights: number[][][];
-    biases: number[][];
-    learningRate: number;
-    
-    // Adam Optimizer state
+/** Adam optimizer moments; only supervised training needs them, so they are created on the first `train` call. */
+interface AdamState {
     mWeights: number[][][];
     vWeights: number[][][];
     mBiases: number[][];
     vBiases: number[][];
-    t: number = 0; // Timestep
-    beta1: number = 0.9;
-    beta2: number = 0.999;
-    epsilon: number = 1e-8;
+    t: number;
+}
 
-    constructor(layers: number[], learningRate: number = 0.001) {
+interface Parameters {
+    weights: number[][][];
+    biases: number[][];
+}
+
+const BETA1 = 0.9;
+const BETA2 = 0.999;
+const EPSILON = 1e-8;
+const WEIGHT_DECAY = 0.0001;
+const LEAKY_SLOPE = 0.01;
+/** Share of mutated weights that are drawn again from scratch instead of nudged. */
+const WEIGHT_RESET_CHANCE = 0.05;
+
+const gaussianRandom = (mean: number, stdDev: number): number => {
+    const u = 1 - Math.random();
+    const v = 1 - Math.random();
+    const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    return mean + z * stdDev;
+};
+
+/** He initialization, suited to Leaky ReLU. */
+const heStdDev = (inputs: number) => Math.sqrt(2.0 / inputs);
+
+const randomParameters = (layers: number[]): Parameters => ({
+    weights: layers.slice(1).map((outputs, i) =>
+        Array.from({ length: outputs }, () =>
+            Array.from({ length: layers[i] }, () => gaussianRandom(0, heStdDev(layers[i]))))),
+    biases: layers.slice(1).map(outputs => new Array<number>(outputs).fill(0)),
+});
+
+const copy2D = (arr: number[][]): number[][] => arr.map(row => [...row]);
+const copy3D = (arr: number[][][]): number[][][] => arr.map(copy2D);
+const zeros2D = (arr: number[][]): number[][] => arr.map(row => row.map(() => 0));
+
+const activate = (x: number): number => (x > 0 ? x : LEAKY_SLOPE * x);
+/** Leaky ReLU keeps the sign, so the derivative can be read from the activated value. */
+const activateDeriv = (activated: number): number => (activated > 0 ? 1 : LEAKY_SLOPE);
+
+const softmax = (logits: number[]): number[] => {
+    const maxLogit = Math.max(...logits);
+    const exps = logits.map(x => Math.exp(x - maxLogit));
+    const sumExps = exps.reduce((a, b) => a + b, 0);
+    return exps.map(x => x / (sumExps + 1e-10));
+};
+
+/**
+ * A Multi-Layer Perceptron with Leaky ReLU hidden layers and a softmax output.
+ * The genetic algorithm only reads and writes its weights; supervised training uses Adam with L2 decay.
+ */
+export class NeuralNetwork {
+    readonly layers: number[];
+    weights: number[][][];
+    biases: number[][];
+    learningRate: number;
+    private adam: AdamState | null = null;
+
+    constructor(layers: number[], learningRate: number = 0.001, parameters: Parameters = randomParameters(layers)) {
         this.layers = layers;
         this.learningRate = learningRate;
-        
-        this.weights = [];
-        this.biases = [];
-        this.mWeights = [];
-        this.vWeights = [];
-        this.mBiases = [];
-        this.vBiases = [];
-
-        this.initializeNetwork(layers);
+        this.weights = parameters.weights;
+        this.biases = parameters.biases;
     }
 
-    private initializeNetwork(layers: number[]) {
-        for (let i = 0; i < layers.length - 1; i++) {
-            const inputNodes = layers[i];
-            const outputNodes = layers[i + 1];
-            
-            // He Initialization (Better for ReLU/Leaky ReLU)
-            const stdDev = Math.sqrt(2.0 / inputNodes);
-
-            const layerWeights: number[][] = [];
-            const layerMWeights: number[][] = [];
-            const layerVWeights: number[][] = [];
-            
-            for (let j = 0; j < outputNodes; j++) {
-                const nodeWeights: number[] = [];
-                const nodeM: number[] = [];
-                const nodeV: number[] = [];
-                for (let k = 0; k < inputNodes; k++) {
-                    nodeWeights.push(this.gaussianRandom(0, stdDev));
-                    nodeM.push(0);
-                    nodeV.push(0);
-                }
-                layerWeights.push(nodeWeights);
-                layerMWeights.push(nodeM);
-                layerVWeights.push(nodeV);
-            }
-            this.weights.push(layerWeights);
-            this.mWeights.push(layerMWeights);
-            this.vWeights.push(layerVWeights);
-
-            const layerBiases: number[] = [];
-            const layerMBiases: number[] = [];
-            const layerVBiases: number[] = [];
-            for (let j = 0; j < outputNodes; j++) {
-                layerBiases.push(0);
-                layerMBiases.push(0);
-                layerVBiases.push(0);
-            }
-            this.biases.push(layerBiases);
-            this.mBiases.push(layerMBiases);
-            this.vBiases.push(layerVBiases);
-        }
-    }
-
-    private gaussianRandom(mean: number, stdDev: number): number {
-        const u = 1 - Math.random();
-        const v = 1 - Math.random();
-        const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-        return mean + z * stdDev;
-    }
-
-    private activate(x: number): number {
-        return x > 0 ? x : 0.01 * x; // Leaky ReLU
-    }
-
-    private activateDeriv(x: number): number {
-        return x > 0 ? 1 : 0.01;
-    }
-
-    private softmax(arr: number[]): number[] {
-        const maxLogit = Math.max(...arr);
-        const exps = arr.map(x => Math.exp(x - maxLogit));
-        const sumExps = exps.reduce((a, b) => a + b, 0);
-        return exps.map(x => x / (sumExps + 1e-10));
-    }
-
-    /**
-     * Standard feedforward pass.
-     * Returns all activations (including input layer) for backpropagation.
-     */
+    /** All activations, input layer included, for backpropagation. */
     feedForward(inputs: number[]): number[][] {
-        let current = inputs;
         const activations: number[][] = [inputs];
+        let current = inputs;
 
         for (let i = 0; i < this.weights.length; i++) {
-            const next: number[] = [];
             const isOutput = i === this.weights.length - 1;
-            
+            const next: number[] = [];
             for (let j = 0; j < this.weights[i].length; j++) {
+                const nodeWeights = this.weights[i][j];
                 let sum = this.biases[i][j];
-                for (let k = 0; k < this.weights[i][j].length; k++) {
-                    sum += current[k] * this.weights[i][j][k];
+                for (let k = 0; k < nodeWeights.length; k++) {
+                    sum += current[k] * nodeWeights[k];
                 }
-                next.push(isOutput ? sum : this.activate(sum));
+                next.push(isOutput ? sum : activate(sum));
             }
-            
-            // Output layer uses softmax (on raw logits for training stability)
-            const layerOutput = isOutput ? this.softmax(next) : next;
-            current = layerOutput;
+            current = isOutput ? softmax(next) : next;
             activations.push(current);
         }
         return activations;
     }
 
     /**
-     * Train using Supervised Learning (Backpropagation).
-     * Assumes Cross-Entropy Loss + Softmax Output Layer.
+     * One supervised step on one sample with cross-entropy loss over the softmax output.
+     * Returns the cross-entropy loss before the update.
      */
     train(inputs: number[], targets: number[]): number {
-        this.t++;
+        const adam = this.adam ??= this.createAdamState();
+        adam.t++;
+        const mScale = 1 / (1 - BETA1 ** adam.t);
+        const vScale = 1 / (1 - BETA2 ** adam.t);
+        const adamDelta = (m: number[], v: number[], k: number, gradient: number): number => {
+            m[k] = BETA1 * m[k] + (1 - BETA1) * gradient;
+            v[k] = BETA2 * v[k] + (1 - BETA2) * gradient * gradient;
+            return (this.learningRate * m[k] * mScale) / (Math.sqrt(v[k] * vScale) + EPSILON);
+        };
+
         const activations = this.feedForward(inputs);
-        const outputActivations = activations[activations.length - 1];
-        
-        // Loss: Cross-Entropy. Gradient w.r.t. output logits (before softmax) is (P - Y)
-        // Since we want to MINIMIZE loss, and we use += below, we'll calculate (Y - P)
-        let deltas = targets.map((y, i) => y - outputActivations[i]);
-        
-        const mse = deltas.reduce((sum, d) => sum + d * d, 0) / deltas.length;
+        const outputs = activations[activations.length - 1];
+        const loss = -targets.reduce((sum, y, i) => sum + y * Math.log(outputs[i] + 1e-10), 0);
+
+        // Gradient ascent on (Y - P), the negative loss gradient w.r.t. the output logits.
+        let deltas = targets.map((y, i) => y - outputs[i]);
 
         for (let i = this.weights.length - 1; i >= 0; i--) {
             const isOutput = i === this.weights.length - 1;
             const prevActivations = activations[i];
-            const nextDeltas: number[] = new Array(this.layers[i]).fill(0);
+            const nextDeltas = new Array<number>(this.layers[i]).fill(0);
 
             for (let j = 0; j < this.weights[i].length; j++) {
-                // If it's a hidden layer, we need the derivative of activation
-                const error = isOutput ? deltas[j] : deltas[j] * this.activateDeriv(activations[i + 1][j]);
-                
-                for (let k = 0; k < this.weights[i][j].length; k++) {
-                    // Gradient calculation with L2 Regularization (Weight Decay)
-                    const gradient = error * prevActivations[k] - 0.0001 * this.weights[i][j][k];
-                    
-                    // Backpropagate error to next layer
-                    nextDeltas[k] += this.weights[i][j][k] * error;
-                    
-                    // Adam Optimizer: Update Weights
-                    this.mWeights[i][j][k] = this.beta1 * this.mWeights[i][j][k] + (1 - this.beta1) * gradient;
-                    this.vWeights[i][j][k] = this.beta2 * this.vWeights[i][j][k] + (1 - this.beta2) * (gradient * gradient);
-                    
-                    const mHat = this.mWeights[i][j][k] / (1 - Math.pow(this.beta1, this.t));
-                    const vHat = this.vWeights[i][j][k] / (1 - Math.pow(this.beta2, this.t));
-                    
-                    this.weights[i][j][k] += (this.learningRate * mHat) / (Math.sqrt(vHat) + this.epsilon);
+                const nodeWeights = this.weights[i][j];
+                const error = isOutput ? deltas[j] : deltas[j] * activateDeriv(activations[i + 1][j]);
+
+                for (let k = 0; k < nodeWeights.length; k++) {
+                    nextDeltas[k] += nodeWeights[k] * error;
+                    const gradient = error * prevActivations[k] - WEIGHT_DECAY * nodeWeights[k];
+                    nodeWeights[k] += adamDelta(adam.mWeights[i][j], adam.vWeights[i][j], k, gradient);
                 }
-                
-                // Adam Optimizer: Update Biases
-                this.mBiases[i][j] = this.beta1 * this.mBiases[i][j] + (1 - this.beta1) * error;
-                this.vBiases[i][j] = this.beta2 * this.vBiases[i][j] + (1 - this.beta2) * (error * error);
-                
-                const mbHat = this.mBiases[i][j] / (1 - Math.pow(this.beta1, this.t));
-                const vbHat = this.vBiases[i][j] / (1 - Math.pow(this.beta2, this.t));
-                
-                this.biases[i][j] += (this.learningRate * mbHat) / (Math.sqrt(vbHat) + this.epsilon);
+                this.biases[i][j] += adamDelta(adam.mBiases[i], adam.vBiases[i], j, error);
             }
             deltas = nextDeltas;
         }
-        return mse;
+        return loss;
     }
 
     predict(inputs: number[]): number[] {
@@ -186,88 +141,62 @@ export class NeuralNetwork {
     }
 
     getWeights(): number[] {
-        const flat: number[] = [];
-        for (const layer of this.weights) {
-            for (const node of layer) {
-                for (const w of node) flat.push(w);
-            }
-        }
-        for (const layer of this.biases) {
-            for (const b of layer) flat.push(b);
-        }
-        return flat;
+        return [...this.weights.flat(2), ...this.biases.flat()];
     }
 
     setWeights(flat: number[]) {
         let idx = 0;
-        for (let i = 0; i < this.weights.length; i++) {
-            for (let j = 0; j < this.weights[i].length; j++) {
-                for (let k = 0; k < this.weights[i][j].length; k++) {
-                    if (idx < flat.length) this.weights[i][j][k] = flat[idx++];
-                }
+        for (const layer of this.weights) {
+            for (const node of layer) {
+                for (let k = 0; k < node.length && idx < flat.length; k++) node[k] = flat[idx++];
             }
         }
-        for (let i = 0; i < this.biases.length; i++) {
-            for (let j = 0; j < this.biases[i].length; j++) {
-                if (idx < flat.length) this.biases[i][j] = flat[idx++];
-            }
+        for (const layer of this.biases) {
+            for (let j = 0; j < layer.length && idx < flat.length; j++) layer[j] = flat[idx++];
         }
     }
 
     mutate(rate: number, amount: number = 0.1) {
-        for (let i = 0; i < this.weights.length; i++) {
-            const stdDev = Math.sqrt(2.0 / this.layers[i]);
-            for (let j = 0; j < this.weights[i].length; j++) {
-                for (let k = 0; k < this.weights[i][j].length; k++) {
-                    if (Math.random() < rate) {
-                        // 5% chance of complete reset to encourage exploration
-                        if (Math.random() < 0.05) {
-                            this.weights[i][j][k] = this.gaussianRandom(0, stdDev);
-                        } else {
-                            this.weights[i][j][k] += this.gaussianRandom(0, amount);
-                        }
-                    }
+        this.weights.forEach((layer, i) => {
+            const stdDev = heStdDev(this.layers[i]);
+            for (const node of layer) {
+                for (let k = 0; k < node.length; k++) {
+                    if (Math.random() >= rate) continue;
+                    node[k] = Math.random() < WEIGHT_RESET_CHANCE
+                        ? gaussianRandom(0, stdDev)
+                        : node[k] + gaussianRandom(0, amount);
                 }
             }
-        }
-        for (let i = 0; i < this.biases.length; i++) {
-            for (let j = 0; j < this.biases[i].length; j++) {
-                if (Math.random() < rate) {
-                    this.biases[i][j] += this.gaussianRandom(0, amount);
-                }
+        });
+        for (const layer of this.biases) {
+            for (let j = 0; j < layer.length; j++) {
+                if (Math.random() < rate) layer[j] += gaussianRandom(0, amount);
             }
         }
     }
 
     static crossover(parentA: NeuralNetwork, parentB: NeuralNetwork): NeuralNetwork {
         const child = parentA.copy();
-        const weightsA = parentA.getWeights();
         const weightsB = parentB.getWeights();
-        const childWeights = weightsA.map((w, i) => Math.random() < 0.5 ? w : weightsB[i]);
-        child.setWeights(childWeights);
+        child.setWeights(parentA.getWeights().map((w, i) => (Math.random() < 0.5 ? w : weightsB[i])));
         return child;
     }
 
     copy(): NeuralNetwork {
-        const nn = new NeuralNetwork(this.layers, this.learningRate);
-        nn.setWeights(this.getWeights());
-        
-        // Fast deep copy for Adam state
-        nn.mWeights = this.deepCopy3D(this.mWeights);
-        nn.vWeights = this.deepCopy3D(this.vWeights);
-        nn.mBiases = this.deepCopy2D(this.mBiases);
-        nn.vBiases = this.deepCopy2D(this.vBiases);
-        nn.t = this.t;
-        
+        const nn = new NeuralNetwork(this.layers, this.learningRate, {
+            weights: copy3D(this.weights),
+            biases: copy2D(this.biases),
+        });
+        if (this.adam) {
+            nn.adam = {
+                mWeights: copy3D(this.adam.mWeights),
+                vWeights: copy3D(this.adam.vWeights),
+                mBiases: copy2D(this.adam.mBiases),
+                vBiases: copy2D(this.adam.vBiases),
+                t: this.adam.t,
+            };
+        }
         return nn;
-    }
-
-    private deepCopy3D(arr: number[][][]): number[][][] {
-        return arr.map(layer => layer.map(node => [...node]));
-    }
-
-    private deepCopy2D(arr: number[][]): number[][] {
-        return arr.map(layer => [...layer]);
     }
 
     save(): string {
@@ -276,25 +205,32 @@ export class NeuralNetwork {
             weights: this.weights,
             biases: this.biases,
             learningRate: this.learningRate,
-            mWeights: this.mWeights,
-            vWeights: this.vWeights,
-            mBiases: this.mBiases,
-            vBiases: this.vBiases,
-            t: this.t
+            ...this.adam,
         });
     }
 
     static load(json: string): NeuralNetwork {
         const data = JSON.parse(json);
-        const nn = new NeuralNetwork(data.layers, data.learningRate);
-        nn.weights = data.weights;
-        nn.biases = data.biases;
-        nn.mWeights = data.mWeights || nn.mWeights;
-        nn.vWeights = data.vWeights || nn.vWeights;
-        nn.mBiases = data.mBiases || nn.mBiases;
-        nn.vBiases = data.vBiases || nn.vBiases;
-        nn.t = data.t || 0;
+        const nn = new NeuralNetwork(data.layers, data.learningRate, { weights: data.weights, biases: data.biases });
+        if (data.mWeights && data.vWeights && data.mBiases && data.vBiases) {
+            nn.adam = {
+                mWeights: data.mWeights,
+                vWeights: data.vWeights,
+                mBiases: data.mBiases,
+                vBiases: data.vBiases,
+                t: data.t ?? 0,
+            };
+        }
         return nn;
     }
-}
 
+    private createAdamState(): AdamState {
+        return {
+            mWeights: this.weights.map(zeros2D),
+            vWeights: this.weights.map(zeros2D),
+            mBiases: zeros2D(this.biases),
+            vBiases: zeros2D(this.biases),
+            t: 0,
+        };
+    }
+}

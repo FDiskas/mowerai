@@ -4,16 +4,54 @@ import { countGrass, resetLawn } from '../utils/simUtils';
 import { CELL_TYPES } from '../constants';
 import { Position } from '../domain/Position';
 import { SimulationService, type SimulationConfig } from '../services/SimulationService';
-import { SimulationStats } from '../domain/SimulationStats';
-import type { Grid as GridType, HistoryRecord, State } from '../types';
+import { EfficiencyMetrics, SimulationStats } from '../domain/SimulationStats';
+import type { SimulationEnvironment } from '../domain/SimulationEnvironment';
+import type { SimulationHistory } from '../domain/SimulationHistory';
+import type { NeuralNetwork } from '../NeuralNetwork';
+import type { Direction, Grid as GridType, HistoryRecord, PositionType as Point, State } from '../types';
+
+type Orientation = 'horizontal' | 'vertical';
+type MoveFn = (state: State, grid: GridType, prevDir: Direction) => Point | null;
+
+/** Algorithm state plus the hook's own bookkeeping for the return to the dock. */
+interface SimState extends State {
+    hasNotifiedFinished: boolean;
+    returnPath: Point[];
+}
+
+interface SessionStartStats {
+    distance: number;
+    turns: number;
+    mowedCount: number;
+    chargeCycles: number;
+    damagedGrassSnapshot: number;
+}
+
+/** Removed algorithm ids that can still come from saved history; they run as Boustrophedon. */
+const LEGACY_SWEEP_IDS = ['stc', 'zigzag', 'u_shape', 'slam_boustrophedon', 'cellular_boustrophedon'];
+
+const roundToTenth = (value: number) => Math.round(value * 10) / 10;
+
+/** Per-run state, cleared so a new run does not resume the phases of an old one. */
+const freshRunState = () => ({
+    cellData: undefined,
+    spiralCenter: undefined,
+    goal: undefined,
+    activeCellId: undefined,
+    cellIdGrid: undefined,
+    hasNotifiedFinished: false,
+    isReturningForCharge: false,
+    returnPath: [],
+});
 
 export const useAppSimulation = (
-    env: any,
-    setEnv: React.Dispatch<React.SetStateAction<any>>,
+    env: SimulationEnvironment,
+    setEnv: React.Dispatch<React.SetStateAction<SimulationEnvironment>>,
     domainStats: SimulationStats,
     setDomainStats: React.Dispatch<React.SetStateAction<SimulationStats>>,
-    setHistory: React.Dispatch<React.SetStateAction<any>>,
-    resetSimulation: (grid: GridType, dockPos: { x: number; y: number }, batteryVal: number) => void,
+    setWorkTimeMs: React.Dispatch<React.SetStateAction<number>>,
+    setHistory: React.Dispatch<React.SetStateAction<SimulationHistory>>,
+    resetSimulation: (grid: GridType, dockPos: Point, batteryVal: number) => void,
     setAlgo: (algo: string) => void,
     config: {
         algo: string;
@@ -22,8 +60,10 @@ export const useAppSimulation = (
         maxBattery: number;
         drainMove: number;
         drainTurn: number;
+        /** Path turn cost in steps, from the training weights (see `turnCostInSteps`). */
+        turnCost: number;
     },
-    nn: any,
+    nn: NeuralNetwork | null,
     showToast: (msg: string, type?: string) => void,
     setStatusMessage: (msg: string) => void
 ) => {
@@ -31,9 +71,10 @@ export const useAppSimulation = (
     const isRunningRef = useRef(false);
     const [isTesting, setIsTesting] = useState(false);
 
-    const simulationRef = useRef<any>(null);
+    const simulationRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const sessionStartTime = useRef<number | null>(null);
-    const sessionStartStats = useRef<any>(null);
+    const lastTickAtRef = useRef(0);
+    const sessionStartStats = useRef<SessionStartStats | null>(null);
     const pendingAlgosRef = useRef<string[]>([]);
     const isTestingAllRef = useRef(false);
     // Pristine lawn captured at the start of a "Test All" run; each algorithm is
@@ -41,33 +82,24 @@ export const useAppSimulation = (
     const testGridRef = useRef<GridType | null>(null);
     // Handle for the delayed start of the next "Test All" model, so a manual
     // stop can cancel it instead of letting the next model fire anyway.
-    const pendingRunTimeoutRef = useRef<any>(null);
+    const pendingRunTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Watchdog: detect a run that stalls (robot spinning in place) or overruns.
     const idleStepsRef = useRef(0);
     const lastMowedRef = useRef(0);
     const totalStepsRef = useRef(0);
 
-    const simState = useRef({
+    const simState = useRef<SimState>({
         pos: { x: 0, y: 0 },
         prevDir: { dx: 0, dy: 1 },
         battery: config.maxBattery,
-        grid: [] as GridType,
-        zigzagIdx: 0,
-        uShapeIdx: 0,
+        grid: [],
         dockPos: { x: 0, y: 0 },
         isCharging: false,
-        isReturningForCharge: false,
-        visitCounts: {} as Record<string, number>,
-        hasNotifiedFinished: false,
-        orientation: config.orientation as 'horizontal' | 'vertical',
+        visitCounts: {},
+        orientation: config.orientation as Orientation,
         maxBattery: config.maxBattery,
-        returnPath: [] as any[],
-        cellData: undefined as State['cellData'],
-        spiralStep: undefined as number | undefined,
-        spiralCenter: undefined as { x: number; y: number } | undefined,
-        stcPath: undefined as any[] | undefined,
-        activeCellId: undefined as number | undefined,
-        cellIdGrid: undefined as number[][] | undefined,
+        turnCost: config.turnCost,
+        ...freshRunState(),
     });
 
     const configRef = useRef(config);
@@ -77,6 +109,11 @@ export const useAppSimulation = (
     useEffect(() => { configRef.current = config; }, [config]);
     useEffect(() => { domainStatsRef.current = domainStats; }, [domainStats]);
     useEffect(() => { envRef.current = env; }, [env]);
+
+    useEffect(() => () => {
+        if (simulationRef.current) clearInterval(simulationRef.current);
+        if (pendingRunTimeoutRef.current) clearTimeout(pendingRunTimeoutRef.current);
+    }, []);
 
     const stopSimulation = useCallback((isManual = false) => {
         setIsRunning(false);
@@ -97,25 +134,27 @@ export const useAppSimulation = (
         }
 
         const duration = sessionStartTime.current ? Math.round((Date.now() - sessionStartTime.current) / 1000) : 0;
-        const currentGrid = envRef.current.grid.cells;
-        const damagedGrassCount = currentGrid.flat().filter((c: any) => c.type === CELL_TYPES.MOWED && c.damage > 0).length;
-        const startDamaged = sessionStartStats.current?.damagedGrassSnapshot || 0;
+        const start = sessionStartStats.current;
+        const { movement, efficiency, impact } = domainStatsRef.current;
+
+        const turns = movement.turns - (start?.turns ?? 0);
+        const mowedCount = efficiency.mowedCount - (start?.mowedCount ?? 0);
+        const damagedGrass = envRef.current.grid.countDamaged() - (start?.damagedGrassSnapshot ?? 0);
+        const chargeCycles = impact.chargeCycles - (start?.chargeCycles ?? 0);
 
         const record: HistoryRecord = {
             id: Date.now(),
             algo: configRef.current.algo,
-            distance: domainStatsRef.current.movement.distance - (sessionStartStats.current?.distance || 0),
-            turns: domainStatsRef.current.movement.turns - (sessionStartStats.current?.turns || 0),
-            mowedCount: domainStatsRef.current.efficiency.mowedCount - (sessionStartStats.current?.mowedCount || 0),
-            duration: duration,
-            damagedGrass: damagedGrassCount - startDamaged,
-            chargeCycles: domainStatsRef.current.impact.chargeCycles - (sessionStartStats.current?.chargeCycles || 0),
-            penalty: 0,
-            moves: []
+            distance: movement.distance - (start?.distance ?? 0),
+            turns,
+            mowedCount,
+            coverage: roundToTenth(new EfficiencyMetrics(mowedCount, efficiency.totalGrass).coveragePercentage),
+            duration,
+            damagedGrass,
+            chargeCycles,
+            penalty: (damagedGrass * 100) + (chargeCycles * 5000) + (turns * 10),
         };
-
-        record.penalty = (record.damagedGrass * 100) + (record.chargeCycles * 5000) + (record.turns * 10);
-        setHistory((prev: any) => prev.addRecord(record));
+        setHistory(prev => prev.addRecord(record));
 
         if (isTestingAllRef.current && pendingAlgosRef.current.length > 0) {
             const nextAlgo = pendingAlgosRef.current.shift()!;
@@ -130,77 +169,64 @@ export const useAppSimulation = (
         }
     }, [setHistory, setAlgo]);
 
-    const getNextStep = useCallback((state: any) => {
+    const getNextStep = useCallback((state: State) => {
         const { pos, grid: curGrid, prevDir, dockPos: currentDock, battery, isReturningForCharge } = state;
         const grassRemaining = countGrass(curGrid);
         const { maxBattery, algo } = configRef.current;
+        const { turnCost } = simState.current;
+
+        const isDock = (p: Point) => p.x === currentDock.x && p.y === currentDock.y;
+        const stepHome = () => algos.findPathToTarget(pos, curGrid, prevDir, isDock, turnCost);
+        const planRouteHome = () => {
+            simState.current.returnPath = algos.findFullPathToTarget(pos, curGrid, prevDir, isDock, turnCost) ?? [];
+        };
+        const followRouteHome = () => simState.current.returnPath.shift() ?? stepHome();
 
         if (((battery / maxBattery) * 100 < 20 || isReturningForCharge) && grassRemaining > 0) {
-            if (pos.x === currentDock.x && pos.y === currentDock.y) return null;
+            if (isDock(pos)) return null;
             if (!simState.current.isReturningForCharge) {
                 showToast("Battery low - returning to charge", 'indigo');
                 simState.current.isReturningForCharge = true;
-                simState.current.returnPath = algos.findFullPathToTarget(pos, curGrid, prevDir, (p) => p.x === currentDock.x && p.y === currentDock.y) || [];
+                planRouteHome();
             }
-            if (simState.current.returnPath && simState.current.returnPath.length > 0) {
-                return simState.current.returnPath.shift();
-            }
-            return algos.findPathToTarget(pos, curGrid, prevDir, (p) => p.x === currentDock.x && p.y === currentDock.y);
+            return followRouteHome();
         }
 
         if (grassRemaining === 0) {
-            if (pos.x === currentDock.x && pos.y === currentDock.y) return null;
+            if (isDock(pos)) return null;
             if (!simState.current.hasNotifiedFinished) {
                 showToast("Mowing finished - returning to dock", 'success');
                 simState.current.hasNotifiedFinished = true;
-                simState.current.returnPath = algos.findFullPathToTarget(pos, curGrid, prevDir, (p) => p.x === currentDock.x && p.y === currentDock.y) || [];
+                planRouteHome();
             }
-            if (simState.current.returnPath && simState.current.returnPath.length > 0) {
-                return simState.current.returnPath.shift();
-            }
-            return algos.findPathToTarget(pos, curGrid, prevDir, (p) => p.x === currentDock.x && p.y === currentDock.y);
+            return followRouteHome();
         }
 
         setStatusMessage("Mowing grass...");
 
-        let move = null;
-        const fns: any = {
-            boustrophedon: (s: any, g: any, d: any) => algos.getBoustrophedonMove(s, g, d, CELL_TYPES),
-            potential_field: (s: any, g: any) => algos.getPotentialFieldMove(s, g, CELL_TYPES),
-            spiral: (s: any, g: any) => algos.getSpiralMove(s, g, CELL_TYPES),
-            dfs_coverage: (s: any, g: any, d: any) => algos.getDFSCoverageMove(s, g, d, CELL_TYPES),
-            rrt: (s: any, g: any, d: any) => algos.getRRTMove(s, g, d, CELL_TYPES),
-            a_star: (s: any, g: any, d: any) => algos.aStarSearch(s.pos, (algos as any).getClosestGrass(s.pos, g, CELL_TYPES) || s.pos, g, d),
-            smart_ai: (s: any, g: any, d: any) => algos.getSmartAIMove(s, g, d, CELL_TYPES),
-            neural_network: (s: any, g: any, d: any) => algos.getNeuralNetworkMove(s, g, d, CELL_TYPES, nn),
-            energy_conservative_sweep: (s: any, g: any, d: any) => algos.getEnergyConservativeSweepMove(s, g, d, CELL_TYPES),
-            cellular_decomposition: (s: any, g: any, d: any) => algos.getCellularDecompositionMove(s, g, d, CELL_TYPES)
+        const fns: Record<string, MoveFn> = {
+            boustrophedon: (s, g, d) => algos.getBoustrophedonMove(s, g, d, CELL_TYPES),
+            potential_field: (s, g) => algos.getPotentialFieldMove(s, g, CELL_TYPES),
+            spiral: (s, g) => algos.getSpiralMove(s, g, CELL_TYPES),
+            dfs_coverage: (s, g, d) => algos.getDFSCoverageMove(s, g, d, CELL_TYPES),
+            rrt: (s, g, d) => algos.getRRTMove(s, g, d, CELL_TYPES),
+            a_star: (s, g, d) => algos.getAStarMove(s, g, d, CELL_TYPES),
+            smart_ai: (s, g, d) => algos.getSmartAIMove(s, g, d, CELL_TYPES),
+            neural_network: (s, g, d) => algos.getNeuralNetworkMove(s, g, d, CELL_TYPES, nn),
+            energy_conservative_sweep: (s, g, d) => algos.getEnergyConservativeSweepMove(s, g, d, CELL_TYPES),
+            cellular_decomposition: (s, g, d) => algos.getCellularDecompositionMove(s, g, d, CELL_TYPES)
         };
+        // Legacy/removed algorithm ids (e.g. a persisted 'stc' or old sweep
+        // names) fall back to the closest surviving behaviour.
+        const algoMove = fns[algo] ?? (LEGACY_SWEEP_IDS.includes(algo) ? fns.boustrophedon : fns.smart_ai);
 
-        if (fns[algo]) {
-            move = fns[algo](simState.current, curGrid, prevDir);
-        } else {
-            // Legacy/removed algorithm ids (e.g. a persisted 'stc' or old sweep
-            // names) fall back to the closest surviving behaviour.
-            if (['stc', 'zigzag', 'u_shape', 'slam_boustrophedon', 'cellular_boustrophedon'].includes(algo)) {
-                move = algos.getBoustrophedonMove(simState.current, curGrid, prevDir, CELL_TYPES);
-            } else {
-                move = algos.getSmartAIMove(simState.current, curGrid, prevDir, CELL_TYPES);
-            }
-        }
+        const move = algoMove(simState.current, curGrid, prevDir)
+            ?? (algo !== 'smart_ai' ? fns.smart_ai(simState.current, curGrid, prevDir) : null);
+        if (move) return move;
 
-
-        if (!move && algo !== 'smart_ai' && grassRemaining > 0) {
-            move = algos.getSmartAIMove(simState.current, curGrid, prevDir, CELL_TYPES);
-        }
-
-        if (!move) {
-            if (pos.x === currentDock.x && pos.y === currentDock.y) return null;
-            setStatusMessage("No grass found - returning home");
-            return algos.findPathToTarget(pos, curGrid, prevDir, (p) => p.x === currentDock.x && p.y === currentDock.y);
-        }
-
-        return move;
+        if (isDock(pos)) return null;
+        setStatusMessage("No grass found - returning home");
+        return stepHome();
     }, [nn, showToast, setStatusMessage]);
 
     const runSimulation = useCallback(() => {
@@ -209,32 +235,33 @@ export const useAppSimulation = (
         setIsRunning(true);
         isRunningRef.current = true;
         sessionStartTime.current = Date.now();
+        lastTickAtRef.current = sessionStartTime.current;
         sessionStartStats.current = {
             distance: domainStatsRef.current.movement.distance,
             turns: domainStatsRef.current.movement.turns,
             mowedCount: domainStatsRef.current.efficiency.mowedCount,
             chargeCycles: domainStatsRef.current.impact.chargeCycles,
-            damagedGrassSnapshot: envRef.current.grid.cells.flat().filter((c: any) => c.type === CELL_TYPES.MOWED && c.damage > 0).length
+            damagedGrassSnapshot: envRef.current.grid.countDamaged()
         };
 
         // Start each session with a clean algorithm state so the contour/sweep
         // and spiral phases restart instead of resuming a previous run.
-        simState.current.orientation = configRef.current.orientation as 'horizontal' | 'vertical';
-        simState.current.cellData = undefined;
-        simState.current.spiralStep = undefined;
-        simState.current.spiralCenter = undefined;
-        simState.current.stcPath = undefined;
-        simState.current.activeCellId = undefined;
-        simState.current.cellIdGrid = undefined;
-        simState.current.hasNotifiedFinished = false;
-        simState.current.isReturningForCharge = false;
-        simState.current.returnPath = [];
+        Object.assign(simState.current, {
+            orientation: configRef.current.orientation as Orientation,
+            turnCost: configRef.current.turnCost,
+            ...freshRunState(),
+        });
 
         idleStepsRef.current = 0;
         lastMowedRef.current = sessionStartStats.current.mowedCount;
         totalStepsRef.current = 0;
 
         simulationRef.current = setInterval(() => {
+            const now = Date.now();
+            const sinceLastTick = now - lastTickAtRef.current;
+            lastTickAtRef.current = now;
+            setWorkTimeMs(t => t + sinceLastTick);
+
             const prevEnv = envRef.current;
             const mower = prevEnv.mower;
             const domainGrid = prevEnv.grid;
@@ -264,16 +291,14 @@ export const useAppSimulation = (
                 return;
             }
 
-            const legacyState = {
+            const nextMoveObj = getNextStep({
                 ...simState.current,
                 pos: mower.pos.toObject(),
                 prevDir: mower.nav.dir,
                 battery: mower.battery.current,
                 grid: domainGrid.cells,
                 dockPos: dPos.toObject()
-            };
-
-            const nextMoveObj = getNextStep(legacyState);
+            });
 
             if (!nextMoveObj) {
                 const isAtDock = mower.pos.equals(dPos);
@@ -300,7 +325,7 @@ export const useAppSimulation = (
             // Track cell visits so coverage algorithms (NN, potential field) can
             // penalise revisits exactly like they do during training.
             const visitKey = `${nextMoveObj.x},${nextMoveObj.y}`;
-            simState.current.visitCounts[visitKey] = (simState.current.visitCounts[visitKey] || 0) + 1;
+            simState.current.visitCounts[visitKey] = (simState.current.visitCounts[visitKey] ?? 0) + 1;
 
             // Watchdog: abort a run that stops making progress (robot spinning in
             // place) or overruns a sane step budget, so "Test All" moves on.
@@ -321,10 +346,10 @@ export const useAppSimulation = (
             }
 
         }, Math.max(10, 140 - configRef.current.speed));
-    }, [stopSimulation, getNextStep, setEnv, setDomainStats, setStatusMessage]);
+    }, [stopSimulation, getNextStep, setEnv, setDomainStats, setWorkTimeMs, setStatusMessage]);
 
-    const prepareSimulationState = useCallback((sourceGrid: GridType, dockPosOverride?: { x: number; y: number }) => {
-        const dockPos = dockPosOverride || envRef.current.dockPos.toObject();
+    const prepareSimulationState = useCallback((sourceGrid: GridType, dockPosOverride?: Point) => {
+        const dockPos = dockPosOverride ?? envRef.current.dockPos.toObject();
         const cleanGrid: GridType = resetLawn(sourceGrid);
 
         resetSimulation(cleanGrid, dockPos, configRef.current.maxBattery);
@@ -335,23 +360,12 @@ export const useAppSimulation = (
             prevDir: { dx: 0, dy: 1 },
             battery: configRef.current.maxBattery,
             grid: cleanGrid,
-            zigzagIdx: 0,
-            uShapeIdx: 0,
             dockPos: { ...dockPos },
             isCharging: false,
-            isReturningForCharge: false,
             visitCounts: {},
-            hasNotifiedFinished: false,
-            orientation: configRef.current.orientation as 'horizontal' | 'vertical',
+            orientation: configRef.current.orientation as Orientation,
             maxBattery: configRef.current.maxBattery,
-            returnPath: [],
-            // Clear per-algorithm state so it cannot leak across runs.
-            cellData: undefined,
-            spiralStep: undefined,
-            spiralCenter: undefined,
-            stcPath: undefined,
-            activeCellId: undefined,
-            cellIdGrid: undefined,
+            ...freshRunState(),
         };
         return cleanGrid;
     }, [resetSimulation]);

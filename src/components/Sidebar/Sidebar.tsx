@@ -3,13 +3,16 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { AlgorithmSelector } from './AlgorithmSelector';
 import type { TrainingStatus, FitnessConfig } from '../../types';
+import type { CELL_TYPES } from '../../constants';
+import { turnCostInSteps } from '../../algorithms';
+import { shareOfIdeal } from '../../utils/fitness';
 
 interface SidebarProps {
     onRandomizeMap: () => void;
     onClearMap: () => void;
     onOpenSaveModal: () => void;
     onOpenLoadModal: () => void;
-    
+
     selectedAlgo: string;
     setAlgo: (val: string) => void;
     speed: number;
@@ -17,8 +20,8 @@ interface SidebarProps {
 
     brushType: string;
     setBrushType: (val: string) => void;
-    cellTypes: any;
-    
+    cellTypes: typeof CELL_TYPES;
+
     trainingStatus: TrainingStatus;
     fitnessConfig: FitnessConfig;
     setFitnessConfig: (cfg: FitnessConfig) => void;
@@ -28,7 +31,7 @@ interface SidebarProps {
     onStopTrainNN: () => void;
     onDownloadModel: () => void;
     onUploadModel: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    
+
     isRunning: boolean;
     isTesting: boolean;
     onRunSimulation: () => void;
@@ -41,37 +44,45 @@ interface SidebarProps {
     onReplayWithNN?: () => void;
 }
 
+interface FitnessRowProps {
+    label: string;
+    cfgKey: keyof FitnessConfig;
+    config: FitnessConfig;
+    onChange: (key: keyof FitnessConfig, val: number) => void;
+    step?: number;
+    min?: number;
+    max?: number;
+}
+
+/** Lives outside `Sidebar`: a component defined inside it remounts on every render and loses input focus. */
+const FitnessRow = ({ label, cfgKey, config, onChange, step = 100, min = -50000, max = 50000 }: FitnessRowProps) => {
+    const rowId = `fitness-${cfgKey}`;
+    return (
+        <div className="flex items-center justify-between gap-2">
+            <label htmlFor={rowId} className="text-[9px] text-slate-400 flex-1 truncate cursor-pointer" title={label}>{label}</label>
+            <input
+                id={rowId}
+                name={rowId}
+                type="number"
+                step={step}
+                min={min}
+                max={max}
+                value={config[cfgKey]}
+                onChange={e => onChange(cfgKey, parseFloat(e.target.value) || 0)}
+                className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-right font-mono text-indigo-300 focus:outline-none focus:border-indigo-500"
+            />
+        </div>
+    );
+};
+
 export const Sidebar = memo<SidebarProps>((props) => {
     const [showFitness, setShowFitness] = useState(false);
+    const isBusy = props.isRunning || props.isTesting;
+    const trainingPercent = Math.round(shareOfIdeal(props.trainingStatus.bestFitness, props.trainingStatus.idealFitness) * 100);
 
-    const updateCfg = (key: keyof FitnessConfig, val: number) => {
-        props.setFitnessConfig({ ...props.fitnessConfig, [key]: val });
-    };
-
-    const FitnessRow = ({ label, cfgKey, step = 100, min = -50000, max = 50000 }: {
-        label: string;
-        cfgKey: keyof FitnessConfig;
-        step?: number;
-        min?: number;
-        max?: number;
-    }) => {
-        const rowId = `fitness-${cfgKey}`;
-        return (
-            <div className="flex items-center justify-between gap-2">
-                <label htmlFor={rowId} className="text-[9px] text-slate-400 flex-1 truncate cursor-pointer" title={label}>{label}</label>
-                <input
-                    id={rowId}
-                    name={rowId}
-                    type="number"
-                    step={step}
-                    min={min}
-                    max={max}
-                    value={props.fitnessConfig[cfgKey] as number}
-                    onChange={e => updateCfg(cfgKey, parseFloat(e.target.value) || 0)}
-                    className="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-right font-mono text-indigo-300 focus:outline-none focus:border-indigo-500"
-                />
-            </div>
-        );
+    const configBinding = {
+        config: props.fitnessConfig,
+        onChange: (key: keyof FitnessConfig, val: number) => props.setFitnessConfig({ ...props.fitnessConfig, [key]: val }),
     };
 
     return (
@@ -87,46 +98,45 @@ export const Sidebar = memo<SidebarProps>((props) => {
                     {/* Map Layout Section */}
                     <div className="bg-slate-950/40 p-4 rounded-2xl border border-slate-800/50 space-y-3">
                         <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block text-left ml-1">Map Layout</label>
-                        
+
                         <div className="grid grid-cols-2 gap-2">
-                            <Button 
-                                variant="primary" 
-                                size="sm" 
-                                onClick={props.onRandomizeMap} 
-                                disabled={props.isRunning || props.isTesting}
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={props.onRandomizeMap}
+                                disabled={isBusy}
                             >
                                 RANDOMIZE
                             </Button>
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={props.onClearMap} 
-                                disabled={props.isRunning || props.isTesting}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={props.onClearMap}
+                                disabled={isBusy}
                             >
                                 CLEAR MAP
                             </Button>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
-                            <Button 
-                                variant="secondary" 
-                                size="sm" 
+                            <Button
+                                variant="secondary"
+                                size="sm"
                                 onClick={props.onOpenSaveModal}
-                                disabled={props.isRunning || props.isTesting}
+                                disabled={isBusy}
                             >
                                 SAVE MAP
                             </Button>
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={props.onOpenLoadModal}
-                                disabled={props.isRunning || props.isTesting}
+                                disabled={isBusy}
                             >
                                 LOAD MAP
                             </Button>
                         </div>
                     </div>
-
 
                     {/* Algorithm Selector */}
                     <AlgorithmSelector
@@ -166,16 +176,16 @@ export const Sidebar = memo<SidebarProps>((props) => {
                 {/* Primary Actions */}
                 <div className="mt-10 space-y-3 pt-6 border-t border-slate-800/50">
                     <Button
-                        variant={props.isRunning || props.isTesting ? 'danger' : 'primary'}
+                        variant={isBusy ? 'danger' : 'primary'}
                         size="lg"
                         fullWidth
-                        onClick={props.isRunning || props.isTesting ? props.onStopSimulation : props.onRunSimulation}
+                        onClick={isBusy ? props.onStopSimulation : props.onRunSimulation}
                         className="text-sm py-4"
                     >
                         {props.isTesting ? 'STOP TEST ALL' : props.isRunning ? 'STOP' : 'START WORK'}
                     </Button>
 
-                    {props.hasNn && props.selectedAlgo !== 'neural_network' && !props.isRunning && !props.isTesting && (
+                    {props.hasNn && props.selectedAlgo !== 'neural_network' && !isBusy && (
                         <Button
                             variant="indigo"
                             size="md"
@@ -186,17 +196,17 @@ export const Sidebar = memo<SidebarProps>((props) => {
                             ⚡ REPLAY WITH EVOLVED NN
                         </Button>
                     )}
-                    
-                    <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        fullWidth 
-                        onClick={props.onTestAll} 
-                        disabled={props.isRunning || props.isTesting}
+
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        fullWidth
+                        onClick={props.onTestAll}
+                        disabled={isBusy}
                     >
                         TEST ALL
                     </Button>
-                    
+
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" fullWidth onClick={props.onResetMap}>
                             CLEAR PATH
@@ -219,13 +229,14 @@ export const Sidebar = memo<SidebarProps>((props) => {
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-tight">Gen {props.trainingStatus.epoch}</span>
                                     <span className="text-[9px] text-indigo-500 font-mono">Fitness: {Math.round(props.trainingStatus.bestFitness)}</span>
+                                    <span className="text-[9px] text-indigo-400 font-mono" title="Best fitness as a share of a perfect run on the same maps">{trainingPercent}% of ideal</span>
                                 </div>
-                                
-                                <button 
+
+                                <button
                                     onClick={props.onToggleVisualTraining}
                                     className={`px-3 py-1.5 rounded-lg text-[9px] font-black tracking-widest transition-all ${
-                                        props.showVisualTraining 
-                                            ? 'bg-indigo-500 text-white shadow-[0_0_10px_rgba(99,102,241,0.4)]' 
+                                        props.showVisualTraining
+                                            ? 'bg-indigo-500 text-white shadow-[0_0_10px_rgba(99,102,241,0.4)]'
                                             : 'bg-slate-900 text-slate-500 border border-slate-800'
                                     }`}
                                 >
@@ -236,8 +247,8 @@ export const Sidebar = memo<SidebarProps>((props) => {
                             <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-indigo-500/10">
                                 <div
                                     className="h-full bg-indigo-500 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(99,102,241,0.5)]"
-                                    style={{ width: `${Math.min(100, Math.max(0, (props.trainingStatus.bestFitness / 400000) * 100))}%` }}
-                                ></div>
+                                    style={{ width: `${trainingPercent}%` }}
+                                />
                             </div>
 
                             {props.showVisualTraining && (
@@ -255,7 +266,6 @@ export const Sidebar = memo<SidebarProps>((props) => {
                             START EVOLUTION
                         </Button>
                     )}
-
 
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" fullWidth onClick={props.onDownloadModel} disabled={props.trainingStatus.isTraining}>
@@ -281,29 +291,32 @@ export const Sidebar = memo<SidebarProps>((props) => {
                             {/* Rewards */}
                             <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">✦ Rewards</p>
                             <div className="space-y-2">
-                                <FitnessRow label="New Cell" cfgKey="discoveryReward" />
-                                <FitnessRow label="Correct Direction Step" cfgKey="orientationBonus" step={10} />
-                                <FitnessRow label="Straight Line Step" cfgKey="straightLineBonus" step={50} />
-                                <FitnessRow label="Completion + Return" cfgKey="completionBonus" />
-                                <FitnessRow label="Battery Efficiency ×" cfgKey="batteryEfficiencyWeight" />
+                                <FitnessRow label="New Cell" cfgKey="discoveryReward" {...configBinding} />
+                                <FitnessRow label="Correct Direction Step" cfgKey="orientationBonus" step={10} {...configBinding} />
+                                <FitnessRow label="Straight Line Step" cfgKey="straightLineBonus" step={50} {...configBinding} />
+                                <FitnessRow label="Completion + Return" cfgKey="completionBonus" {...configBinding} />
+                                <FitnessRow label="Battery Efficiency ×" cfgKey="batteryEfficiencyWeight" {...configBinding} />
                             </div>
 
                             {/* Penalties */}
                             <p className="text-[8px] font-black text-rose-500 uppercase tracking-widest mt-2">✦ Penalties</p>
                             <div className="space-y-2">
-                                <FitnessRow label="Mowed Grass Revisit" cfgKey="mowedRevisitPenalty" step={10} />
-                                <FitnessRow label="Cyclic Movement" cfgKey="oscillationPenalty" />
-                                <FitnessRow label="Turn" cfgKey="turnPenalty" step={10} />
-                                <FitnessRow label="Out of Battery Outside Dock" cfgKey="batteryOutPenalty" />
-                                <FitnessRow label="Grass Damage ×" cfgKey="damageWeight" />
-                                <FitnessRow label="Charge Cycle ×" cfgKey="chargeCycleWeight" />
+                                <FitnessRow label="Mowed Grass Revisit" cfgKey="mowedRevisitPenalty" step={10} {...configBinding} />
+                                <FitnessRow label="Cyclic Movement" cfgKey="oscillationPenalty" {...configBinding} />
+                                <FitnessRow label="Turn" cfgKey="turnPenalty" step={10} {...configBinding} />
+                                <p className="text-[9px] text-slate-500 text-right">
+                                    Path turn cost (all algorithms): {turnCostInSteps(props.fitnessConfig).toFixed(1)} steps = Turn ÷ Mowed Grass Revisit
+                                </p>
+                                <FitnessRow label="Out of Battery Outside Dock" cfgKey="batteryOutPenalty" {...configBinding} />
+                                <FitnessRow label="Grass Damage ×" cfgKey="damageWeight" {...configBinding} />
+                                <FitnessRow label="Charge Cycle ×" cfgKey="chargeCycleWeight" {...configBinding} />
                             </div>
 
                             {/* Hard limits */}
                             <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest mt-2">✦ Hard Limits</p>
                             <div className="space-y-2">
-                                <FitnessRow label="Visit Limit (Disqual.)" cfgKey="visitLimit" step={1} min={2} max={20} />
-                                <FitnessRow label="Max Revisit Ratio" cfgKey="maxMowedRevisitRatio" step={0.05} min={0.05} max={1} />
+                                <FitnessRow label="Visit Limit (Disqual.)" cfgKey="visitLimit" step={1} min={2} max={20} {...configBinding} />
+                                <FitnessRow label="Max Revisit Ratio" cfgKey="maxMowedRevisitRatio" step={0.05} min={0.05} max={1} {...configBinding} />
                             </div>
                         </div>
                     )}

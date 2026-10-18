@@ -1,16 +1,18 @@
 import type { CELL_TYPES } from "../constants";
 import type { Grid, PositionType as Point, Direction, State } from "../types";
+import { nextLaneSweepStep } from "./laneSweep";
 import { findPathToTarget } from "./pathfinding";
+import { turnCostOf } from "./turnCost";
 
 /**
  * Snake Fill — depth-first / backtracking coverage.
  *
  * Unlike Boustrophedon (which imposes a contour pass and fixed parallel rows)
  * this just greedily snakes through whatever fresh grass is adjacent: keep the
- * current heading as long as there is grass ahead, otherwise turn, otherwise —
- * at a dead end — A* back to the nearest remaining grass. The straight-ahead
- * preference produces long passes with few turns, and the backtrack step keeps
- * it complete on obstacle-riddled lawns.
+ * current lane while there is grass ahead, shift one tile into the next lane
+ * along the selected orientation, otherwise — at a dead end — A* back to the
+ * nearest remaining grass. The lane preference produces long passes with few
+ * turns, and the backtrack step keeps it complete on obstacle-riddled lawns.
  */
 export const getDFSCoverageMove = (
   state: State,
@@ -19,47 +21,11 @@ export const getDFSCoverageMove = (
   cellTypes: typeof CELL_TYPES,
 ): Point | null => {
   const { pos } = state;
-  const rows = curGrid.length;
-  const cols = curGrid[0].length;
+  const isFreshGrass = (p: Point) => curGrid[p.y]?.[p.x]?.type === cellTypes.GRASS;
 
-  const isFreshGrass = (x: number, y: number) =>
-    x >= 0 &&
-    x < cols &&
-    y >= 0 &&
-    y < rows &&
-    curGrid[y][x].type === cellTypes.GRASS;
-
-  const sideA = { dx: -prevDir.dy, dy: prevDir.dx };
-  const sideB = { dx: prevDir.dy, dy: -prevDir.dx };
-
-  // Prioritize the side turn that aligns with our preferred orientation
-  const isAligned = (d: Direction) => state.orientation === 'horizontal' ? d.dx !== 0 : d.dy !== 0;
-  const turns = isAligned(sideA) ? [sideA, sideB] : [sideB, sideA];
-
-  // Prefer straight, then a perpendicular turn, then reverse — relative to the
-  // current heading, so the mower keeps snaking instead of darting around.
-  const candidates: Direction[] = [
-    prevDir,
-    ...turns,
-    { dx: -prevDir.dx, dy: -prevDir.dy },
-    // Absolute fallback order for the first move (prevDir may be a no-op).
-    state.orientation === 'horizontal' ? { dx: 1, dy: 0 } : { dx: 0, dy: 1 },
-    state.orientation === 'horizontal' ? { dx: -1, dy: 0 } : { dx: 0, dy: -1 },
-    state.orientation === 'horizontal' ? { dx: 0, dy: 1 } : { dx: 1, dy: 0 },
-    state.orientation === 'horizontal' ? { dx: 0, dy: -1 } : { dx: -1, dy: 0 },
-  ];
-
-  for (const d of candidates) {
-    if (d.dx === 0 && d.dy === 0) continue;
-    if (isFreshGrass(pos.x + d.dx, pos.y + d.dy))
-      return { x: pos.x + d.dx, y: pos.y + d.dy };
-  }
-
-  // Dead end: backtrack to the nearest remaining grass via A*.
-  return findPathToTarget(
-    pos,
-    curGrid,
-    prevDir,
-    (p) => curGrid[p.y][p.x].type === cellTypes.GRASS,
+  return (
+    nextLaneSweepStep(pos, prevDir, state.orientation, curGrid, cellTypes, isFreshGrass) ??
+    // Dead end: backtrack to the nearest remaining grass via A*.
+    findPathToTarget(pos, curGrid, prevDir, isFreshGrass, turnCostOf(state))
   );
 };

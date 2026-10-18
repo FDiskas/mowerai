@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { MapManagerModal } from './components/Sidebar/MapManagerModal';
 import { useNeuralNetwork } from './hooks/useNeuralNetwork';
-import {
-    CELL_TYPES,
-    ALGORITHMS_LIST,
-} from './constants';
-import type { Grid as GridType, Stats } from './types';
+import { CELL_TYPES, ALGORITHMS_LIST, ALGORITHMS_NAMES } from './constants';
+import type { Cell, Grid as GridType, PositionType, Stats } from './types';
 import { resetLawn } from './utils/simUtils';
+import { turnCostInSteps } from './algorithms';
 
 // UI Components
 import { Sidebar } from './components/Sidebar/Sidebar';
@@ -17,7 +15,6 @@ import { StatsPanel } from './components/Stats/StatsPanel';
 import { TopBar } from './components/Layout/TopBar';
 import { Footer } from './components/Layout/Footer';
 import { TelemetryPanel } from './components/Stats/TelemetryPanel';
-import { ALGORITHMS_NAMES } from './constants';
 
 // Domain
 import { useSimulation } from './hooks/useSimulation';
@@ -30,25 +27,29 @@ import { useAppSettings } from './hooks/useAppSettings';
 import { useAppUI } from './hooks/useAppUI';
 import { useAppSimulation } from './hooks/useAppSimulation';
 
+const isInDockLandingZone = (r: number, c: number, dock: PositionType) =>
+    Math.abs(r - dock.y) <= 1 && Math.abs(c - dock.x) <= 1;
+
+const freshCellOfType = (cell: Cell, type: Cell['type']): Cell =>
+    ({ ...cell, type, damage: 0, direction: null });
+
 /** Seed a natural-looking default scatter of trees / bushes / rocks (obstacles). */
-const seedObstacles = (cells: GridType, dock: { x: number; y: number }): GridType => {
+const seedObstacles = (cells: GridType, dock: PositionType): GridType => {
     const rows = cells.length;
     const cols = cells[0]?.length ?? 0;
     return cells.map((row, r) => row.map((cell, c) => {
-        if (cell.type === CELL_TYPES.DOCK) return cell;
-        // keep a clear landing zone around the dock
-        if (Math.abs(r - dock.y) <= 1 && Math.abs(c - dock.x) <= 1) return cell;
+        if (cell.type === CELL_TYPES.DOCK || isInDockLandingZone(r, c, dock)) return cell;
         const h = Math.abs((r * 928371) ^ (c * 1299721) ^ ((r + c) * 40503));
         const nearEdge = r < 2 || c < 2 || r > rows - 3 || c > cols - 3;
         const make = nearEdge ? h % 5 === 0 : h % 23 === 0;
-        return make ? { ...cell, type: CELL_TYPES.OBSTACLE, damage: 0, direction: null } : cell;
+        return make ? freshCellOfType(cell, CELL_TYPES.OBSTACLE) : cell;
     }));
 };
 
 /** Build a fresh grass grid of the given size with a dock and a seeded obstacle scatter. */
-const buildGrid = (cols: number, rows: number, dock: { x: number; y: number }): GridType => {
-    const base: GridType = Array(rows).fill(null).map((_, r) =>
-        Array(cols).fill(null).map((_, c) => ({
+const buildGrid = (cols: number, rows: number, dock: PositionType): GridType => {
+    const base: GridType = Array.from({ length: rows }, (_, r) =>
+        Array.from({ length: cols }, (_, c) => ({
             type: (r === dock.y && c === dock.x) ? CELL_TYPES.DOCK : CELL_TYPES.GRASS,
             damage: 0,
             direction: null
@@ -57,23 +58,16 @@ const buildGrid = (cols: number, rows: number, dock: { x: number; y: number }): 
     return seedObstacles(base, dock);
 };
 
-const randomizeObstacles = (cells: GridType, dock: { x: number; y: number }): GridType => {
-    return cells.map((row, r) => row.map((cell, c) => {
-        if (cell.type === CELL_TYPES.DOCK) return cell;
-        if (Math.abs(r - dock.y) <= 1 && Math.abs(c - dock.x) <= 1) return cell;
-        const isObstacle = Math.random() < 0.15;
-        return isObstacle 
-            ? { ...cell, type: CELL_TYPES.OBSTACLE, damage: 0, direction: null } 
-            : { ...cell, type: CELL_TYPES.GRASS, damage: 0, direction: null };
+const randomizeObstacles = (cells: GridType, dock: PositionType): GridType =>
+    cells.map((row, r) => row.map((cell, c) => {
+        if (cell.type === CELL_TYPES.DOCK || isInDockLandingZone(r, c, dock)) return cell;
+        return freshCellOfType(cell, Math.random() < 0.15 ? CELL_TYPES.OBSTACLE : CELL_TYPES.GRASS);
     }));
-};
 
-const clearObstacles = (cells: GridType): GridType => {
-    return cells.map(row => row.map(cell => {
-        if (cell.type === CELL_TYPES.DOCK) return cell;
-        return { ...cell, type: CELL_TYPES.GRASS, damage: 0, direction: null };
-    }));
-};
+const clearObstacles = (cells: GridType): GridType =>
+    cells.map(row => row.map(cell =>
+        cell.type === CELL_TYPES.DOCK ? cell : freshCellOfType(cell, CELL_TYPES.GRASS)
+    ));
 
 export const App: React.FC = () => {
     // UI State
@@ -107,25 +101,22 @@ export const App: React.FC = () => {
     } = useAppUI();
 
     // Domain State
-    const { env, setEnv, stats: domainStats, setStats: setDomainStats, history, setHistory, reset: resetSimulation } = useSimulation([], { x: 0, y: 0 }, maxBattery);
+    const { env, setEnv, stats: domainStats, setStats: setDomainStats, workTimeMs, setWorkTimeMs, history, setHistory, reset: resetSimulation } = useSimulation([], { x: 0, y: 0 }, maxBattery);
 
     // Derived UI State
     const grid = env.grid.cells;
     const mowerPos = env.mower.pos.toObject();
     const battery = env.mower.battery.current;
-    const dockPos = useMemo(() => env.dockPos.toObject(), [env.dockPos.x, env.dockPos.y]);
+    const dockPos = useMemo(() => env.dockPos.toObject(), [env.dockPos]);
 
-    const stats: Stats = {
+    const stats: Stats = useMemo(() => ({
         distance: domainStats.movement.distance,
         mowedCount: domainStats.efficiency.mowedCount,
         totalGrass: domainStats.efficiency.totalGrass,
         turns: domainStats.movement.turns,
         chargeCycles: domainStats.impact.chargeCycles,
-        startTime: null,
-        endTime: null,
-        accumulatedDuration: 0,
         history: history.records
-    };
+    }), [domainStats, history]);
 
     // Map Manager Modal State
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -142,32 +133,34 @@ export const App: React.FC = () => {
     } = useAppSimulation(
         env, setEnv,
         domainStats, setDomainStats,
+        setWorkTimeMs,
         setHistory, resetSimulation,
         setAlgo,
-        { algo, orientation, speed, maxBattery, drainMove, drainTurn },
+        { algo, orientation, speed, maxBattery, drainMove, drainTurn, turnCost: turnCostInSteps(fitnessConfig) },
         nn, showToast, setStatusMessage
     );
 
     // Persist Grid Layout in localStorage
+    const gridCells = env.grid.cells;
+    const envDockPos = env.dockPos;
     useEffect(() => {
-        if (env && env.grid && env.grid.cells && env.grid.cells.length > 0) {
-            try {
-                const layout = {
-                    cols: gridSize.cols,
-                    rows: gridSize.rows,
-                    dockPos: env.dockPos.toObject(),
-                    cells: env.grid.cells.map(row => row.map(cell => ({
-                        type: cell.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : cell.type,
-                        damage: 0,
-                        direction: null
-                    })))
-                };
-                localStorage.setItem('mowerai_saved_map', JSON.stringify(layout));
-            } catch (e) {
-                console.error("Failed to save map to localStorage", e);
-            }
+        if (gridCells.length === 0) return;
+        try {
+            const layout = {
+                cols: gridSize.cols,
+                rows: gridSize.rows,
+                dockPos: envDockPos.toObject(),
+                cells: gridCells.map(row => row.map(cell => ({
+                    type: cell.type === CELL_TYPES.MOWED ? CELL_TYPES.GRASS : cell.type,
+                    damage: 0,
+                    direction: null
+                })))
+            };
+            localStorage.setItem('mowerai_saved_map', JSON.stringify(layout));
+        } catch (e) {
+            console.error("Failed to save map to localStorage", e);
         }
-    }, [env.grid.cells, env.dockPos, gridSize]);
+    }, [gridCells, envDockPos, gridSize]);
 
     const initGrid = useCallback(() => {
         const saved = localStorage.getItem('mowerai_saved_map');
@@ -238,7 +231,7 @@ export const App: React.FC = () => {
         showToast("Map cleared of all obstacles");
     }, [stopSimulation, prepareSimulationState, showToast]);
 
-    const handleLoadMap = useCallback((cells: GridType, cols: number, rows: number, dock: { x: number; y: number }) => {
+    const handleLoadMap = useCallback((cells: GridType, cols: number, rows: number, dock: PositionType) => {
         stopSimulation(true);
         setGridSize({ cols, rows });
         prepareSimulationState(cells, dock);
@@ -273,7 +266,7 @@ export const App: React.FC = () => {
         if (!isRunningRef.current) {
             stopSimulation(true);
             prepareSimulationState(gridRef.current);
-            showToast(`Switched to ${ALGORITHMS_NAMES[newAlgo as keyof typeof ALGORITHMS_NAMES] || newAlgo}. Lawn cleared.`);
+            showToast(`Switched to ${ALGORITHMS_NAMES[newAlgo as keyof typeof ALGORITHMS_NAMES] ?? newAlgo}. Lawn cleared.`);
         }
     }, [setAlgo, stopSimulation, prepareSimulationState, showToast]);
 
@@ -297,7 +290,7 @@ export const App: React.FC = () => {
         if (currentBrushType === CELL_TYPES.DOCK) {
             if (currentCell.type === CELL_TYPES.OBSTACLE) return;
 
-            const newGridCells = currentEnv.grid.cells.map((row: any, rIdx: number) => row.map((cell: any, cIdx: number) => {
+            const newGridCells = currentEnv.grid.cells.map((row, rIdx) => row.map((cell, cIdx) => {
                 if (cell.type === CELL_TYPES.DOCK) return { ...cell, type: CELL_TYPES.GRASS };
                 if (rIdx === r && cIdx === c) return { ...cell, type: CELL_TYPES.DOCK, damage: 0 };
                 return cell;
@@ -307,11 +300,11 @@ export const App: React.FC = () => {
             return;
         }
 
-        const newType = currentCell.type === currentBrushType ? CELL_TYPES.GRASS : currentBrushType as any;
+        const newType = currentCell.type === currentBrushType ? CELL_TYPES.GRASS : currentBrushType;
         const nextGrid = currentEnv.grid.updateCell(pos.toObject(), { type: newType, damage: 0, direction: null });
 
         setEnv(prev => prev.withGrid(nextGrid));
-        setDomainStats(s => new SimulationStats(s.movement, new EfficiencyMetrics(s.efficiency.mowedCount, nextGrid.countGrass()), s.impact));
+        setDomainStats(s => new SimulationStats(s.movement, EfficiencyMetrics.fromGrid(nextGrid), s.impact));
     }, [resetSimulation, setEnv, setDomainStats]);
 
     const handleCellMouseEnter = useCallback((r: number, c: number) => {
@@ -345,27 +338,23 @@ export const App: React.FC = () => {
     }, [setIsSettingsOpen]);
 
     const handleClearHistory = useCallback(() => {
-        setHistory(new SimulationHistory([]));
+        setHistory(new SimulationHistory());
     }, [setHistory]);
 
     const handleMouseDown = useCallback(() => {
         setIsDrawing(true);
     }, []);
 
-    // Note: duration is calculated based on accumulated time when session is not running.
-    const duration = Math.round((stats.accumulatedDuration || 0) / 1000);
+    const duration = Math.round(workTimeMs / 1000);
     const winnerId = useMemo(() => history.getWinnerId(), [history]);
-    const currentDamage = useMemo(() => {
-        return env.grid.cells.flat().filter(c => c.type === CELL_TYPES.MOWED && c.damage > 0).length;
-    }, [env.grid.cells]);
+    const currentDamage = useMemo(() => env.grid.countDamaged(), [env.grid]);
 
-    // Telemetry (right panel) derivations
-    const coverage = stats.totalGrass > 0 ? (stats.mowedCount / stats.totalGrass) * 100 : 0;
+    const coverage = domainStats.efficiency.coveragePercentage;
     const batteryPct = (battery / maxBattery) * 100;
     const stepDelay = Math.max(10, 140 - speed);
     const speedLabel = `${((1000 / stepDelay) * 0.045).toFixed(1)} m/s`;
     const complexity = stats.distance > 0 ? Math.min(100, (stats.turns / stats.distance) * 220) : 0;
-    const algoName = ALGORITHMS_NAMES[algo as keyof typeof ALGORITHMS_NAMES] || algo;
+    const algoName = ALGORITHMS_NAMES[algo as keyof typeof ALGORITHMS_NAMES] ?? algo;
 
     return (
         <div className="flex flex-col items-center p-4 md:p-6 min-h-screen text-slate-200 font-sans selection:bg-cyan-500/30" onMouseUp={() => setIsDrawing(false)}>
@@ -460,6 +449,7 @@ export const App: React.FC = () => {
 
                 <StatsPanel
                     stats={stats}
+                    coverage={coverage}
                     duration={duration}
                     winnerId={winnerId}
                     currentDamage={currentDamage}
