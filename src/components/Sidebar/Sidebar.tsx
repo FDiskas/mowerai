@@ -2,8 +2,7 @@ import React, { useRef, memo } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { AlgorithmSelector } from './AlgorithmSelector';
-import type { CELL_TYPES } from '../../constants';
-import type { TrainingStatus } from '../../hooks/useNeuralNetwork';
+import { STOP_AFTER_GENERATIONS_WITHOUT_IMPROVEMENT, type TrainingStatus } from '../../hooks/useNeuralNetwork';
 import type { LoadedModel } from '../../simulation/modelFile';
 import { speedLabel } from '../../utils/speed';
 
@@ -17,10 +16,6 @@ interface SidebarProps {
     setAlgo: (val: string) => void;
     speed: number;
     setSpeed: (val: number) => void;
-
-    brushType: string;
-    setBrushType: (val: string) => void;
-    cellTypes: typeof CELL_TYPES;
 
     trainingStatus: TrainingStatus;
     model: LoadedModel;
@@ -206,6 +201,9 @@ export const Sidebar = memo<SidebarProps>((props) => {
                                             {validation.meanCost.toFixed(2)} vs best algo {validation.meanBestAlgorithmCost.toFixed(2)} · wins {validation.wins}/{validation.lawns}
                                         </span>
                                     )}
+                                    <span className="text-[9px] text-indigo-400 font-mono" title="Training stops by itself when no better network comes in this many generations">
+                                        No better network: {props.trainingStatus.generationsWithoutImprovement}/{STOP_AFTER_GENERATIONS_WITHOUT_IMPROVEMENT} gens
+                                    </span>
                                 </div>
 
                                 <button

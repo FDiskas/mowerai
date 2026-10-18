@@ -1,8 +1,8 @@
 ---
 name: real-nn-vs-algorithms-plan
-description: DECISION 2026-10-18 — prove a real NN beats the algorithms (fixed score, unknown map, TS training, beat best algorithm per held-out lawn); user allowed distance inputs + imitation-then-ES; measured results of every approach (ES plateau, rollout teacher 2.02, students 2.19–2.30)
+description: DECISION 2026-10-18 — prove a real NN beats the algorithms (fixed score, unknown map, TS training, beat best algorithm per held-out lawn); user allowed distance inputs + imitation-then-ES; measured results of every approach (ES plateau, rollout teacher 2.02, students 2.19–2.30, soft labels worse)
 keywords: [neural network, proof, benchmark, unknown map, known map, sensor, evolution strategies, OpenAI-ES, imitation, DAgger, rollout teacher, privileged teacher, distance field, held-out maps, SCORE_WEIGHTS, validation, plateau, branch real-network]
-updated: 2026-10-18
+updated: 2026-10-19
 ---
 
 ### Rule / Fact
@@ -36,6 +36,9 @@ Final state 2026-10-18 (user: "I will train by myself, I just need a working sol
 - Test (60 lawns, run once): network 1.835 = lowest mean of all models (dfs/smart_ai 1.901); vs best algorithm per lawn 22 wins, 3 ties, 35 losses, sign test p = 0.11 → not proven. Report in `results/benchmark-test.md`.
 - `npm run train` resumes from `training/checkpoint.json` (git-ignored), else from the shipped model; `--fresh` = warm start from zero. It saves a model only when validation improves.
 - Seeds 2–4 gave 2.219, 2.219, 2.324; 64-64 networks and more DAgger rounds did not help.
+- Re-check 2026-10-18 (user: "preview always drives the same"): 30 more ES generations from the shipped model (defaults) → validation 2.184 at gen 15 (noise-sized gain), then 2.20 → 2.238 at gen 40. ES on top of the warm start does not learn; it drifts. The preview drives the **best validated** network with argmax on the user's lawn, so its path is identical until validation improves — which almost never happens. Per-generation training cost jumps (1.88–2.03) because every generation uses new lawns.
+- Soft labels tried 2026-10-19 (user picked it): rollout teacher's per-move extra cost → softmax target with a temperature (code removed after the test at the user's request; rebuild it from this note if needed). Students, 3 seeds each, mean cost on 96 validation lawns: T 0 (one-hot) **2.146**, T 1 2.161, T 2 2.169, T 5 2.173; T 0 best for every seed. Soft labels do **not** help — likely because moves that cost the same when Smart AI finishes the job are not equal for the student.
+- 96 validation lawns: student 2.139 = lowest mean (smart_ai 2.224), but vs best algorithm per lawn 32 W / 9 T / 55 L. A 96-lawn benchmark takes ~3 s, a warm start ~4 min (11 threads); 24-lawn validation scores disagree with 96-lawn ones by up to 0.08.
 
 ### Why
 

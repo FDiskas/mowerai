@@ -18,12 +18,12 @@ import { Footer } from './components/Layout/Footer';
 import { TelemetryPanel } from './components/Stats/TelemetryPanel';
 
 // Domain
-import { useSimulation } from './hooks/useSimulation';
 import { Position } from './domain/Position';
 import { SimulationStats, EfficiencyMetrics } from './domain/SimulationStats';
 import { SimulationHistory } from './domain/SimulationHistory';
 
 // Hooks
+import { useSimulation } from './hooks/useSimulation';
 import { useAppSettings } from './hooks/useAppSettings';
 import { useAppUI } from './hooks/useAppUI';
 import { useAppSimulation } from './hooks/useAppSimulation';
@@ -92,6 +92,14 @@ const randomizeObstacles = (cells: GridType, dock: PositionType): GridType =>
     }));
 
 const algorithmName = (id: string): string => ALGORITHMS_NAMES[id as keyof typeof ALGORITHMS_NAMES] ?? id;
+
+const TOAST_LOOKS = {
+    success: { toastClass: '', iconClass: 'bg-emerald-500/20 text-emerald-500', icon: '✓' },
+    error: { toastClass: 'error', iconClass: 'bg-rose-500/20 text-rose-500', icon: '!' },
+    indigo: { toastClass: 'indigo', iconClass: 'bg-indigo-500/20 text-indigo-500', icon: '⚡' },
+};
+
+const toastLookOf = (type: string) => TOAST_LOOKS[type as keyof typeof TOAST_LOOKS] ?? TOAST_LOOKS.success;
 
 const clearObstacles = (cells: GridType): GridType =>
     cells.map(row => row.map(cell =>
@@ -372,9 +380,6 @@ export const App: React.FC = () => {
                         setAlgo={handleSetAlgo}
                         speed={speed}
                         setSpeed={setSpeed}
-                        brushType={brushType}
-                        setBrushType={setBrushType}
-                        cellTypes={CELL_TYPES}
                         trainingStatus={trainingStatus}
                         model={model}
                         onOpenBenchmark={handleOpenBenchmark}
@@ -472,15 +477,18 @@ export const App: React.FC = () => {
             />
 
             <div className="toast-container">
-                {toasts.map(t => (
-                    <div key={t.id} className={`toast ${t.type === 'error' ? 'error' : t.type === 'indigo' ? 'indigo' : ''}`}>
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm
-                            ${t.type === 'error' ? 'bg-rose-500/20 text-rose-500' : t.type === 'indigo' ? 'bg-indigo-500/20 text-indigo-500' : 'bg-emerald-500/20 text-emerald-500'}`}>
-                            {t.type === 'error' ? '!' : t.type === 'indigo' ? '⚡' : '✓'}
+                {toasts.map(t => {
+                    const look = toastLookOf(t.type);
+                    return (
+                        <div key={t.id} className={`toast ${look.toastClass}`}>
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm
+                                ${look.iconClass}`}>
+                                {look.icon}
+                            </div>
+                            {t.msg}
                         </div>
-                        {t.msg}
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

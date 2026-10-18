@@ -18,6 +18,8 @@ export interface TrainingStatus {
     trainingCost: number | null;
     /** The last validation of the current network against the best algorithm on each lawn. */
     validation: ValidationSummary | null;
+    /** Generations of this training run since the validation last found a better network. */
+    generationsWithoutImprovement: number;
 }
 
 interface PreviewFrame {
@@ -29,9 +31,17 @@ interface PreviewFrame {
 /** The trained network that ships with the app (`npm run train` writes it). */
 const SHIPPED_MODEL_URL = '/models/policy.json';
 const VALIDATE_EVERY = 10;
+/** Training stops by itself when this many generations bring no better network. */
+export const STOP_AFTER_GENERATIONS_WITHOUT_IMPROVEMENT = 50;
 const RANDOM_SEED = 1;
 
-const INITIAL_TRAINING_STATUS: TrainingStatus = { isTraining: false, generation: 0, trainingCost: null, validation: null };
+const INITIAL_TRAINING_STATUS: TrainingStatus = {
+    isTraining: false,
+    generation: 0,
+    trainingCost: null,
+    validation: null,
+    generationsWithoutImprovement: 0,
+};
 
 const untrainedModel = (): LoadedModel => ({
     network: { layers: NETWORK_LAYERS, params: initialParameters(NETWORK_LAYERS, RANDOM_SEED) },
@@ -141,12 +151,15 @@ export const useNeuralNetwork = (
             return;
         }
         isTrainingRef.current = true;
-        setTrainingStatus(prev => ({ ...prev, isTraining: true }));
+        setTrainingStatus(prev => ({ ...prev, isTraining: true, generationsWithoutImprovement: 0 }));
         const pool = createBrowserPool();
+        let stopMessage = 'NN training stopped.';
 
         try {
             const es = strategyRef.current ?? strategyFrom(modelRef.current);
             strategyRef.current = es;
+            const firstGeneration = es.generation;
+            const generationsWithoutImprovement = () => es.generation - Math.max(firstGeneration, modelRef.current.generation);
             setStatusMessage('Measuring the best algorithm on the validation lawns...');
             const bestCosts = bestCostsRef.current ?? await bestAlgorithmCosts(pool);
             bestCostsRef.current = bestCosts;
@@ -175,18 +188,23 @@ export const useNeuralNetwork = (
 
             while (isTrainingRef.current) {
                 const trainingCost = await trainGeneration(es, DEFAULT_ES_SETTINGS, pool);
-                setTrainingStatus(prev => ({ ...prev, generation: es.generation, trainingCost }));
                 if (es.generation % VALIDATE_EVERY === 0) await validate();
+                const withoutImprovement = generationsWithoutImprovement();
+                setTrainingStatus(prev => ({ ...prev, generation: es.generation, trainingCost, generationsWithoutImprovement: withoutImprovement }));
+                if (withoutImprovement >= STOP_AFTER_GENERATIONS_WITHOUT_IMPROVEMENT) {
+                    stopMessage = `NN training stopped: no better network in ${withoutImprovement} generations.`;
+                    break;
+                }
             }
         } catch (err) {
             console.error(err);
-            setStatusMessage('ERROR: Training worker failed.');
+            stopMessage = 'ERROR: Training worker failed.';
         } finally {
             isTrainingRef.current = false;
             pool.close();
             setTrainingStatus(prev => ({ ...prev, isTraining: false }));
             setShowVisualTraining(false);
-            setStatusMessage('NN training stopped.');
+            setStatusMessage(stopMessage);
         }
     }, [setStatusMessage]);
 
