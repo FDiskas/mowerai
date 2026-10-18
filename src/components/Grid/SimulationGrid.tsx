@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useRef } from 'react';
-import type { Grid as GridType, PositionType as Position, Direction } from '../../types';
+import type { Cell, Grid as GridType, PositionType as Position, Direction } from '../../types';
 import { CELL_TYPES } from '../../constants';
 
 /** Rendered cell size in px (matches the w-6 / h-6 = 24px cells). */
@@ -130,23 +130,56 @@ const getPathDefinition = (
     return paths.join(' ');
 };
 
-interface CellProps {
-    r: number;
-    c: number;
-    cell: any;
-    isMower: boolean;
-    isDock: boolean;
-    obs: ObsToken | null;
+interface TrailSides {
     hasLeft: boolean;
     hasRight: boolean;
     hasTop: boolean;
     hasBottom: boolean;
+}
+
+const NO_TRAIL: TrailSides = { hasLeft: false, hasRight: false, hasTop: false, hasBottom: false };
+
+const isHeading = (cell: Cell | undefined, dx: number, dy: number) =>
+    cell?.direction?.dx === dx && cell.direction.dy === dy;
+
+/** Sides of a mowed tile that the trail line joins: its own heading, or a neighbour heading into it. */
+const trailSides = (grid: GridType, r: number, c: number): TrailSides => {
+    const cell = grid[r][c];
+    if (cell.type !== CELL_TYPES.MOWED) return NO_TRAIL;
+
+    const sides = {
+        hasLeft: isHeading(cell, -1, 0) || isHeading(grid[r][c - 1], 1, 0),
+        hasRight: isHeading(cell, 1, 0) || isHeading(grid[r][c + 1], -1, 0),
+        hasTop: isHeading(cell, 0, -1) || isHeading(grid[r - 1]?.[c], 0, 1),
+        hasBottom: isHeading(cell, 0, 1) || isHeading(grid[r + 1]?.[c], 0, -1),
+    };
+    const isHorizontalLine = sides.hasLeft && sides.hasRight;
+    const isVerticalLine = sides.hasTop && sides.hasBottom;
+
+    // Drop the stubs that an earlier perpendicular pass left on a straight line.
+    if (isHorizontalLine && isVerticalLine) {
+        const isVerticalDir = cell.direction?.dy !== 0;
+        return isVerticalDir ? { ...sides, hasLeft: false, hasRight: false } : { ...sides, hasTop: false, hasBottom: false };
+    }
+    if (isHorizontalLine) return { ...sides, hasTop: false, hasBottom: false };
+    if (isVerticalLine) return { ...sides, hasLeft: false, hasRight: false };
+    return sides;
+};
+
+interface CellProps extends TrailSides {
+    r: number;
+    c: number;
+    cell: Cell;
+    isMower: boolean;
+    isDock: boolean;
+    obs: ObsToken | null;
     onCellClick?: (r: number, c: number) => void;
     onCellMouseEnter?: (r: number, c: number) => void;
 }
 
 const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, hasLeft, hasRight, hasTop, hasBottom, onCellClick, onCellMouseEnter }: CellProps) => {
     const isMowed = cell.type === CELL_TYPES.MOWED;
+    const passes = cell.passes ?? 0;
     const d = getPathDefinition(hasLeft, hasRight, hasTop, hasBottom);
 
     return (
@@ -158,14 +191,14 @@ const MemoizedCell = memo(({ r, c, cell, isMower, isDock, obs, hasLeft, hasRight
             {/* Mown grass: cut shade + directional stripes + multi-pass wear */}
             {isMowed && (
                 <>
-                    <div className="mown-base" style={{ background: mownColor(cell.damage || 0) }} />
+                    <div className="mown-base" style={{ background: mownColor(cell.damage) }} />
                     <div className={cell.direction && cell.direction.dx !== 0 ? 'mown-stripe-h' : 'mown-stripe-v'} />
                     {cell.damage > 0 && (
                         <div className="mown-wear" style={{ opacity: Math.min(0.55, cell.damage * 0.4) }} />
                     )}
                     {/* overlap: mower drove over already-cut grass — flagged so repeats are obvious */}
-                    {(cell.passes || 0) >= 2 && (
-                        <div className="mown-overlap" style={{ opacity: Math.min(0.9, 0.4 + ((cell.passes || 2) - 2) * 0.2) }} />
+                    {passes >= 2 && (
+                        <div className="mown-overlap" style={{ opacity: Math.min(0.9, 0.4 + (passes - 2) * 0.2) }} />
                     )}
                     <div className="trail">
                         <svg
@@ -239,7 +272,6 @@ interface GridProps {
     grid: GridType;
     mowerPos: Position;
     mowerDir?: Direction;
-    isAiLoading: boolean;
     onCellClick?: (r: number, c: number) => void;
     onCellMouseEnter?: (r: number, c: number) => void;
     onMouseDown: () => void;
@@ -251,7 +283,6 @@ export const SimulationGrid: React.FC<GridProps> = ({
     grid,
     mowerPos,
     mowerDir,
-    isAiLoading,
     onCellClick,
     onCellMouseEnter,
     onMouseDown,
@@ -298,70 +329,27 @@ export const SimulationGrid: React.FC<GridProps> = ({
         <div className="relative inline-block">
             <div
                 className={`lawn-field inline-block p-3 rounded-[2rem] border border-white/10 ring-1 ring-black/40
-                    shadow-[0_30px_70px_-20px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-500 relative
-                    ${isAiLoading ? 'opacity-50 scale-95 grayscale' : 'opacity-100'}`}
+                    shadow-[0_30px_70px_-20px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-500 relative`}
                 onMouseDown={onMouseDown}
             >
                 {/* padding-free positioning context so px-based overlays align with cells */}
                 <div className="relative field-grid">
                     {grid.map((row, r) => (
                         <div key={r} className="flex">
-                            {row.map((cell, c) => {
-                                const isMowed = cell.type === CELL_TYPES.MOWED;
-                                let hasLeft = isMowed && (
-                                    (cell.direction?.dx === -1 && cell.direction?.dy === 0) ||
-                                    (c > 0 && grid[r][c - 1]?.direction?.dx === 1 && grid[r][c - 1]?.direction?.dy === 0)
-                                );
-                                let hasRight = isMowed && (
-                                    (cell.direction?.dx === 1 && cell.direction?.dy === 0) ||
-                                    (c < cols - 1 && grid[r][c + 1]?.direction?.dx === -1 && grid[r][c + 1]?.direction?.dy === 0)
-                                );
-                                let hasTop = isMowed && (
-                                    (cell.direction?.dx === 0 && cell.direction?.dy === -1) ||
-                                    (r > 0 && grid[r - 1][c]?.direction?.dx === 0 && grid[r - 1][c]?.direction?.dy === 1)
-                                );
-                                let hasBottom = isMowed && (
-                                    (cell.direction?.dx === 0 && cell.direction?.dy === 1) ||
-                                    (r < rows - 1 && grid[r + 1][c]?.direction?.dx === 0 && grid[r + 1][c]?.direction?.dy === -1)
-                                );
-
-                                // Filter out redundant stubs from previous perpendicular passes
-                                const isVerticalDir = cell.direction?.dy !== 0;
-
-                                if (hasLeft && hasRight && hasTop && hasBottom) {
-                                    if (isVerticalDir) {
-                                        hasLeft = false;
-                                        hasRight = false;
-                                    } else {
-                                        hasTop = false;
-                                        hasBottom = false;
-                                    }
-                                } else if (hasLeft && hasRight) {
-                                    hasTop = false;
-                                    hasBottom = false;
-                                } else if (hasTop && hasBottom) {
-                                    hasLeft = false;
-                                    hasRight = false;
-                                }
-
-                                return (
-                                    <MemoizedCell
-                                        key={`${r}-${c}`}
-                                        r={r}
-                                        c={c}
-                                        cell={cell}
-                                        isMower={mowerPos.x === c && mowerPos.y === r}
-                                        isDock={cell.type === CELL_TYPES.DOCK}
-                                        obs={tokens[r]?.[c] ?? null}
-                                        hasLeft={hasLeft}
-                                        hasRight={hasRight}
-                                        hasTop={hasTop}
-                                        hasBottom={hasBottom}
-                                        onCellClick={onCellClick}
-                                        onCellMouseEnter={onCellMouseEnter}
-                                    />
-                                );
-                            })}
+                            {row.map((cell, c) => (
+                                <MemoizedCell
+                                    key={`${r}-${c}`}
+                                    r={r}
+                                    c={c}
+                                    cell={cell}
+                                    isMower={mowerPos.x === c && mowerPos.y === r}
+                                    isDock={cell.type === CELL_TYPES.DOCK}
+                                    obs={tokens[r][c]}
+                                    {...trailSides(grid, r, c)}
+                                    onCellClick={onCellClick}
+                                    onCellMouseEnter={onCellMouseEnter}
+                                />
+                            ))}
                         </div>
                     ))}
 

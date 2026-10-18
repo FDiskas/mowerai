@@ -1,7 +1,7 @@
 ---
 name: simulation-paths-and-nn
 description: The places that step the mower (live sim, NN preview, training fitness, imitation) — preview/fitness/imitation share advanceMower; the battery/dock-return logic is still copied in fitness; 47-input model contract
-keywords: [mowTile, MowingStep, SimulationService, fitness, runFitnessEpisode, evaluateFitness, advanceMower, episode, training worker, imitation worker, neural network, 47 inputs, prepareNNInputs, damage, genetic algorithm]
+keywords: [preview, LIVE ON, mowTile, MowingStep, SimulationService, fitness, runFitnessEpisode, evaluateFitness, advanceMower, episode, training worker, imitation worker, neural network, 47 inputs, prepareNNInputs, damage, genetic algorithm]
 updated: 2026-10-18
 ---
 
@@ -10,7 +10,7 @@ updated: 2026-10-18
 Three code paths move the mower and apply mowing rules:
 
 1. **Live simulation** — `src/hooks/useAppSimulation.ts` → `SimulationService.calculateStep` (`src/services/SimulationService.ts`) → `mowTile` (`src/domain/MowingStep.ts`). State is immutable domain classes in `src/domain/`.
-2. **NN preview** — `src/hooks/useNeuralNetwork.ts`.
+2. **NN preview** — `src/hooks/useNeuralNetwork.ts`. Runs only while training. Each run drives the champion it starts with; it restarts when the lawn is done (`getNeuralNetworkMove` returns `null`), the battery is empty or the mower spins. Stopping training switches the preview off (`setShowVisualTraining(false)`), so the main grid shows again.
 3. **NN training** — `runFitnessEpisode` / `evaluateFitness` (`src/utils/fitness.ts`) inside `src/training.worker.ts`, one worker per `navigator.hardwareConcurrency`.
 4. **Warm start** — `collectDemonstrations` (`src/utils/imitation.ts`) inside `src/imitation.worker.ts`.
 

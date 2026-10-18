@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useRef, memo } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { AlgorithmSelector } from './AlgorithmSelector';
@@ -6,6 +6,7 @@ import type { TrainingStatus, FitnessConfig } from '../../types';
 import type { CELL_TYPES } from '../../constants';
 import { turnCostInSteps } from '../../algorithms';
 import { shareOfIdeal } from '../../utils/fitness';
+import { speedLabel } from '../../utils/speed';
 
 interface SidebarProps {
     onRandomizeMap: () => void;
@@ -31,6 +32,7 @@ interface SidebarProps {
     onStopTrainNN: () => void;
     onDownloadModel: () => void;
     onUploadModel: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onClearModel: () => void;
 
     isRunning: boolean;
     isTesting: boolean;
@@ -39,9 +41,7 @@ interface SidebarProps {
     onTestAll: () => void;
     onResetMap: () => void;
     onFullReset: () => void;
-
-    hasNn?: boolean;
-    onReplayWithNN?: () => void;
+    onReplayWithNN: () => void;
 }
 
 interface FitnessRowProps {
@@ -77,8 +77,13 @@ const FitnessRow = ({ label, cfgKey, config, onChange, step = 100, min = -50000,
 
 export const Sidebar = memo<SidebarProps>((props) => {
     const [showFitness, setShowFitness] = useState(false);
+    const modelFileInput = useRef<HTMLInputElement>(null);
     const isBusy = props.isRunning || props.isTesting;
     const trainingPercent = Math.round(shareOfIdeal(props.trainingStatus.bestFitness, props.trainingStatus.idealFitness) * 100);
+
+    const confirmClearModel = () => {
+        if (window.confirm('Delete the trained network and the saved training progress?')) props.onClearModel();
+    };
 
     const configBinding = {
         config: props.fitnessConfig,
@@ -150,7 +155,7 @@ export const Sidebar = memo<SidebarProps>((props) => {
                         <div className="flex justify-between items-center px-1">
                             <label htmlFor="simulation-speed" className="text-[11px] font-medium text-slate-400 tracking-wide cursor-pointer">Speed</label>
                             <span className="text-[11px] font-semibold text-cyan-400 font-display tabular-nums">
-                                {((1000 / Math.max(10, 140 - props.speed)) * 0.045).toFixed(1)} m/s
+                                {speedLabel(props.speed)}
                             </span>
                         </div>
                         <input
@@ -185,7 +190,7 @@ export const Sidebar = memo<SidebarProps>((props) => {
                         {props.isTesting ? 'STOP TEST ALL' : props.isRunning ? 'STOP' : 'START WORK'}
                     </Button>
 
-                    {props.hasNn && props.selectedAlgo !== 'neural_network' && !isBusy && (
+                    {props.selectedAlgo !== 'neural_network' && !isBusy && (
                         <Button
                             variant="indigo"
                             size="md"
@@ -268,14 +273,18 @@ export const Sidebar = memo<SidebarProps>((props) => {
                     )}
 
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" fullWidth onClick={props.onDownloadModel} disabled={props.trainingStatus.isTraining}>
+                        <Button variant="outline" size="sm" className="flex-1" onClick={props.onDownloadModel} disabled={props.trainingStatus.isTraining}>
                             EXPORT
                         </Button>
-                        <label htmlFor="import-model" className={`flex-1 bg-transparent border border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white py-2 rounded-xl text-[10px] font-black tracking-widest cursor-pointer text-center flex items-center justify-center transition-all ${props.trainingStatus.isTraining ? 'opacity-50 pointer-events-none' : ''}`}>
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => modelFileInput.current?.click()} disabled={props.trainingStatus.isTraining}>
                             IMPORT
-                            <input id="import-model" name="import-model" type="file" className="hidden" onChange={props.onUploadModel} accept=".json" />
-                        </label>
+                        </Button>
+                        <input ref={modelFileInput} id="import-model" name="import-model" type="file" className="hidden" onChange={props.onUploadModel} accept=".json" />
                     </div>
+
+                    <Button variant="ghost" size="sm" fullWidth onClick={confirmClearModel} disabled={props.trainingStatus.isTraining}>
+                        CLEAR TRAINING
+                    </Button>
 
                     {/* Fitness Config Toggle */}
                     <button

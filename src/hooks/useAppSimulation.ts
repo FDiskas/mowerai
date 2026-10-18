@@ -8,9 +8,9 @@ import { EfficiencyMetrics, SimulationStats } from '../domain/SimulationStats';
 import type { SimulationEnvironment } from '../domain/SimulationEnvironment';
 import type { SimulationHistory } from '../domain/SimulationHistory';
 import type { NeuralNetwork } from '../NeuralNetwork';
-import type { Direction, Grid as GridType, HistoryRecord, PositionType as Point, State } from '../types';
+import type { Direction, Grid as GridType, HistoryRecord, Orientation, PositionType as Point, State } from '../types';
+import { stepDelayMs } from '../utils/speed';
 
-type Orientation = 'horizontal' | 'vertical';
 type MoveFn = (state: State, grid: GridType, prevDir: Direction) => Point | null;
 
 /** Algorithm state plus the hook's own bookkeeping for the return to the dock. */
@@ -55,7 +55,7 @@ export const useAppSimulation = (
     setAlgo: (algo: string) => void,
     config: {
         algo: string;
-        orientation: string;
+        orientation: Orientation;
         speed: number;
         maxBattery: number;
         drainMove: number;
@@ -89,14 +89,14 @@ export const useAppSimulation = (
     const totalStepsRef = useRef(0);
 
     const simState = useRef<SimState>({
-        pos: { x: 0, y: 0 },
+        pos: env.mower.pos.toObject(),
         prevDir: { dx: 0, dy: 1 },
         battery: config.maxBattery,
-        grid: [],
-        dockPos: { x: 0, y: 0 },
+        grid: env.grid.cells,
+        dockPos: env.dockPos.toObject(),
         isCharging: false,
         visitCounts: {},
-        orientation: config.orientation as Orientation,
+        orientation: config.orientation,
         maxBattery: config.maxBattery,
         turnCost: config.turnCost,
         ...freshRunState(),
@@ -114,6 +114,31 @@ export const useAppSimulation = (
         if (simulationRef.current) clearInterval(simulationRef.current);
         if (pendingRunTimeoutRef.current) clearTimeout(pendingRunTimeoutRef.current);
     }, []);
+
+    const prepareSimulationState = useCallback((sourceGrid: GridType, dockPosOverride?: Point) => {
+        const dockPos = dockPosOverride ?? envRef.current.dockPos.toObject();
+        const cleanGrid: GridType = resetLawn(sourceGrid);
+
+        resetSimulation(cleanGrid, dockPos, configRef.current.maxBattery);
+
+        simState.current = {
+            ...simState.current,
+            pos: { ...dockPos },
+            prevDir: { dx: 0, dy: 1 },
+            battery: configRef.current.maxBattery,
+            grid: cleanGrid,
+            dockPos: { ...dockPos },
+            isCharging: false,
+            visitCounts: {},
+            orientation: configRef.current.orientation,
+            maxBattery: configRef.current.maxBattery,
+            ...freshRunState(),
+        };
+        return cleanGrid;
+    }, [resetSimulation]);
+
+    /** Latest `runSimulation`, so a "Test All" model started from `stopSimulation` uses current callbacks. */
+    const runSimulationRef = useRef<() => void>(() => {});
 
     const stopSimulation = useCallback((isManual = false) => {
         setIsRunning(false);
@@ -161,13 +186,13 @@ export const useAppSimulation = (
             setAlgo(nextAlgo);
             // Regrow the lawn and reset stats before the next model runs.
             if (testGridRef.current) prepareSimulationState(testGridRef.current);
-            pendingRunTimeoutRef.current = setTimeout(() => runSimulation(), 500);
+            pendingRunTimeoutRef.current = setTimeout(() => runSimulationRef.current(), 500);
         } else {
             setIsTesting(false);
             isTestingAllRef.current = false;
             testGridRef.current = null;
         }
-    }, [setHistory, setAlgo]);
+    }, [prepareSimulationState, setHistory, setAlgo]);
 
     const getNextStep = useCallback((state: State) => {
         const { pos, grid: curGrid, prevDir, dockPos: currentDock, battery, isReturningForCharge } = state;
@@ -247,7 +272,7 @@ export const useAppSimulation = (
         // Start each session with a clean algorithm state so the contour/sweep
         // and spiral phases restart instead of resuming a previous run.
         Object.assign(simState.current, {
-            orientation: configRef.current.orientation as Orientation,
+            orientation: configRef.current.orientation,
             turnCost: configRef.current.turnCost,
             ...freshRunState(),
         });
@@ -345,32 +370,12 @@ export const useAppSimulation = (
                 return;
             }
 
-        }, Math.max(10, 140 - configRef.current.speed));
+        }, stepDelayMs(configRef.current.speed));
     }, [stopSimulation, getNextStep, setEnv, setDomainStats, setWorkTimeMs, setStatusMessage]);
 
-    const prepareSimulationState = useCallback((sourceGrid: GridType, dockPosOverride?: Point) => {
-        const dockPos = dockPosOverride ?? envRef.current.dockPos.toObject();
-        const cleanGrid: GridType = resetLawn(sourceGrid);
+    useEffect(() => { runSimulationRef.current = runSimulation; }, [runSimulation]);
 
-        resetSimulation(cleanGrid, dockPos, configRef.current.maxBattery);
-
-        simState.current = {
-            ...simState.current,
-            pos: { ...dockPos },
-            prevDir: { dx: 0, dy: 1 },
-            battery: configRef.current.maxBattery,
-            grid: cleanGrid,
-            dockPos: { ...dockPos },
-            isCharging: false,
-            visitCounts: {},
-            orientation: configRef.current.orientation as Orientation,
-            maxBattery: configRef.current.maxBattery,
-            ...freshRunState(),
-        };
-        return cleanGrid;
-    }, [resetSimulation]);
-
-    const testAll = useCallback((algosList: string[], currentGrid: GridType) => {
+    const testAll = useCallback((algosList: readonly string[], currentGrid: GridType) => {
         if (isRunningRef.current) stopSimulation(true);
         setIsTesting(true);
         // Keep a pristine copy so every model is scored on the same fresh lawn.
@@ -386,9 +391,7 @@ export const useAppSimulation = (
 
     return {
         isRunning,
-        setIsRunning,
         isTesting,
-        setIsTesting,
         prepareSimulationState,
         runSimulation,
         stopSimulation,

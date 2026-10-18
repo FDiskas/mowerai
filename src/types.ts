@@ -24,6 +24,8 @@ export interface PositionType {
 
 export type Point = PositionType;
 
+export type Orientation = 'horizontal' | 'vertical';
+
 export interface Stats {
     distance: number;
     mowedCount: number;
@@ -64,7 +66,7 @@ export interface State {
         sweepDir: number;
         cellScanDir: number;
         /** Mowing direction chosen by direction-optimization (longest-edge). */
-        orientation?: 'horizontal' | 'vertical';
+        orientation?: Orientation;
         /** State machine phase: contour pass first, then parallel sweep. */
         phase?: 'edge' | 'zigzag';
     };
@@ -77,7 +79,7 @@ export interface State {
     isCharging: boolean;
     isReturningForCharge: boolean;
     visitCounts: { [key: string]: number };
-    orientation?: 'horizontal' | 'vertical';
+    orientation?: Orientation;
     maxBattery?: number;
     /** Price of one heading change in path steps (see `turnCostInSteps`); unset means the default. */
     turnCost?: number;

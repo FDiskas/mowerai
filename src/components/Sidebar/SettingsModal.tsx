@@ -1,11 +1,14 @@
 import React from 'react';
 import { Button } from '../ui/Button';
 import { Slider } from '../ui/Slider';
+import type { Orientation } from '../../types';
+
+const ORIENTATIONS: Orientation[] = ['vertical', 'horizontal'];
 
 interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
-    
+
     maxBattery: number;
     setMaxBattery: (val: number) => void;
     drainMove: number;
@@ -14,10 +17,10 @@ interface SettingsModalProps {
     setDrainTurn: (val: number) => void;
     speed: number;
     setSpeed: (val: number) => void;
-    
-    orientation: string;
-    setOrientation: (val: string) => void;
-    
+
+    orientation: Orientation;
+    setOrientation: (val: Orientation) => void;
+
     isRunning: boolean;
 }
 
@@ -41,22 +44,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
                         <Slider label="Energy Consumption (movement)" value={props.drainMove} min={0.01} max={1.0} step={0.01} onChange={props.setDrainMove} disabled={props.isRunning} />
                         <Slider label="Energy Consumption (turn)" value={props.drainTurn} min={0} max={2.0} step={0.1} onChange={props.setDrainTurn} disabled={props.isRunning} />
                         <Slider label="Simulation Speed" value={props.speed} min={10} max={135} step={5} onChange={props.setSpeed} disabled={props.isRunning} />
-                        
+
                         <div className="space-y-3 pt-2">
                             <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block text-left">Mowing Direction</label>
                             <div className="flex gap-2 p-1.5 bg-slate-950 rounded-2xl border border-slate-800/50">
-                                <button 
-                                    onClick={() => props.setOrientation('vertical')} 
-                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${props.orientation === 'vertical' ? 'bg-emerald-500 text-emerald-950 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-                                >
-                                    VERTICAL
-                                </button>
-                                <button 
-                                    onClick={() => props.setOrientation('horizontal')} 
-                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${props.orientation === 'horizontal' ? 'bg-emerald-500 text-emerald-950 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-                                >
-                                    HORIZONTAL
-                                </button>
+                                {ORIENTATIONS.map(orientation => (
+                                    <button
+                                        key={orientation}
+                                        onClick={() => props.setOrientation(orientation)}
+                                        className={`flex-1 py-3 rounded-xl text-[10px] font-black transition-all uppercase ${props.orientation === orientation ? 'bg-emerald-500 text-emerald-950 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                                    >
+                                        {orientation}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>

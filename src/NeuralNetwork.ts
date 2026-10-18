@@ -144,7 +144,7 @@ export class NeuralNetwork {
         return [...this.weights.flat(2), ...this.biases.flat()];
     }
 
-    setWeights(flat: number[]) {
+    setWeights(flat: ArrayLike<number>) {
         let idx = 0;
         for (const layer of this.weights) {
             for (const node of layer) {

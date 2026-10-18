@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { NeuralNetwork } from '../NeuralNetwork';
-import type { Direction, Grid, Point, FitnessConfig, TrainingStatus } from '../types';
+import type { Direction, Grid, Point, FitnessConfig, Orientation, TrainingStatus } from '../types';
 import { DEFAULT_FITNESS_CONFIG } from '../types';
 import { CELL_TYPES } from '../constants';
 import { getNeuralNetworkMove, turnCostInSteps } from '../algorithms';
 import { advanceMower, startEpisode } from '../utils/episode';
 import { idealFitness, type FitnessOptions } from '../utils/fitness';
 import { generateTrainingMaps } from '../utils/trainingMaps';
+import { stepDelayMs } from '../utils/speed';
 import {
     breedNextGeneration,
     crownChampion,
@@ -18,6 +19,13 @@ import {
     type ScoredIndividual,
 } from '../utils/evolution';
 import type { ImitationRequest, ImitationResponse } from '../utils/imitation';
+import {
+    clearTrainingProgress,
+    loadTrainingProgress,
+    saveTrainingProgress,
+    type BreedingState,
+    type TrainingProgress,
+} from '../utils/trainingStore';
 import type { TrainingRequest, TrainingResponse } from '../training.worker';
 
 /** Network shape: 47 sensor inputs (see `prepareNNInputs`), two hidden layers, 4 move outputs. */
@@ -82,6 +90,11 @@ const scorePopulation = async (
         .sort((a, b) => b.fitness - a.fitness);
 };
 
+/** Fire and forget: a failed save must not stop training. */
+const persistProgress = (progress: TrainingProgress) => {
+    saveTrainingProgress(progress).catch(err => console.error('Failed to save training progress', err));
+};
+
 /** Behaviour cloning of the Snake Fill expert in a worker; returns the trained weights. */
 const runWarmStart = async (request: ImitationRequest): Promise<ImitationResponse> => {
     const worker = new Worker(new URL('../imitation.worker.ts', import.meta.url), { type: 'module' });
@@ -95,7 +108,7 @@ const runWarmStart = async (request: ImitationRequest): Promise<ImitationRespons
 export const useNeuralNetwork = (
     dockPos: Point,
     setStatusMessage: (msg: string) => void,
-    orientation: 'horizontal' | 'vertical' = 'horizontal',
+    orientation: Orientation = 'horizontal',
     speed: number = 85
 ) => {
 
@@ -118,61 +131,79 @@ export const useNeuralNetwork = (
     const isUntrainedRef = useRef(true);
     const bestNnRef = useRef<NeuralNetwork | null>(null);
     const currentNnRef = useRef(nn);
-    const previewIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    /** The population of the last generation, so the next training run continues it. */
+    const breedingRef = useRef<BreedingState | null>(null);
     const userGridRef = useRef<Grid | null>(null);
 
     useEffect(() => {
         currentNnRef.current = nn;
     }, [nn]);
 
-    // Start/stop preview loop on the main map
     useEffect(() => {
-        if (previewIntervalRef.current) {
-            clearInterval(previewIntervalRef.current);
-            previewIntervalRef.current = null;
-        }
+        let isCancelled = false;
+        loadTrainingProgress(NN_LAYERS, POPULATION_SIZE)
+            .then(progress => {
+                if (isCancelled || !progress || isTrainingRef.current) return;
+                breedingRef.current = progress.breeding;
+                isUntrainedRef.current = false;
+                setNn(progress.champion.nn);
+                setFitnessConfig(progress.fitnessConfig);
+                setTrainingStatus(prev => ({
+                    ...prev,
+                    epoch: progress.generation,
+                    bestFitness: progress.champion.fitness,
+                    idealFitness: progress.idealFitness,
+                }));
+                setStatusMessage(`Training restored: generation ${progress.generation}`);
+            })
+            .catch(err => console.error('Failed to load training progress', err));
+        return () => {
+            isCancelled = true;
+        };
+    }, [setStatusMessage]);
 
-        // Animate only while evolution is actually running; once it stops the
-        // last frame stays frozen instead of looping forever.
+    // Preview loop on the main map
+    useEffect(() => {
+        // Animate only while evolution runs; stopping training also hides the preview.
         if (!showVisualTraining || !trainingStatus.isTraining) return;
 
-        const sourceGrid = userGridRef.current;
-        if (!sourceGrid || !bestNnRef.current) return;
+        const lawn = userGridRef.current;
+        if (!lawn || !bestNnRef.current) return;
 
-        const restartPreview = (lawn: Grid) => {
+        /** Each run drives one network from start to end: the best one when the run starts. */
+        let runNn = bestNnRef.current;
+        const restartPreview = () => {
+            runNn = bestNnRef.current ?? runNn;
             const state = startEpisode(lawn, dockPos, { battery: PREVIEW_BATTERY, orientation, turnCost });
             setPreview({ grid: state.grid.map(r => [...r]), mowerPos: { ...dockPos }, mowerDir: state.prevDir });
             return state;
         };
 
-        let state = restartPreview(sourceGrid);
+        let state = restartPreview();
 
-        previewIntervalRef.current = setInterval(() => {
-            const currentNn = bestNnRef.current;
-            if (!currentNn) return;
-
-            const move = getNeuralNetworkMove(state, state.grid, state.prevDir, CELL_TYPES, currentNn);
-            if (!move) return;
+        const interval = setInterval(() => {
+            const move = getNeuralNetworkMove(state, state.grid, state.prevDir, CELL_TYPES, runNn);
+            const isLawnDone = !move;
+            if (isLawnDone) {
+                state = restartPreview();
+                return;
+            }
 
             // Same step rule as the live simulation and the fitness function.
             const { heading, visitCount } = advanceMower(state, move);
             state.battery -= PREVIEW_DRAIN_PER_STEP;
 
             const isDock = move.x === dockPos.x && move.y === dockPos.y;
-            const isLooping = !isDock && visitCount >= PREVIEW_LOOP_VISITS;
-
-            if (state.battery <= 0 || isLooping) {
-                // Reset – battery ran out or robot was spinning in one place
-                if (userGridRef.current) state = restartPreview(userGridRef.current);
+            const isSpinning = !isDock && visitCount >= PREVIEW_LOOP_VISITS;
+            if (state.battery <= 0 || isSpinning) {
+                state = restartPreview();
                 return;
             }
 
             setPreview({ grid: state.grid.map(r => [...r]), mowerPos: { ...move }, mowerDir: heading });
-        }, Math.max(10, 140 - speed));
+        }, stepDelayMs(speed));
 
-        return () => {
-            if (previewIntervalRef.current) clearInterval(previewIntervalRef.current);
-        };
+        return () => clearInterval(interval);
     }, [showVisualTraining, trainingStatus.isTraining, dockPos, orientation, speed, turnCost]);
 
     const trainNN = useCallback(async (userGrid?: Grid, drainMove?: number, drainTurn?: number) => {
@@ -232,9 +263,10 @@ export const useNeuralNetwork = (
             let mapsIdealFitness = averageIdealFitness(trainingMaps, fitnessOptions);
             let mapsChanged = true;
             let champion: Champion = { nn: parent, fitness: trainingStatus.bestFitness };
-            let population = seedPopulation(POPULATION_SIZE, NN_LAYERS, parent);
-            let stagnantGenerations = 0;
-            let mutationStrength = INITIAL_MUTATION_STRENGTH;
+            const breeding = breedingRef.current;
+            let population = breeding?.population ?? seedPopulation(POPULATION_SIZE, NN_LAYERS, parent);
+            let stagnantGenerations = breeding?.stagnantGenerations ?? 0;
+            let mutationStrength = breeding?.mutationStrength ?? INITIAL_MUTATION_STRENGTH;
 
             while (isTrainingRef.current) {
                 generation++;
@@ -253,13 +285,15 @@ export const useNeuralNetwork = (
                 mutationStrength = nextMutationStrength(mutationStrength, crowned.improved, stagnantGenerations);
                 setTrainingStatus(prev => ({ ...prev, epoch: generation, bestFitness: champion.fitness, idealFitness: mapsIdealFitness }));
 
+                population = breedNextGeneration(ranked, champion.nn, POPULATION_SIZE, mutationStrength);
+                breedingRef.current = { population, mutationStrength, stagnantGenerations };
+                persistProgress({ champion, breeding: breedingRef.current, generation, idealFitness: mapsIdealFitness, fitnessConfig });
+
                 if (generation % NEW_MAPS_EVERY === 0) {
                     trainingMaps = lawnsWithUserGrid(1);
                     mapsIdealFitness = averageIdealFitness(trainingMaps, fitnessOptions);
                     mapsChanged = true;
                 }
-
-                population = breedNextGeneration(ranked, champion.nn, POPULATION_SIZE, mutationStrength);
 
                 await new Promise(r => setTimeout(r, 10));
             }
@@ -270,17 +304,17 @@ export const useNeuralNetwork = (
             isTrainingRef.current = false;
             workers.forEach(w => w.terminate());
             setTrainingStatus(prev => ({ ...prev, isTraining: false }));
+            setShowVisualTraining(false);
             setStatusMessage("NN Optimization stopped.");
         }
     }, [dockPos, orientation, fitnessConfig, turnCost, trainingStatus.epoch, trainingStatus.bestFitness, setStatusMessage]);
 
+    /** Exports only the best network: no population and no optimizer state. */
     const downloadModel = useCallback(() => {
         try {
-            // Save the model with metadata (epoch and bestFitness)
-            const modelObj = JSON.parse(nn.save());
-            modelObj.epoch = trainingStatus.epoch;
-            modelObj.bestFitness = trainingStatus.bestFitness;
-            const data = JSON.stringify(modelObj, null, 2);
+            const { layers, weights, biases, learningRate } = nn;
+            const { epoch, bestFitness } = trainingStatus;
+            const data = JSON.stringify({ layers, weights, biases, learningRate, epoch, bestFitness }, null, 2);
 
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -303,15 +337,15 @@ export const useNeuralNetwork = (
             console.error(err);
             setStatusMessage("ERROR: Failed to generate file.");
         }
-    }, [nn, trainingStatus.epoch, trainingStatus.bestFitness, setStatusMessage]);
+    }, [nn, trainingStatus, setStatusMessage]);
 
     const uploadModel = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = () => {
             try {
-                const contents = event.target?.result as string;
+                const contents = reader.result as string;
                 const data = JSON.parse(contents);
 
                 if (data.layers?.[0] !== NN_INPUTS) {
@@ -319,16 +353,22 @@ export const useNeuralNetwork = (
                     return;
                 }
 
-                setNn(NeuralNetwork.load(contents));
-                isUntrainedRef.current = false;
+                const importedNn = NeuralNetwork.load(contents);
+                const hasStats = typeof data.epoch === 'number' || typeof data.bestFitness === 'number';
+                const epoch: number = hasStats ? data.epoch ?? 0 : trainingStatus.epoch;
+                const bestFitness: number = hasStats ? data.bestFitness ?? -Infinity : trainingStatus.bestFitness;
 
-                if (typeof data.epoch === 'number' || typeof data.bestFitness === 'number') {
-                    setTrainingStatus(prev => ({
-                        ...prev,
-                        epoch: data.epoch ?? 0,
-                        bestFitness: data.bestFitness ?? -Infinity
-                    }));
-                }
+                setNn(importedNn);
+                isUntrainedRef.current = false;
+                breedingRef.current = null;
+                setTrainingStatus(prev => ({ ...prev, epoch, bestFitness }));
+                persistProgress({
+                    champion: { nn: importedNn, fitness: bestFitness },
+                    breeding: null,
+                    generation: epoch,
+                    idealFitness: trainingStatus.idealFitness,
+                    fitnessConfig,
+                });
 
                 setStatusMessage("Model successfully loaded!");
             } catch {
@@ -336,6 +376,21 @@ export const useNeuralNetwork = (
             }
         };
         reader.readAsText(file);
+    }, [trainingStatus, fitnessConfig, setStatusMessage]);
+
+    const clearModel = useCallback(() => {
+        if (isTrainingRef.current) return;
+        breedingRef.current = null;
+        bestNnRef.current = null;
+        isUntrainedRef.current = true;
+        setNn(new NeuralNetwork(NN_LAYERS));
+        setTrainingStatus(INITIAL_TRAINING_STATUS);
+        clearTrainingProgress()
+            .then(() => setStatusMessage('Training data cleared.'))
+            .catch(err => {
+                console.error(err);
+                setStatusMessage('ERROR: Failed to clear training data.');
+            });
     }, [setStatusMessage]);
 
     const stopTraining = useCallback(() => {
@@ -349,6 +404,7 @@ export const useNeuralNetwork = (
         stopTraining,
         downloadModel,
         uploadModel,
+        clearModel,
         showVisualTraining,
         setShowVisualTraining,
         previewGrid: preview?.grid ?? null,

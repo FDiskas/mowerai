@@ -5,11 +5,12 @@ import {
     DEFAULT_DRAIN_MOVE,
     DEFAULT_DRAIN_TURN
 } from '../constants';
+import type { Orientation } from '../types';
 
 export const useAppSettings = () => {
     const [brushType, setBrushType] = useState<string>(CELL_TYPES.OBSTACLE);
     const [algo, setAlgo] = useState('smart_ai');
-    const [orientation, setOrientation] = useState('vertical');
+    const [orientation, setOrientation] = useState<Orientation>('vertical');
     const [speed, setSpeed] = useState(85);
     const [maxBattery, setMaxBattery] = useState(DEFAULT_MAX_BATTERY);
     const [drainMove, setDrainMove] = useState(DEFAULT_DRAIN_MOVE);
