@@ -23,6 +23,6 @@ Saves a new investigation of why these algorithms looked alike, and records the 
 - Done since: unused `State` fields (`spiralStep`, `zigzagIdx`, `uShapeIdx`, `slamDir`, `stcPath`) removed; diagonal rays in `prepareNNInputs` cast once; turn cost now configurable (see [[turn-cost-from-training-weights]]).
 - Open follow-ups: `potential_field` has no attractive term; `genericPathSearch` uses string keys in a `Map`.
 - Fixed 2026-10-18 (user approved): "Test All" stale closures. `stopSimulation` now starts the next model through `runSimulationRef` (latest `runSimulation`), and `prepareSimulationState` is declared before it. Before the fix, `neural_network` in Test All silently ran Smart AI; after it, NN results differ from Smart AI (checked in the browser). `simState` now starts from the initial `env`, because `App.tsx` loads the saved lawn on the first render and no longer calls `prepareSimulationState` on mount.
-- The NN input `distToTarget` changed meaning with the `getClosestGrass` fix (it was almost always 0). Older trained models saw the old value.
+- Since 2026-10-18 the main comparison is `npm run benchmark` on generated unknown-map lawns ([[real-nn-vs-algorithms-plan]]); the numbers above are from the older full-map `runCoverage` method.
 
 Related: [[add-mowing-algorithm]], [[simulation-paths-and-nn]], [[turn-cost-from-training-weights]]

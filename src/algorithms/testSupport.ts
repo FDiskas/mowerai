@@ -74,9 +74,6 @@ export const runCoverage = (grid: Grid, dock: Point, move: MoveFn, fallback?: Mo
         battery: Infinity,
         grid,
         dockPos: { ...dock },
-        isCharging: false,
-        isReturningForCharge: false,
-        visitCounts: {},
         orientation: 'horizontal',
     } as never;
 
@@ -107,7 +104,6 @@ export const runCoverage = (grid: Grid, dock: Point, move: MoveFn, fallback?: Mo
         if (grid[pos.y][pos.x].type === CELL_TYPES.GRASS) {
             grid[pos.y][pos.x] = { ...grid[pos.y][pos.x], type: CELL_TYPES.MOWED };
         }
-        state.visitCounts[`${next.x},${next.y}`] = (state.visitCounts[`${next.x},${next.y}`] || 0) + 1;
         prevDir = { dx: next.x - pos.x, dy: next.y - pos.y };
         pos = { x: next.x, y: next.y };
 

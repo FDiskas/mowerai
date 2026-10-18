@@ -1,10 +1,5 @@
 import { CELL_TYPES } from '../constants';
-import type { Grid, Cell } from '../types';
-
-export const countGrass = (currentGrid: Grid) => {
-    if (!currentGrid || currentGrid.length === 0) return 0;
-    return currentGrid.flat().filter((cell: Cell) => cell.type === CELL_TYPES.GRASS).length;
-};
+import type { Grid } from '../types';
 
 /**
  * Regrow a lawn for a fresh run: mowed tiles become grass again and all

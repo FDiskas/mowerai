@@ -1,25 +1,8 @@
-import { DEFAULT_FITNESS_CONFIG } from "../types";
-import type { Direction, FitnessConfig, PositionType as Point, State } from "../types";
+import type { Direction, PositionType as Point, State } from "../types";
+import { SCORE_WEIGHTS } from "../simulation/score";
 
-type TurnWeights = Pick<FitnessConfig, "turnPenalty" | "mowedRevisitPenalty">;
-
-const ratioInSteps = ({ turnPenalty, mowedRevisitPenalty }: TurnWeights) =>
-  Math.max(0, turnPenalty) / mowedRevisitPenalty;
-
-/** Turn cost in steps for the default training weights. */
-export const DEFAULT_TURN_COST = ratioInSteps(DEFAULT_FITNESS_CONFIG);
-
-/**
- * Turn cost for path searches and target choice, in steps.
- *
- * The training weights price a turn (`turnPenalty`) and a revisit
- * (`mowedRevisitPenalty`, one wasted step) in the same fitness points, so their
- * ratio is the price of a turn in steps. A negative turn penalty counts as 0,
- * because negative costs break the search. A revisit penalty of 0 or less gives
- * no exchange rate, so the default applies.
- */
-export const turnCostInSteps = (weights: TurnWeights): number =>
-  weights.mowedRevisitPenalty > 0 ? ratioInSteps(weights) : DEFAULT_TURN_COST;
+/** Turn cost in steps for path searches and target choice: the benchmark prices a turn at this many steps. */
+export const DEFAULT_TURN_COST = SCORE_WEIGHTS.turn / SCORE_WEIGHTS.step;
 
 export const turnCostOf = (state: Pick<State, "turnCost">): number =>
   state.turnCost ?? DEFAULT_TURN_COST;

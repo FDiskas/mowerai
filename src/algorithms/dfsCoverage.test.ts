@@ -27,8 +27,7 @@ describe('getDFSCoverageMove', () => {
         const grid = buildLawn(10, 5, { x: 0, y: 0 }, false);
         const state = {
             pos: { x: 2, y: 2 }, prevDir: { dx: 1, dy: 0 }, orientation: 'horizontal',
-            visitCounts: {}, dockPos: { x: 0, y: 0 }, isCharging: false,
-            isReturningForCharge: false, battery: Infinity, grid,
+            dockPos: { x: 0, y: 0 }, battery: Infinity, grid,
         } as unknown as State;
         expect(getDFSCoverageMove(state, grid, { dx: 1, dy: 0 }, CELL_TYPES)).toEqual({ x: 3, y: 2 });
     });
@@ -40,8 +39,7 @@ describe('getDFSCoverageMove', () => {
         grid[7][7] = { type: CELL_TYPES.GRASS, damage: 0, direction: null };
         const state = {
             pos: { x: 0, y: 0 }, prevDir: { dx: 0, dy: 1 }, orientation: 'horizontal',
-            visitCounts: {}, dockPos: { x: 0, y: 0 }, isCharging: false,
-            isReturningForCharge: false, battery: Infinity, grid,
+            dockPos: { x: 0, y: 0 }, battery: Infinity, grid,
         } as unknown as State;
         const next = getDFSCoverageMove(state, grid, { dx: 0, dy: 1 }, CELL_TYPES)!;
         expect(next).not.toBeNull();

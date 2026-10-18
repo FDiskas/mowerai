@@ -73,10 +73,7 @@ describe("getSpiralMove", () => {
     const state = {
       pos: { x: 4, y: 4 },
       prevDir: { dx: 0, dy: 1 },
-      visitCounts: {},
       dockPos: { x: 0, y: 0 },
-      isCharging: false,
-      isReturningForCharge: false,
       battery: Infinity,
       grid,
     } as unknown as State;

@@ -1,0 +1,8222 @@
+[
+ {
+  "seed": 2000000,
+  "width": 15,
+  "height": 16,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.8387096774193548,
+    "tally": {
+     "steps": 224,
+     "turns": 41,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.1774193548387095,
+    "tally": {
+     "steps": 246,
+     "turns": 50,
+     "overlaps": 59,
+     "chargeTrips": 0,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.247311827956989,
+    "tally": {
+     "steps": 244,
+     "turns": 59,
+     "overlaps": 56,
+     "chargeTrips": 0,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.935483870967742,
+    "tally": {
+     "steps": 370,
+     "turns": 79,
+     "overlaps": 179,
+     "chargeTrips": 1,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.978494623655914,
+    "tally": {
+     "steps": 228,
+     "turns": 50,
+     "overlaps": 40,
+     "chargeTrips": 0,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.21505376344086,
+    "tally": {
+     "steps": 250,
+     "turns": 50,
+     "overlaps": 62,
+     "chargeTrips": 0,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.21505376344086,
+    "tally": {
+     "steps": 250,
+     "turns": 50,
+     "overlaps": 62,
+     "chargeTrips": 0,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.946236559139785,
+    "tally": {
+     "steps": 226,
+     "turns": 49,
+     "overlaps": 38,
+     "chargeTrips": 0,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.935483870967742,
+    "tally": {
+     "steps": 224,
+     "turns": 50,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.043010752688172,
+    "tally": {
+     "steps": 238,
+     "turns": 46,
+     "overlaps": 50,
+     "chargeTrips": 0,
+     "mowed": 186,
+     "reachableGrass": 186,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000001,
+  "width": 25,
+  "height": 17,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.4534313725490196,
+    "tally": {
+     "steps": 448,
+     "turns": 53,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.6299019607843137,
+    "tally": {
+     "steps": 460,
+     "turns": 65,
+     "overlaps": 50,
+     "chargeTrips": 1,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.3872549019607843,
+    "tally": {
+     "steps": 444,
+     "turns": 44,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.536764705882353,
+    "tally": {
+     "steps": 442,
+     "turns": 64,
+     "overlaps": 32,
+     "chargeTrips": 1,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.4338235294117647,
+    "tally": {
+     "steps": 448,
+     "turns": 49,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.411764705882353,
+    "tally": {
+     "steps": 444,
+     "turns": 49,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.411764705882353,
+    "tally": {
+     "steps": 444,
+     "turns": 49,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.4338235294117647,
+    "tally": {
+     "steps": 448,
+     "turns": 49,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.6151960784313726,
+    "tally": {
+     "steps": 486,
+     "turns": 48,
+     "overlaps": 77,
+     "chargeTrips": 0,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.3897058823529411,
+    "tally": {
+     "steps": 440,
+     "turns": 48,
+     "overlaps": 31,
+     "chargeTrips": 0,
+     "mowed": 408,
+     "reachableGrass": 408,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000002,
+  "width": 24,
+  "height": 17,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.3538873994638068,
+    "tally": {
+     "steps": 512,
+     "turns": 102,
+     "overlaps": 137,
+     "chargeTrips": 1,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.557640750670241,
+    "tally": {
+     "steps": 498,
+     "turns": 154,
+     "overlaps": 123,
+     "chargeTrips": 1,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.3726541554959786,
+    "tally": {
+     "steps": 486,
+     "turns": 132,
+     "overlaps": 110,
+     "chargeTrips": 1,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.6916890080428955,
+    "tally": {
+     "steps": 538,
+     "turns": 139,
+     "overlaps": 163,
+     "chargeTrips": 1,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.3029490616621984,
+    "tally": {
+     "steps": 500,
+     "turns": 105,
+     "overlaps": 124,
+     "chargeTrips": 1,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 3.3458445040214477,
+    "tally": {
+     "steps": 606,
+     "turns": 181,
+     "overlaps": 230,
+     "chargeTrips": 2,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.3485254691689006,
+    "tally": {
+     "steps": 496,
+     "turns": 117,
+     "overlaps": 121,
+     "chargeTrips": 1,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.420911528150134,
+    "tally": {
+     "steps": 524,
+     "turns": 103,
+     "overlaps": 148,
+     "chargeTrips": 1,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.415549597855228,
+    "tally": {
+     "steps": 532,
+     "turns": 94,
+     "overlaps": 156,
+     "chargeTrips": 1,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.219839142091153,
+    "tally": {
+     "steps": 486,
+     "turns": 103,
+     "overlaps": 111,
+     "chargeTrips": 1,
+     "mowed": 373,
+     "reachableGrass": 373,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000003,
+  "width": 17,
+  "height": 13,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.087378640776699,
+    "tally": {
+     "steps": 274,
+     "turns": 45,
+     "overlaps": 66,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.1699029126213594,
+    "tally": {
+     "steps": 266,
+     "turns": 61,
+     "overlaps": 59,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.8155339805825244,
+    "tally": {
+     "steps": 244,
+     "turns": 47,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.4466019417475726,
+    "tally": {
+     "steps": 304,
+     "turns": 55,
+     "overlaps": 90,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.7912621359223302,
+    "tally": {
+     "steps": 240,
+     "turns": 48,
+     "overlaps": 33,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.0485436893203883,
+    "tally": {
+     "steps": 260,
+     "turns": 55,
+     "overlaps": 52,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.9320388349514563,
+    "tally": {
+     "steps": 256,
+     "turns": 47,
+     "overlaps": 48,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.912621359223301,
+    "tally": {
+     "steps": 256,
+     "turns": 45,
+     "overlaps": 48,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.0242718446601944,
+    "tally": {
+     "steps": 264,
+     "turns": 48,
+     "overlaps": 57,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.7864077669902914,
+    "tally": {
+     "steps": 242,
+     "turns": 46,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 206,
+     "reachableGrass": 206,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000004,
+  "width": 22,
+  "height": 15,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.9259259259259258,
+    "tally": {
+     "steps": 336,
+     "turns": 60,
+     "overlaps": 64,
+     "chargeTrips": 0,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.8925925925925926,
+    "tally": {
+     "steps": 324,
+     "turns": 67,
+     "overlaps": 53,
+     "chargeTrips": 0,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.1148148148148147,
+    "tally": {
+     "steps": 346,
+     "turns": 75,
+     "overlaps": 75,
+     "chargeTrips": 0,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.3185185185185184,
+    "tally": {
+     "steps": 482,
+     "turns": 92,
+     "overlaps": 205,
+     "chargeTrips": 1,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.7740740740740741,
+    "tally": {
+     "steps": 312,
+     "turns": 63,
+     "overlaps": 41,
+     "chargeTrips": 0,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.3407407407407406,
+    "tally": {
+     "steps": 350,
+     "turns": 90,
+     "overlaps": 77,
+     "chargeTrips": 1,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.8666666666666667,
+    "tally": {
+     "steps": 328,
+     "turns": 60,
+     "overlaps": 56,
+     "chargeTrips": 0,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.7851851851851852,
+    "tally": {
+     "steps": 322,
+     "turns": 55,
+     "overlaps": 50,
+     "chargeTrips": 0,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.7074074074074075,
+    "tally": {
+     "steps": 306,
+     "turns": 60,
+     "overlaps": 35,
+     "chargeTrips": 0,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.7074074074074075,
+    "tally": {
+     "steps": 314,
+     "turns": 52,
+     "overlaps": 43,
+     "chargeTrips": 0,
+     "mowed": 270,
+     "reachableGrass": 270,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000005,
+  "width": 28,
+  "height": 18,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.3300198807157058,
+    "tally": {
+     "steps": 528,
+     "turns": 47,
+     "overlaps": 22,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.3956262425447317,
+    "tally": {
+     "steps": 546,
+     "turns": 45,
+     "overlaps": 41,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.2982107355864811,
+    "tally": {
+     "steps": 524,
+     "turns": 43,
+     "overlaps": 18,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.6998011928429424,
+    "tally": {
+     "steps": 598,
+     "turns": 71,
+     "overlaps": 90,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.5506958250497018,
+    "tally": {
+     "steps": 570,
+     "turns": 60,
+     "overlaps": 65,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.2922465208747516,
+    "tally": {
+     "steps": 524,
+     "turns": 41,
+     "overlaps": 19,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.2922465208747516,
+    "tally": {
+     "steps": 524,
+     "turns": 41,
+     "overlaps": 19,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.2624254473161034,
+    "tally": {
+     "steps": 520,
+     "turns": 37,
+     "overlaps": 16,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5506958250497018,
+    "tally": {
+     "steps": 570,
+     "turns": 60,
+     "overlaps": 65,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.2246520874751492,
+    "tally": {
+     "steps": 520,
+     "turns": 40,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000006,
+  "width": 20,
+  "height": 14,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.4331550802139037,
+    "tally": {
+     "steps": 268,
+     "turns": 54,
+     "overlaps": 79,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.213903743315508,
+    "tally": {
+     "steps": 236,
+     "turns": 65,
+     "overlaps": 48,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.5080213903743314,
+    "tally": {
+     "steps": 252,
+     "turns": 77,
+     "overlaps": 63,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.4598930481283423,
+    "tally": {
+     "steps": 338,
+     "turns": 82,
+     "overlaps": 145,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.6844919786096257,
+    "tally": {
+     "steps": 270,
+     "turns": 75,
+     "overlaps": 82,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.267379679144385,
+    "tally": {
+     "steps": 242,
+     "turns": 64,
+     "overlaps": 54,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.6042780748663104,
+    "tally": {
+     "steps": 272,
+     "turns": 66,
+     "overlaps": 83,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.770053475935829,
+    "tally": {
+     "steps": 280,
+     "turns": 73,
+     "overlaps": 92,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 3.0588235294117645,
+    "tally": {
+     "steps": 306,
+     "turns": 74,
+     "overlaps": 118,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.267379679144385,
+    "tally": {
+     "steps": 244,
+     "turns": 62,
+     "overlaps": 56,
+     "chargeTrips": 0,
+     "mowed": 187,
+     "reachableGrass": 187,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000007,
+  "width": 16,
+  "height": 19,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.505190311418685,
+    "tally": {
+     "steps": 320,
+     "turns": 43,
+     "overlaps": 29,
+     "chargeTrips": 0,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.7647058823529411,
+    "tally": {
+     "steps": 350,
+     "turns": 50,
+     "overlaps": 60,
+     "chargeTrips": 0,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.6089965397923875,
+    "tally": {
+     "steps": 336,
+     "turns": 42,
+     "overlaps": 45,
+     "chargeTrips": 0,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.8269896193771626,
+    "tally": {
+     "steps": 476,
+     "turns": 68,
+     "overlaps": 180,
+     "chargeTrips": 1,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.7508650519031141,
+    "tally": {
+     "steps": 344,
+     "turns": 54,
+     "overlaps": 54,
+     "chargeTrips": 0,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.934256055363322,
+    "tally": {
+     "steps": 354,
+     "turns": 71,
+     "overlaps": 63,
+     "chargeTrips": 0,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.6505190311418685,
+    "tally": {
+     "steps": 342,
+     "turns": 42,
+     "overlaps": 51,
+     "chargeTrips": 0,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.6159169550173011,
+    "tally": {
+     "steps": 336,
+     "turns": 43,
+     "overlaps": 45,
+     "chargeTrips": 0,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.7508650519031141,
+    "tally": {
+     "steps": 344,
+     "turns": 54,
+     "overlaps": 54,
+     "chargeTrips": 0,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.5640138408304498,
+    "tally": {
+     "steps": 326,
+     "turns": 45,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 289,
+     "reachableGrass": 289,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000008,
+  "width": 20,
+  "height": 16,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.7728813559322034,
+    "tally": {
+     "steps": 356,
+     "turns": 54,
+     "overlaps": 59,
+     "chargeTrips": 0,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.8779661016949152,
+    "tally": {
+     "steps": 352,
+     "turns": 73,
+     "overlaps": 56,
+     "chargeTrips": 0,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.406779661016949,
+    "tally": {
+     "steps": 368,
+     "turns": 123,
+     "overlaps": 71,
+     "chargeTrips": 1,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.8203389830508474,
+    "tally": {
+     "steps": 454,
+     "turns": 99,
+     "overlaps": 155,
+     "chargeTrips": 1,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.5966101694915253,
+    "tally": {
+     "steps": 416,
+     "turns": 103,
+     "overlaps": 119,
+     "chargeTrips": 1,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.9830508474576272,
+    "tally": {
+     "steps": 372,
+     "turns": 69,
+     "overlaps": 75,
+     "chargeTrips": 0,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.7389830508474575,
+    "tally": {
+     "steps": 342,
+     "turns": 63,
+     "overlaps": 45,
+     "chargeTrips": 0,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.606779661016949,
+    "tally": {
+     "steps": 422,
+     "turns": 99,
+     "overlaps": 124,
+     "chargeTrips": 1,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.5898305084745763,
+    "tally": {
+     "steps": 418,
+     "turns": 100,
+     "overlaps": 121,
+     "chargeTrips": 1,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8372881355932202,
+    "tally": {
+     "steps": 356,
+     "turns": 63,
+     "overlaps": 60,
+     "chargeTrips": 0,
+     "mowed": 295,
+     "reachableGrass": 295,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000009,
+  "width": 18,
+  "height": 22,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.2607594936708861,
+    "tally": {
+     "steps": 410,
+     "turns": 37,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.2607594936708861,
+    "tally": {
+     "steps": 410,
+     "turns": 37,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.3240506329113924,
+    "tally": {
+     "steps": 416,
+     "turns": 44,
+     "overlaps": 19,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.5696202531645569,
+    "tally": {
+     "steps": 450,
+     "turns": 58,
+     "overlaps": 54,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.3240506329113924,
+    "tally": {
+     "steps": 416,
+     "turns": 44,
+     "overlaps": 19,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.2607594936708861,
+    "tally": {
+     "steps": 410,
+     "turns": 37,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.2607594936708861,
+    "tally": {
+     "steps": 410,
+     "turns": 37,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.3240506329113924,
+    "tally": {
+     "steps": 416,
+     "turns": 44,
+     "overlaps": 19,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.3240506329113924,
+    "tally": {
+     "steps": 416,
+     "turns": 44,
+     "overlaps": 19,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.2860759493670886,
+    "tally": {
+     "steps": 412,
+     "turns": 40,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 395,
+     "reachableGrass": 395,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000010,
+  "width": 22,
+  "height": 14,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.6892857142857143,
+    "tally": {
+     "steps": 326,
+     "turns": 51,
+     "overlaps": 45,
+     "chargeTrips": 0,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.7428571428571429,
+    "tally": {
+     "steps": 332,
+     "turns": 53,
+     "overlaps": 50,
+     "chargeTrips": 0,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.7214285714285715,
+    "tally": {
+     "steps": 324,
+     "turns": 58,
+     "overlaps": 42,
+     "chargeTrips": 0,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.675,
+    "tally": {
+     "steps": 416,
+     "turns": 87,
+     "overlaps": 134,
+     "chargeTrips": 1,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.8178571428571428,
+    "tally": {
+     "steps": 346,
+     "turns": 50,
+     "overlaps": 63,
+     "chargeTrips": 0,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.7821428571428573,
+    "tally": {
+     "steps": 330,
+     "turns": 60,
+     "overlaps": 49,
+     "chargeTrips": 0,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.8178571428571428,
+    "tally": {
+     "steps": 338,
+     "turns": 57,
+     "overlaps": 57,
+     "chargeTrips": 0,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.8107142857142857,
+    "tally": {
+     "steps": 346,
+     "turns": 49,
+     "overlaps": 63,
+     "chargeTrips": 0,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.725,
+    "tally": {
+     "steps": 330,
+     "turns": 52,
+     "overlaps": 49,
+     "chargeTrips": 0,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.667857142857143,
+    "tally": {
+     "steps": 320,
+     "turns": 54,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 280,
+     "reachableGrass": 280,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000011,
+  "width": 16,
+  "height": 11,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.9627329192546583,
+    "tally": {
+     "steps": 212,
+     "turns": 27,
+     "overlaps": 50,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.7391304347826086,
+    "tally": {
+     "steps": 192,
+     "turns": 29,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.6583850931677018,
+    "tally": {
+     "steps": 190,
+     "turns": 25,
+     "overlaps": 27,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.9006211180124224,
+    "tally": {
+     "steps": 194,
+     "turns": 40,
+     "overlaps": 32,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.5900621118012421,
+    "tally": {
+     "steps": 186,
+     "turns": 23,
+     "overlaps": 24,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.6770186335403727,
+    "tally": {
+     "steps": 190,
+     "turns": 26,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.6645962732919255,
+    "tally": {
+     "steps": 190,
+     "turns": 25,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.5900621118012421,
+    "tally": {
+     "steps": 186,
+     "turns": 23,
+     "overlaps": 24,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5900621118012421,
+    "tally": {
+     "steps": 186,
+     "turns": 23,
+     "overlaps": 24,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8509316770186335,
+    "tally": {
+     "steps": 196,
+     "turns": 34,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 161,
+     "reachableGrass": 161,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000012,
+  "width": 19,
+  "height": 17,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.6704119850187267,
+    "tally": {
+     "steps": 304,
+     "turns": 53,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.5131086142322097,
+    "tally": {
+     "steps": 286,
+     "turns": 50,
+     "overlaps": 18,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.4644194756554307,
+    "tally": {
+     "steps": 290,
+     "turns": 40,
+     "overlaps": 21,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.6104868913857677,
+    "tally": {
+     "steps": 296,
+     "turns": 53,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.550561797752809,
+    "tally": {
+     "steps": 302,
+     "turns": 39,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.8277153558052435,
+    "tally": {
+     "steps": 324,
+     "turns": 54,
+     "overlaps": 56,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.595505617977528,
+    "tally": {
+     "steps": 296,
+     "turns": 51,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.591760299625468,
+    "tally": {
+     "steps": 310,
+     "turns": 37,
+     "overlaps": 41,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5430711610486891,
+    "tally": {
+     "steps": 302,
+     "turns": 38,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.6254681647940075,
+    "tally": {
+     "steps": 308,
+     "turns": 43,
+     "overlaps": 40,
+     "chargeTrips": 0,
+     "mowed": 267,
+     "reachableGrass": 267,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000013,
+  "width": 26,
+  "height": 21,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.8998073217726397,
+    "tally": {
+     "steps": 642,
+     "turns": 99,
+     "overlaps": 121,
+     "chargeTrips": 1,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.4932562620423893,
+    "tally": {
+     "steps": 716,
+     "turns": 167,
+     "overlaps": 194,
+     "chargeTrips": 2,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.2909441233140657,
+    "tally": {
+     "steps": 684,
+     "turns": 147,
+     "overlaps": 161,
+     "chargeTrips": 2,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.1811175337186897,
+    "tally": {
+     "steps": 682,
+     "turns": 132,
+     "overlaps": 161,
+     "chargeTrips": 1,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.9017341040462428,
+    "tally": {
+     "steps": 644,
+     "turns": 98,
+     "overlaps": 122,
+     "chargeTrips": 1,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.647398843930636,
+    "tally": {
+     "steps": 754,
+     "turns": 169,
+     "overlaps": 232,
+     "chargeTrips": 2,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.1734104046242773,
+    "tally": {
+     "steps": 694,
+     "turns": 118,
+     "overlaps": 173,
+     "chargeTrips": 1,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.9441233140655105,
+    "tally": {
+     "steps": 650,
+     "turns": 103,
+     "overlaps": 128,
+     "chargeTrips": 1,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.1059730250481694,
+    "tally": {
+     "steps": 704,
+     "turns": 91,
+     "overlaps": 182,
+     "chargeTrips": 1,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8901734104046244,
+    "tally": {
+     "steps": 636,
+     "turns": 103,
+     "overlaps": 114,
+     "chargeTrips": 1,
+     "mowed": 519,
+     "reachableGrass": 519,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000014,
+  "width": 14,
+  "height": 11,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.4901960784313726,
+    "tally": {
+     "steps": 168,
+     "turns": 23,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.6470588235294117,
+    "tally": {
+     "steps": 178,
+     "turns": 25,
+     "overlaps": 24,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.5751633986928104,
+    "tally": {
+     "steps": 172,
+     "turns": 26,
+     "overlaps": 17,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.7777777777777777,
+    "tally": {
+     "steps": 176,
+     "turns": 37,
+     "overlaps": 22,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.5947712418300655,
+    "tally": {
+     "steps": 176,
+     "turns": 23,
+     "overlaps": 22,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.4901960784313726,
+    "tally": {
+     "steps": 168,
+     "turns": 23,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.4901960784313726,
+    "tally": {
+     "steps": 168,
+     "turns": 23,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.5947712418300655,
+    "tally": {
+     "steps": 176,
+     "turns": 23,
+     "overlaps": 22,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5947712418300655,
+    "tally": {
+     "steps": 176,
+     "turns": 23,
+     "overlaps": 22,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.4509803921568627,
+    "tally": {
+     "steps": 164,
+     "turns": 24,
+     "overlaps": 10,
+     "chargeTrips": 0,
+     "mowed": 153,
+     "reachableGrass": 153,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000015,
+  "width": 28,
+  "height": 21,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.1491442542787285,
+    "tally": {
+     "steps": 534,
+     "turns": 99,
+     "overlaps": 122,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.3056234718826407,
+    "tally": {
+     "steps": 536,
+     "turns": 129,
+     "overlaps": 124,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.4180929095354524,
+    "tally": {
+     "steps": 546,
+     "turns": 142,
+     "overlaps": 134,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.334963325183374,
+    "tally": {
+     "steps": 552,
+     "turns": 119,
+     "overlaps": 140,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.1026894865525674,
+    "tally": {
+     "steps": 518,
+     "turns": 105,
+     "overlaps": 107,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.545232273838631,
+    "tally": {
+     "steps": 574,
+     "turns": 140,
+     "overlaps": 162,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.273838630806846,
+    "tally": {
+     "steps": 554,
+     "turns": 105,
+     "overlaps": 141,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.19559902200489,
+    "tally": {
+     "steps": 530,
+     "turns": 112,
+     "overlaps": 119,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.234718826405868,
+    "tally": {
+     "steps": 552,
+     "turns": 98,
+     "overlaps": 141,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.1907090464547676,
+    "tally": {
+     "steps": 532,
+     "turns": 109,
+     "overlaps": 121,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000016,
+  "width": 20,
+  "height": 19,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.8724035608308605,
+    "tally": {
+     "steps": 424,
+     "turns": 61,
+     "overlaps": 85,
+     "chargeTrips": 0,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.1305637982195846,
+    "tally": {
+     "steps": 426,
+     "turns": 90,
+     "overlaps": 87,
+     "chargeTrips": 1,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.14540059347181,
+    "tally": {
+     "steps": 436,
+     "turns": 83,
+     "overlaps": 96,
+     "chargeTrips": 1,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.72106824925816,
+    "tally": {
+     "steps": 528,
+     "turns": 90,
+     "overlaps": 184,
+     "chargeTrips": 1,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.599406528189911,
+    "tally": {
+     "steps": 382,
+     "turns": 57,
+     "overlaps": 43,
+     "chargeTrips": 0,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.406528189910979,
+    "tally": {
+     "steps": 452,
+     "turns": 111,
+     "overlaps": 112,
+     "chargeTrips": 1,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.771513353115727,
+    "tally": {
+     "steps": 410,
+     "turns": 58,
+     "overlaps": 71,
+     "chargeTrips": 0,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.599406528189911,
+    "tally": {
+     "steps": 382,
+     "turns": 57,
+     "overlaps": 43,
+     "chargeTrips": 0,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.3471810089020773,
+    "tally": {
+     "steps": 478,
+     "turns": 75,
+     "overlaps": 138,
+     "chargeTrips": 1,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.2700296735905043,
+    "tally": {
+     "steps": 470,
+     "turns": 70,
+     "overlaps": 130,
+     "chargeTrips": 1,
+     "mowed": 337,
+     "reachableGrass": 337,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000017,
+  "width": 25,
+  "height": 11,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.7053941908713692,
+    "tally": {
+     "steps": 276,
+     "turns": 51,
+     "overlaps": 33,
+     "chargeTrips": 0,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.929460580912863,
+    "tally": {
+     "steps": 300,
+     "turns": 54,
+     "overlaps": 57,
+     "chargeTrips": 0,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.145228215767635,
+    "tally": {
+     "steps": 308,
+     "turns": 72,
+     "overlaps": 65,
+     "chargeTrips": 0,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.2946058091286305,
+    "tally": {
+     "steps": 424,
+     "turns": 86,
+     "overlaps": 173,
+     "chargeTrips": 1,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.6929460580912863,
+    "tally": {
+     "steps": 278,
+     "turns": 47,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.995850622406639,
+    "tally": {
+     "steps": 316,
+     "turns": 46,
+     "overlaps": 73,
+     "chargeTrips": 0,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.954356846473029,
+    "tally": {
+     "steps": 314,
+     "turns": 43,
+     "overlaps": 71,
+     "chargeTrips": 0,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.7759336099585061,
+    "tally": {
+     "steps": 290,
+     "turns": 45,
+     "overlaps": 48,
+     "chargeTrips": 0,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.7427385892116183,
+    "tally": {
+     "steps": 280,
+     "turns": 51,
+     "overlaps": 38,
+     "chargeTrips": 0,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.5601659751037344,
+    "tally": {
+     "steps": 268,
+     "turns": 41,
+     "overlaps": 26,
+     "chargeTrips": 0,
+     "mowed": 241,
+     "reachableGrass": 241,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000018,
+  "width": 30,
+  "height": 20,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.4340567612687813,
+    "tally": {
+     "steps": 644,
+     "turns": 74,
+     "overlaps": 42,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.5191986644407345,
+    "tally": {
+     "steps": 654,
+     "turns": 89,
+     "overlaps": 53,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.3639398998330552,
+    "tally": {
+     "steps": 648,
+     "turns": 49,
+     "overlaps": 46,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.2020033388981637,
+    "tally": {
+     "steps": 880,
+     "turns": 74,
+     "overlaps": 266,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.5492487479131887,
+    "tally": {
+     "steps": 688,
+     "turns": 64,
+     "overlaps": 87,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.4808013355592655,
+    "tally": {
+     "steps": 656,
+     "turns": 76,
+     "overlaps": 54,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.4841402337228715,
+    "tally": {
+     "steps": 660,
+     "turns": 73,
+     "overlaps": 58,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.4223706176961604,
+    "tally": {
+     "steps": 666,
+     "turns": 48,
+     "overlaps": 65,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5492487479131887,
+    "tally": {
+     "steps": 688,
+     "turns": 64,
+     "overlaps": 87,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.5041736227045075,
+    "tally": {
+     "steps": 664,
+     "turns": 75,
+     "overlaps": 62,
+     "chargeTrips": 1,
+     "mowed": 599,
+     "reachableGrass": 599,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000019,
+  "width": 15,
+  "height": 19,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.341549295774648,
+    "tally": {
+     "steps": 302,
+     "turns": 31,
+     "overlaps": 17,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.3485915492957747,
+    "tally": {
+     "steps": 302,
+     "turns": 32,
+     "overlaps": 17,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.482394366197183,
+    "tally": {
+     "steps": 314,
+     "turns": 39,
+     "overlaps": 29,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.482394366197183,
+    "tally": {
+     "steps": 302,
+     "turns": 51,
+     "overlaps": 17,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.4964788732394365,
+    "tally": {
+     "steps": 316,
+     "turns": 39,
+     "overlaps": 31,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.341549295774648,
+    "tally": {
+     "steps": 302,
+     "turns": 31,
+     "overlaps": 17,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.341549295774648,
+    "tally": {
+     "steps": 302,
+     "turns": 31,
+     "overlaps": 17,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.4964788732394365,
+    "tally": {
+     "steps": 316,
+     "turns": 39,
+     "overlaps": 31,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.4964788732394365,
+    "tally": {
+     "steps": 316,
+     "turns": 39,
+     "overlaps": 31,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.3485915492957747,
+    "tally": {
+     "steps": 302,
+     "turns": 32,
+     "overlaps": 17,
+     "chargeTrips": 0,
+     "mowed": 284,
+     "reachableGrass": 284,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000020,
+  "width": 18,
+  "height": 10,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.8545454545454545,
+    "tally": {
+     "steps": 208,
+     "turns": 28,
+     "overlaps": 42,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.7575757575757576,
+    "tally": {
+     "steps": 200,
+     "turns": 28,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.793939393939394,
+    "tally": {
+     "steps": 202,
+     "turns": 29,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.066666666666667,
+    "tally": {
+     "steps": 256,
+     "turns": 80,
+     "overlaps": 90,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.915151515151515,
+    "tally": {
+     "steps": 210,
+     "turns": 31,
+     "overlaps": 44,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.9515151515151514,
+    "tally": {
+     "steps": 210,
+     "turns": 34,
+     "overlaps": 44,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.7212121212121212,
+    "tally": {
+     "steps": 198,
+     "turns": 27,
+     "overlaps": 32,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.915151515151515,
+    "tally": {
+     "steps": 210,
+     "turns": 31,
+     "overlaps": 44,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.0727272727272728,
+    "tally": {
+     "steps": 224,
+     "turns": 30,
+     "overlaps": 58,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.5636363636363637,
+    "tally": {
+     "steps": 186,
+     "turns": 26,
+     "overlaps": 20,
+     "chargeTrips": 0,
+     "mowed": 165,
+     "reachableGrass": 165,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000021,
+  "width": 23,
+  "height": 19,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.1833740831295843,
+    "tally": {
+     "steps": 554,
+     "turns": 86,
+     "overlaps": 142,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.41320293398533,
+    "tally": {
+     "steps": 552,
+     "turns": 135,
+     "overlaps": 140,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.0733496332518335,
+    "tally": {
+     "steps": 500,
+     "turns": 117,
+     "overlaps": 89,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.5770171149144256,
+    "tally": {
+     "steps": 596,
+     "turns": 125,
+     "overlaps": 183,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.2249388753056234,
+    "tally": {
+     "steps": 538,
+     "turns": 110,
+     "overlaps": 127,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.2836185819070907,
+    "tally": {
+     "steps": 542,
+     "turns": 119,
+     "overlaps": 129,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.1882640586797066,
+    "tally": {
+     "steps": 530,
+     "turns": 111,
+     "overlaps": 118,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.2689486552567235,
+    "tally": {
+     "steps": 546,
+     "turns": 111,
+     "overlaps": 135,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.6772616136919316,
+    "tally": {
+     "steps": 628,
+     "turns": 113,
+     "overlaps": 216,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.039119804400978,
+    "tally": {
+     "steps": 510,
+     "turns": 100,
+     "overlaps": 99,
+     "chargeTrips": 1,
+     "mowed": 409,
+     "reachableGrass": 409,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000022,
+  "width": 19,
+  "height": 20,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.536986301369863,
+    "tally": {
+     "steps": 416,
+     "turns": 48,
+     "overlaps": 49,
+     "chargeTrips": 0,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.4356164383561645,
+    "tally": {
+     "steps": 394,
+     "turns": 51,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.7205479452054795,
+    "tally": {
+     "steps": 390,
+     "turns": 95,
+     "overlaps": 23,
+     "chargeTrips": 1,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.750684931506849,
+    "tally": {
+     "steps": 562,
+     "turns": 115,
+     "overlaps": 187,
+     "chargeTrips": 1,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.9205479452054794,
+    "tally": {
+     "steps": 444,
+     "turns": 78,
+     "overlaps": 76,
+     "chargeTrips": 1,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.3808219178082193,
+    "tally": {
+     "steps": 494,
+     "turns": 113,
+     "overlaps": 124,
+     "chargeTrips": 1,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.536986301369863,
+    "tally": {
+     "steps": 416,
+     "turns": 48,
+     "overlaps": 49,
+     "chargeTrips": 0,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.9808219178082191,
+    "tally": {
+     "steps": 460,
+     "turns": 73,
+     "overlaps": 92,
+     "chargeTrips": 1,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.7123287671232876,
+    "tally": {
+     "steps": 406,
+     "turns": 78,
+     "overlaps": 38,
+     "chargeTrips": 1,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.5808219178082192,
+    "tally": {
+     "steps": 424,
+     "turns": 48,
+     "overlaps": 57,
+     "chargeTrips": 0,
+     "mowed": 365,
+     "reachableGrass": 365,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000023,
+  "width": 14,
+  "height": 18,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.4422310756972112,
+    "tally": {
+     "steps": 268,
+     "turns": 39,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.4741035856573705,
+    "tally": {
+     "steps": 268,
+     "turns": 43,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.4143426294820718,
+    "tally": {
+     "steps": 268,
+     "turns": 36,
+     "overlaps": 15,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.49800796812749,
+    "tally": {
+     "steps": 270,
+     "turns": 44,
+     "overlaps": 18,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.4143426294820718,
+    "tally": {
+     "steps": 268,
+     "turns": 36,
+     "overlaps": 15,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.4103585657370519,
+    "tally": {
+     "steps": 268,
+     "turns": 35,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.4103585657370519,
+    "tally": {
+     "steps": 268,
+     "turns": 35,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.4143426294820718,
+    "tally": {
+     "steps": 268,
+     "turns": 36,
+     "overlaps": 15,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.4143426294820718,
+    "tally": {
+     "steps": 268,
+     "turns": 36,
+     "overlaps": 15,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.5219123505976095,
+    "tally": {
+     "steps": 276,
+     "turns": 41,
+     "overlaps": 24,
+     "chargeTrips": 0,
+     "mowed": 251,
+     "reachableGrass": 251,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000024,
+  "width": 24,
+  "height": 19,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.290556900726392,
+    "tally": {
+     "steps": 550,
+     "turns": 118,
+     "overlaps": 135,
+     "chargeTrips": 1,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.5375302663438255,
+    "tally": {
+     "steps": 542,
+     "turns": 165,
+     "overlaps": 126,
+     "chargeTrips": 2,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.8523002421307506,
+    "tally": {
+     "steps": 604,
+     "turns": 168,
+     "overlaps": 188,
+     "chargeTrips": 2,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.593220338983051,
+    "tally": {
+     "steps": 586,
+     "turns": 146,
+     "overlaps": 168,
+     "chargeTrips": 1,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.4092009685230025,
+    "tally": {
+     "steps": 550,
+     "turns": 143,
+     "overlaps": 134,
+     "chargeTrips": 1,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 3.2832929782082325,
+    "tally": {
+     "steps": 668,
+     "turns": 193,
+     "overlaps": 252,
+     "chargeTrips": 2,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.305084745762712,
+    "tally": {
+     "steps": 536,
+     "turns": 135,
+     "overlaps": 121,
+     "chargeTrips": 1,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.307506053268765,
+    "tally": {
+     "steps": 534,
+     "turns": 138,
+     "overlaps": 118,
+     "chargeTrips": 1,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.5181598062953996,
+    "tally": {
+     "steps": 594,
+     "turns": 121,
+     "overlaps": 179,
+     "chargeTrips": 1,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.079903147699758,
+    "tally": {
+     "steps": 508,
+     "turns": 117,
+     "overlaps": 92,
+     "chargeTrips": 1,
+     "mowed": 413,
+     "reachableGrass": 413,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000025,
+  "width": 20,
+  "height": 18,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.46484375,
+    "tally": {
+     "steps": 280,
+     "turns": 36,
+     "overlaps": 23,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.62109375,
+    "tally": {
+     "steps": 296,
+     "turns": 40,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.65625,
+    "tally": {
+     "steps": 298,
+     "turns": 43,
+     "overlaps": 40,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.73828125,
+    "tally": {
+     "steps": 290,
+     "turns": 61,
+     "overlaps": 33,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.5625,
+    "tally": {
+     "steps": 290,
+     "turns": 39,
+     "overlaps": 32,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.80078125,
+    "tally": {
+     "steps": 302,
+     "turns": 57,
+     "overlaps": 45,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.46484375,
+    "tally": {
+     "steps": 280,
+     "turns": 36,
+     "overlaps": 23,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.47265625,
+    "tally": {
+     "steps": 280,
+     "turns": 37,
+     "overlaps": 23,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5625,
+    "tally": {
+     "steps": 290,
+     "turns": 39,
+     "overlaps": 32,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.703125,
+    "tally": {
+     "steps": 294,
+     "turns": 53,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 256,
+     "reachableGrass": 256,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000026,
+  "width": 14,
+  "height": 17,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.5911111111111111,
+    "tally": {
+     "steps": 256,
+     "turns": 36,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.6533333333333333,
+    "tally": {
+     "steps": 252,
+     "turns": 47,
+     "overlaps": 26,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.56,
+    "tally": {
+     "steps": 250,
+     "turns": 39,
+     "overlaps": 23,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.6,
+    "tally": {
+     "steps": 250,
+     "turns": 43,
+     "overlaps": 24,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.5733333333333333,
+    "tally": {
+     "steps": 254,
+     "turns": 36,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.471111111111111,
+    "tally": {
+     "steps": 244,
+     "turns": 35,
+     "overlaps": 17,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.4933333333333334,
+    "tally": {
+     "steps": 242,
+     "turns": 39,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.5733333333333333,
+    "tally": {
+     "steps": 254,
+     "turns": 36,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5733333333333333,
+    "tally": {
+     "steps": 256,
+     "turns": 35,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.511111111111111,
+    "tally": {
+     "steps": 248,
+     "turns": 35,
+     "overlaps": 22,
+     "chargeTrips": 0,
+     "mowed": 225,
+     "reachableGrass": 225,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000027,
+  "width": 29,
+  "height": 10,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.874015748031496,
+    "tally": {
+     "steps": 318,
+     "turns": 48,
+     "overlaps": 62,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.830708661417323,
+    "tally": {
+     "steps": 300,
+     "turns": 60,
+     "overlaps": 45,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.7677165354330708,
+    "tally": {
+     "steps": 300,
+     "turns": 52,
+     "overlaps": 45,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.5511811023622046,
+    "tally": {
+     "steps": 392,
+     "turns": 64,
+     "overlaps": 128,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.6141732283464567,
+    "tally": {
+     "steps": 286,
+     "turns": 47,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.9606299212598426,
+    "tally": {
+     "steps": 316,
+     "turns": 61,
+     "overlaps": 60,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.6614173228346456,
+    "tally": {
+     "steps": 296,
+     "turns": 43,
+     "overlaps": 40,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.594488188976378,
+    "tally": {
+     "steps": 284,
+     "turns": 46,
+     "overlaps": 29,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.889763779527559,
+    "tally": {
+     "steps": 326,
+     "turns": 42,
+     "overlaps": 70,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.7125984251968505,
+    "tally": {
+     "steps": 296,
+     "turns": 49,
+     "overlaps": 41,
+     "chargeTrips": 0,
+     "mowed": 254,
+     "reachableGrass": 254,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000028,
+  "width": 21,
+  "height": 14,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.4436860068259385,
+    "tally": {
+     "steps": 314,
+     "turns": 45,
+     "overlaps": 19,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.5699658703071673,
+    "tally": {
+     "steps": 324,
+     "turns": 53,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.3003412969283277,
+    "tally": {
+     "steps": 306,
+     "turns": 32,
+     "overlaps": 11,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.9965870307167235,
+    "tally": {
+     "steps": 396,
+     "turns": 48,
+     "overlaps": 93,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.4402730375426622,
+    "tally": {
+     "steps": 316,
+     "turns": 42,
+     "overlaps": 22,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.4982935153583619,
+    "tally": {
+     "steps": 318,
+     "turns": 49,
+     "overlaps": 23,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.4982935153583619,
+    "tally": {
+     "steps": 318,
+     "turns": 49,
+     "overlaps": 23,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.2832764505119454,
+    "tally": {
+     "steps": 306,
+     "turns": 29,
+     "overlaps": 12,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.4402730375426622,
+    "tally": {
+     "steps": 316,
+     "turns": 42,
+     "overlaps": 22,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.3993174061433447,
+    "tally": {
+     "steps": 310,
+     "turns": 42,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 293,
+     "reachableGrass": 293,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000029,
+  "width": 18,
+  "height": 17,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.120274914089347,
+    "tally": {
+     "steps": 394,
+     "turns": 61,
+     "overlaps": 101,
+     "chargeTrips": 0,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.4742268041237114,
+    "tally": {
+     "steps": 396,
+     "turns": 98,
+     "overlaps": 103,
+     "chargeTrips": 1,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.52233676975945,
+    "tally": {
+     "steps": 402,
+     "turns": 99,
+     "overlaps": 109,
+     "chargeTrips": 1,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.0446735395189,
+    "tally": {
+     "steps": 484,
+     "turns": 97,
+     "overlaps": 183,
+     "chargeTrips": 1,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2,
+    "tally": {
+     "steps": 372,
+     "turns": 65,
+     "overlaps": 80,
+     "chargeTrips": 0,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.2439862542955327,
+    "tally": {
+     "steps": 380,
+     "turns": 81,
+     "overlaps": 86,
+     "chargeTrips": 1,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.8934707903780068,
+    "tally": {
+     "steps": 356,
+     "turns": 66,
+     "overlaps": 63,
+     "chargeTrips": 0,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.006872852233677,
+    "tally": {
+     "steps": 374,
+     "turns": 64,
+     "overlaps": 82,
+     "chargeTrips": 0,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.1168384879725086,
+    "tally": {
+     "steps": 390,
+     "turns": 64,
+     "overlaps": 98,
+     "chargeTrips": 0,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8487972508591066,
+    "tally": {
+     "steps": 358,
+     "turns": 57,
+     "overlaps": 66,
+     "chargeTrips": 0,
+     "mowed": 291,
+     "reachableGrass": 291,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000030,
+  "width": 20,
+  "height": 15,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.6761565836298933,
+    "tally": {
+     "steps": 330,
+     "turns": 47,
+     "overlaps": 47,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.6441281138790036,
+    "tally": {
+     "steps": 314,
+     "turns": 58,
+     "overlaps": 32,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.583629893238434,
+    "tally": {
+     "steps": 320,
+     "turns": 44,
+     "overlaps": 37,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.0284697508896796,
+    "tally": {
+     "steps": 352,
+     "turns": 75,
+     "overlaps": 68,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.6370106761565837,
+    "tally": {
+     "steps": 318,
+     "turns": 53,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.697508896797153,
+    "tally": {
+     "steps": 328,
+     "turns": 52,
+     "overlaps": 45,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.597864768683274,
+    "tally": {
+     "steps": 322,
+     "turns": 44,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.7615658362989324,
+    "tally": {
+     "steps": 338,
+     "turns": 51,
+     "overlaps": 55,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.914590747330961,
+    "tally": {
+     "steps": 356,
+     "turns": 54,
+     "overlaps": 74,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.6370106761565837,
+    "tally": {
+     "steps": 330,
+     "turns": 41,
+     "overlaps": 48,
+     "chargeTrips": 0,
+     "mowed": 281,
+     "reachableGrass": 281,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000031,
+  "width": 23,
+  "height": 16,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.2425068119891007,
+    "tally": {
+     "steps": 380,
+     "turns": 32,
+     "overlaps": 12,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.2425068119891007,
+    "tally": {
+     "steps": 380,
+     "turns": 32,
+     "overlaps": 12,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.2561307901907357,
+    "tally": {
+     "steps": 382,
+     "turns": 33,
+     "overlaps": 13,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.5149863760217983,
+    "tally": {
+     "steps": 402,
+     "turns": 60,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.2506811989100817,
+    "tally": {
+     "steps": 382,
+     "turns": 32,
+     "overlaps": 13,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.2425068119891007,
+    "tally": {
+     "steps": 380,
+     "turns": 32,
+     "overlaps": 12,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.2425068119891007,
+    "tally": {
+     "steps": 380,
+     "turns": 32,
+     "overlaps": 12,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.2506811989100817,
+    "tally": {
+     "steps": 382,
+     "turns": 32,
+     "overlaps": 13,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.2506811989100817,
+    "tally": {
+     "steps": 382,
+     "turns": 32,
+     "overlaps": 13,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.231607629427793,
+    "tally": {
+     "steps": 378,
+     "turns": 32,
+     "overlaps": 10,
+     "chargeTrips": 0,
+     "mowed": 367,
+     "reachableGrass": 367,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000032,
+  "width": 28,
+  "height": 16,
+  "runs": {
+   "smart_ai": {
+    "cost": 4.2,
+    "tally": {
+     "steps": 8,
+     "turns": 6,
+     "overlaps": 1,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 3.2,
+    "tally": {
+     "steps": 6,
+     "turns": 5,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 4.2,
+    "tally": {
+     "steps": 8,
+     "turns": 6,
+     "overlaps": 1,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 4.2,
+    "tally": {
+     "steps": 8,
+     "turns": 6,
+     "overlaps": 1,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 3.2,
+    "tally": {
+     "steps": 6,
+     "turns": 5,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 4.2,
+    "tally": {
+     "steps": 8,
+     "turns": 6,
+     "overlaps": 1,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 4.2,
+    "tally": {
+     "steps": 8,
+     "turns": 6,
+     "overlaps": 1,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 3.2,
+    "tally": {
+     "steps": 6,
+     "turns": 5,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 3.2,
+    "tally": {
+     "steps": 6,
+     "turns": 5,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 3.2,
+    "tally": {
+     "steps": 6,
+     "turns": 5,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 5,
+     "reachableGrass": 5,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000033,
+  "width": 16,
+  "height": 18,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.4981818181818183,
+    "tally": {
+     "steps": 304,
+     "turns": 40,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.949090909090909,
+    "tally": {
+     "steps": 340,
+     "turns": 66,
+     "overlaps": 64,
+     "chargeTrips": 0,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.6618181818181819,
+    "tally": {
+     "steps": 316,
+     "turns": 51,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.418181818181818,
+    "tally": {
+     "steps": 494,
+     "turns": 102,
+     "overlaps": 217,
+     "chargeTrips": 1,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.6545454545454545,
+    "tally": {
+     "steps": 316,
+     "turns": 50,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.4981818181818183,
+    "tally": {
+     "steps": 304,
+     "turns": 40,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.5418181818181818,
+    "tally": {
+     "steps": 302,
+     "turns": 48,
+     "overlaps": 26,
+     "chargeTrips": 0,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.5527272727272727,
+    "tally": {
+     "steps": 308,
+     "turns": 44,
+     "overlaps": 31,
+     "chargeTrips": 0,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.6545454545454545,
+    "tally": {
+     "steps": 316,
+     "turns": 50,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.4763636363636363,
+    "tally": {
+     "steps": 298,
+     "turns": 43,
+     "overlaps": 22,
+     "chargeTrips": 0,
+     "mowed": 275,
+     "reachableGrass": 275,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000034,
+  "width": 23,
+  "height": 16,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.4325396825396823,
+    "tally": {
+     "steps": 356,
+     "turns": 77,
+     "overlaps": 103,
+     "chargeTrips": 0,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.865079365079365,
+    "tally": {
+     "steps": 366,
+     "turns": 110,
+     "overlaps": 111,
+     "chargeTrips": 1,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.892857142857143,
+    "tally": {
+     "steps": 366,
+     "turns": 113,
+     "overlaps": 112,
+     "chargeTrips": 1,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.3373015873015874,
+    "tally": {
+     "steps": 336,
+     "turns": 85,
+     "overlaps": 83,
+     "chargeTrips": 0,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.6031746031746033,
+    "tally": {
+     "steps": 346,
+     "turns": 97,
+     "overlaps": 91,
+     "chargeTrips": 1,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 3.25,
+    "tally": {
+     "steps": 420,
+     "turns": 104,
+     "overlaps": 166,
+     "chargeTrips": 1,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.6944444444444446,
+    "tally": {
+     "steps": 368,
+     "turns": 86,
+     "overlaps": 114,
+     "chargeTrips": 1,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.7063492063492065,
+    "tally": {
+     "steps": 364,
+     "turns": 92,
+     "overlaps": 109,
+     "chargeTrips": 1,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.9523809523809526,
+    "tally": {
+     "steps": 392,
+     "turns": 95,
+     "overlaps": 137,
+     "chargeTrips": 1,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.2222222222222223,
+    "tally": {
+     "steps": 334,
+     "turns": 73,
+     "overlaps": 80,
+     "chargeTrips": 0,
+     "mowed": 252,
+     "reachableGrass": 252,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000035,
+  "width": 26,
+  "height": 17,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.315270935960591,
+    "tally": {
+     "steps": 566,
+     "turns": 96,
+     "overlaps": 157,
+     "chargeTrips": 1,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.3620689655172415,
+    "tally": {
+     "steps": 516,
+     "turns": 155,
+     "overlaps": 108,
+     "chargeTrips": 1,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.460591133004926,
+    "tally": {
+     "steps": 548,
+     "turns": 143,
+     "overlaps": 140,
+     "chargeTrips": 1,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.8177339901477834,
+    "tally": {
+     "steps": 622,
+     "turns": 144,
+     "overlaps": 209,
+     "chargeTrips": 1,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.0960591133004924,
+    "tally": {
+     "steps": 514,
+     "turns": 103,
+     "overlaps": 106,
+     "chargeTrips": 1,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.9014778325123154,
+    "tally": {
+     "steps": 596,
+     "turns": 173,
+     "overlaps": 186,
+     "chargeTrips": 2,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.600985221674877,
+    "tally": {
+     "steps": 582,
+     "turns": 138,
+     "overlaps": 173,
+     "chargeTrips": 1,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.2561576354679804,
+    "tally": {
+     "steps": 542,
+     "turns": 108,
+     "overlaps": 133,
+     "chargeTrips": 1,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.4310344827586206,
+    "tally": {
+     "steps": 594,
+     "turns": 92,
+     "overlaps": 184,
+     "chargeTrips": 1,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.2536945812807883,
+    "tally": {
+     "steps": 560,
+     "turns": 89,
+     "overlaps": 152,
+     "chargeTrips": 1,
+     "mowed": 406,
+     "reachableGrass": 406,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000036,
+  "width": 20,
+  "height": 18,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.309192200557103,
+    "tally": {
+     "steps": 376,
+     "turns": 39,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.3314763231197773,
+    "tally": {
+     "steps": 376,
+     "turns": 43,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.2896935933147633,
+    "tally": {
+     "steps": 376,
+     "turns": 36,
+     "overlaps": 15,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.448467966573816,
+    "tally": {
+     "steps": 384,
+     "turns": 56,
+     "overlaps": 24,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.2896935933147633,
+    "tally": {
+     "steps": 376,
+     "turns": 36,
+     "overlaps": 15,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.3203342618384402,
+    "tally": {
+     "steps": 378,
+     "turns": 39,
+     "overlaps": 18,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.2924791086350975,
+    "tally": {
+     "steps": 376,
+     "turns": 36,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.2896935933147633,
+    "tally": {
+     "steps": 376,
+     "turns": 36,
+     "overlaps": 15,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.2896935933147633,
+    "tally": {
+     "steps": 376,
+     "turns": 36,
+     "overlaps": 15,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.4317548746518105,
+    "tally": {
+     "steps": 396,
+     "turns": 41,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 359,
+     "reachableGrass": 359,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000037,
+  "width": 20,
+  "height": 18,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.5168918918918919,
+    "tally": {
+     "steps": 332,
+     "turns": 41,
+     "overlaps": 35,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.7804054054054055,
+    "tally": {
+     "steps": 354,
+     "turns": 58,
+     "overlaps": 57,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.6418918918918919,
+    "tally": {
+     "steps": 348,
+     "turns": 44,
+     "overlaps": 50,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.760135135135135,
+    "tally": {
+     "steps": 352,
+     "turns": 57,
+     "overlaps": 55,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.5033783783783783,
+    "tally": {
+     "steps": 326,
+     "turns": 45,
+     "overlaps": 29,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.5574324324324325,
+    "tally": {
+     "steps": 330,
+     "turns": 49,
+     "overlaps": 33,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.5168918918918919,
+    "tally": {
+     "steps": 326,
+     "turns": 47,
+     "overlaps": 29,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.5844594594594594,
+    "tally": {
+     "steps": 344,
+     "turns": 39,
+     "overlaps": 47,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5033783783783783,
+    "tally": {
+     "steps": 326,
+     "turns": 45,
+     "overlaps": 29,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.364864864864865,
+    "tally": {
+     "steps": 312,
+     "turns": 39,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 296,
+     "reachableGrass": 296,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000038,
+  "width": 22,
+  "height": 22,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.7384259259259258,
+    "tally": {
+     "steps": 512,
+     "turns": 68,
+     "overlaps": 78,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.650462962962963,
+    "tally": {
+     "steps": 482,
+     "turns": 79,
+     "overlaps": 48,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.7731481481481481,
+    "tally": {
+     "steps": 512,
+     "turns": 76,
+     "overlaps": 77,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.3194444444444446,
+    "tally": {
+     "steps": 600,
+     "turns": 106,
+     "overlaps": 165,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.7106481481481481,
+    "tally": {
+     "steps": 506,
+     "turns": 68,
+     "overlaps": 72,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.7615740740740742,
+    "tally": {
+     "steps": 514,
+     "turns": 71,
+     "overlaps": 80,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.7615740740740742,
+    "tally": {
+     "steps": 528,
+     "turns": 57,
+     "overlaps": 94,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.7106481481481481,
+    "tally": {
+     "steps": 506,
+     "turns": 68,
+     "overlaps": 72,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.7199074074074074,
+    "tally": {
+     "steps": 504,
+     "turns": 72,
+     "overlaps": 70,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.7384259259259258,
+    "tally": {
+     "steps": 518,
+     "turns": 62,
+     "overlaps": 84,
+     "chargeTrips": 1,
+     "mowed": 432,
+     "reachableGrass": 432,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000039,
+  "width": 14,
+  "height": 21,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.701923076923077,
+    "tally": {
+     "steps": 308,
+     "turns": 78,
+     "overlaps": 98,
+     "chargeTrips": 0,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 3.1586538461538463,
+    "tally": {
+     "steps": 316,
+     "turns": 106,
+     "overlaps": 104,
+     "chargeTrips": 1,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 3.1634615384615383,
+    "tally": {
+     "steps": 316,
+     "turns": 106,
+     "overlaps": 105,
+     "chargeTrips": 1,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.6634615384615383,
+    "tally": {
+     "steps": 296,
+     "turns": 86,
+     "overlaps": 86,
+     "chargeTrips": 0,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.7596153846153846,
+    "tally": {
+     "steps": 298,
+     "turns": 94,
+     "overlaps": 88,
+     "chargeTrips": 0,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 3.9471153846153846,
+    "tally": {
+     "steps": 364,
+     "turns": 139,
+     "overlaps": 154,
+     "chargeTrips": 1,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 4.115384615384615,
+    "tally": {
+     "steps": 402,
+     "turns": 119,
+     "overlaps": 191,
+     "chargeTrips": 1,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.7211538461538463,
+    "tally": {
+     "steps": 296,
+     "turns": 92,
+     "overlaps": 86,
+     "chargeTrips": 0,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 3.4423076923076925,
+    "tally": {
+     "steps": 350,
+     "turns": 101,
+     "overlaps": 139,
+     "chargeTrips": 1,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.5961538461538463,
+    "tally": {
+     "steps": 298,
+     "turns": 77,
+     "overlaps": 88,
+     "chargeTrips": 0,
+     "mowed": 208,
+     "reachableGrass": 208,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000040,
+  "width": 23,
+  "height": 22,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.0375275938189845,
+    "tally": {
+     "steps": 586,
+     "turns": 91,
+     "overlaps": 130,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.0022075055187636,
+    "tally": {
+     "steps": 566,
+     "turns": 103,
+     "overlaps": 110,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.8057395143487858,
+    "tally": {
+     "steps": 544,
+     "turns": 80,
+     "overlaps": 89,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.2229580573951435,
+    "tally": {
+     "steps": 618,
+     "turns": 101,
+     "overlaps": 162,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.8852097130242826,
+    "tally": {
+     "steps": 542,
+     "turns": 100,
+     "overlaps": 87,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.183222958057395,
+    "tally": {
+     "steps": 590,
+     "turns": 120,
+     "overlaps": 134,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.9359823399558498,
+    "tally": {
+     "steps": 568,
+     "turns": 86,
+     "overlaps": 112,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.858719646799117,
+    "tally": {
+     "steps": 544,
+     "turns": 92,
+     "overlaps": 89,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.955849889624724,
+    "tally": {
+     "steps": 568,
+     "turns": 90,
+     "overlaps": 113,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8278145695364238,
+    "tally": {
+     "steps": 548,
+     "turns": 81,
+     "overlaps": 93,
+     "chargeTrips": 1,
+     "mowed": 453,
+     "reachableGrass": 453,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000041,
+  "width": 29,
+  "height": 13,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.6706948640483383,
+    "tally": {
+     "steps": 492,
+     "turns": 104,
+     "overlaps": 159,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.7764350453172204,
+    "tally": {
+     "steps": 468,
+     "turns": 146,
+     "overlaps": 134,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.6374622356495467,
+    "tally": {
+     "steps": 456,
+     "turns": 135,
+     "overlaps": 122,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.4531722054380665,
+    "tally": {
+     "steps": 570,
+     "turns": 158,
+     "overlaps": 232,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.29607250755287,
+    "tally": {
+     "steps": 434,
+     "turns": 100,
+     "overlaps": 101,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.8187311178247736,
+    "tally": {
+     "steps": 486,
+     "turns": 135,
+     "overlaps": 152,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.6314199395770395,
+    "tally": {
+     "steps": 468,
+     "turns": 122,
+     "overlaps": 134,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.516616314199396,
+    "tally": {
+     "steps": 466,
+     "turns": 105,
+     "overlaps": 132,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.5498489425981874,
+    "tally": {
+     "steps": 480,
+     "turns": 96,
+     "overlaps": 147,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.610271903323263,
+    "tally": {
+     "steps": 478,
+     "turns": 108,
+     "overlaps": 145,
+     "chargeTrips": 1,
+     "mowed": 331,
+     "reachableGrass": 331,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000042,
+  "width": 16,
+  "height": 18,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.5218978102189782,
+    "tally": {
+     "steps": 306,
+     "turns": 40,
+     "overlaps": 31,
+     "chargeTrips": 0,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.6386861313868613,
+    "tally": {
+     "steps": 314,
+     "turns": 48,
+     "overlaps": 39,
+     "chargeTrips": 0,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.5474452554744527,
+    "tally": {
+     "steps": 306,
+     "turns": 44,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.68978102189781,
+    "tally": {
+     "steps": 534,
+     "turns": 97,
+     "overlaps": 258,
+     "chargeTrips": 1,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.6642335766423357,
+    "tally": {
+     "steps": 318,
+     "turns": 48,
+     "overlaps": 42,
+     "chargeTrips": 0,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.5218978102189782,
+    "tally": {
+     "steps": 306,
+     "turns": 40,
+     "overlaps": 31,
+     "chargeTrips": 0,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.4927007299270072,
+    "tally": {
+     "steps": 300,
+     "turns": 42,
+     "overlaps": 25,
+     "chargeTrips": 0,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.562043795620438,
+    "tally": {
+     "steps": 310,
+     "turns": 42,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.6642335766423357,
+    "tally": {
+     "steps": 318,
+     "turns": 48,
+     "overlaps": 42,
+     "chargeTrips": 0,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.5,
+    "tally": {
+     "steps": 304,
+     "turns": 39,
+     "overlaps": 29,
+     "chargeTrips": 0,
+     "mowed": 274,
+     "reachableGrass": 274,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000043,
+  "width": 19,
+  "height": 10,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.5843373493975905,
+    "tally": {
+     "steps": 248,
+     "turns": 51,
+     "overlaps": 79,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.4518072289156625,
+    "tally": {
+     "steps": 218,
+     "turns": 69,
+     "overlaps": 51,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.433734939759036,
+    "tally": {
+     "steps": 214,
+     "turns": 72,
+     "overlaps": 46,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.3855421686746987,
+    "tally": {
+     "steps": 296,
+     "turns": 72,
+     "overlaps": 122,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.283132530120482,
+    "tally": {
+     "steps": 220,
+     "turns": 53,
+     "overlaps": 53,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.5783132530120483,
+    "tally": {
+     "steps": 236,
+     "turns": 62,
+     "overlaps": 68,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.4457831325301207,
+    "tally": {
+     "steps": 234,
+     "turns": 53,
+     "overlaps": 66,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.289156626506024,
+    "tally": {
+     "steps": 220,
+     "turns": 54,
+     "overlaps": 52,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.2650602409638556,
+    "tally": {
+     "steps": 220,
+     "turns": 52,
+     "overlaps": 52,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.325301204819277,
+    "tally": {
+     "steps": 226,
+     "turns": 51,
+     "overlaps": 58,
+     "chargeTrips": 0,
+     "mowed": 166,
+     "reachableGrass": 166,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000044,
+  "width": 15,
+  "height": 19,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.605263157894737,
+    "tally": {
+     "steps": 256,
+     "turns": 42,
+     "overlaps": 26,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.6008771929824561,
+    "tally": {
+     "steps": 250,
+     "turns": 47,
+     "overlaps": 21,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.8289473684210527,
+    "tally": {
+     "steps": 274,
+     "turns": 49,
+     "overlaps": 45,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.9166666666666667,
+    "tally": {
+     "steps": 280,
+     "turns": 55,
+     "overlaps": 47,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.6228070175438596,
+    "tally": {
+     "steps": 260,
+     "turns": 40,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.7280701754385965,
+    "tally": {
+     "steps": 272,
+     "turns": 40,
+     "overlaps": 42,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.7280701754385965,
+    "tally": {
+     "steps": 272,
+     "turns": 40,
+     "overlaps": 42,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.6228070175438596,
+    "tally": {
+     "steps": 260,
+     "turns": 40,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.6228070175438596,
+    "tally": {
+     "steps": 260,
+     "turns": 40,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.530701754385965,
+    "tally": {
+     "steps": 248,
+     "turns": 41,
+     "overlaps": 19,
+     "chargeTrips": 0,
+     "mowed": 228,
+     "reachableGrass": 228,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000045,
+  "width": 18,
+  "height": 13,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.8768115942028984,
+    "tally": {
+     "steps": 164,
+     "turns": 35,
+     "overlaps": 25,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.0434782608695654,
+    "tally": {
+     "steps": 178,
+     "turns": 33,
+     "overlaps": 38,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.8985507246376812,
+    "tally": {
+     "steps": 166,
+     "turns": 35,
+     "overlaps": 26,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.2753623188405796,
+    "tally": {
+     "steps": 180,
+     "turns": 47,
+     "overlaps": 40,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.891304347826087,
+    "tally": {
+     "steps": 168,
+     "turns": 32,
+     "overlaps": 29,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.1159420289855073,
+    "tally": {
+     "steps": 174,
+     "turns": 42,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.028985507246377,
+    "tally": {
+     "steps": 172,
+     "turns": 38,
+     "overlaps": 32,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.891304347826087,
+    "tally": {
+     "steps": 168,
+     "turns": 32,
+     "overlaps": 29,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.8695652173913044,
+    "tally": {
+     "steps": 168,
+     "turns": 31,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8405797101449275,
+    "tally": {
+     "steps": 164,
+     "turns": 33,
+     "overlaps": 24,
+     "chargeTrips": 0,
+     "mowed": 138,
+     "reachableGrass": 138,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000046,
+  "width": 28,
+  "height": 22,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.551304347826087,
+    "tally": {
+     "steps": 654,
+     "turns": 68,
+     "overlaps": 77,
+     "chargeTrips": 1,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.728695652173913,
+    "tally": {
+     "steps": 674,
+     "turns": 99,
+     "overlaps": 97,
+     "chargeTrips": 1,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.4939130434782608,
+    "tally": {
+     "steps": 636,
+     "turns": 70,
+     "overlaps": 58,
+     "chargeTrips": 1,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.4869565217391303,
+    "tally": {
+     "steps": 854,
+     "turns": 125,
+     "overlaps": 276,
+     "chargeTrips": 2,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.5669565217391304,
+    "tally": {
+     "steps": 652,
+     "turns": 75,
+     "overlaps": 74,
+     "chargeTrips": 1,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.666086956521739,
+    "tally": {
+     "steps": 670,
+     "turns": 85,
+     "overlaps": 93,
+     "chargeTrips": 1,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.551304347826087,
+    "tally": {
+     "steps": 654,
+     "turns": 68,
+     "overlaps": 77,
+     "chargeTrips": 1,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.52,
+    "tally": {
+     "steps": 644,
+     "turns": 69,
+     "overlaps": 67,
+     "chargeTrips": 1,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5582608695652174,
+    "tally": {
+     "steps": 658,
+     "turns": 66,
+     "overlaps": 81,
+     "chargeTrips": 1,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8434782608695652,
+    "tally": {
+     "steps": 706,
+     "turns": 100,
+     "overlaps": 129,
+     "chargeTrips": 1,
+     "mowed": 575,
+     "reachableGrass": 575,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000047,
+  "width": 25,
+  "height": 21,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.5208747514910537,
+    "tally": {
+     "steps": 568,
+     "turns": 55,
+     "overlaps": 62,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.6421471172962228,
+    "tally": {
+     "steps": 588,
+     "turns": 65,
+     "overlaps": 83,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.5009940357852882,
+    "tally": {
+     "steps": 544,
+     "turns": 74,
+     "overlaps": 38,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.1332007952286283,
+    "tally": {
+     "steps": 686,
+     "turns": 93,
+     "overlaps": 176,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.7455268389662029,
+    "tally": {
+     "steps": 606,
+     "turns": 73,
+     "overlaps": 101,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.5924453280318092,
+    "tally": {
+     "steps": 572,
+     "turns": 69,
+     "overlaps": 66,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.6560636182902584,
+    "tally": {
+     "steps": 590,
+     "turns": 67,
+     "overlaps": 84,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.7514910536779325,
+    "tally": {
+     "steps": 626,
+     "turns": 55,
+     "overlaps": 120,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.7495029821073558,
+    "tally": {
+     "steps": 606,
+     "turns": 74,
+     "overlaps": 101,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.7375745526838966,
+    "tally": {
+     "steps": 604,
+     "turns": 73,
+     "overlaps": 99,
+     "chargeTrips": 1,
+     "mowed": 503,
+     "reachableGrass": 503,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000048,
+  "width": 14,
+  "height": 11,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.900709219858156,
+    "tally": {
+     "steps": 180,
+     "turns": 25,
+     "overlaps": 38,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.8156028368794326,
+    "tally": {
+     "steps": 168,
+     "turns": 31,
+     "overlaps": 26,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.5815602836879432,
+    "tally": {
+     "steps": 158,
+     "turns": 25,
+     "overlaps": 15,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.7872340425531914,
+    "tally": {
+     "steps": 160,
+     "turns": 37,
+     "overlaps": 18,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.851063829787234,
+    "tally": {
+     "steps": 178,
+     "turns": 24,
+     "overlaps": 35,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.8581560283687943,
+    "tally": {
+     "steps": 172,
+     "turns": 30,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.872340425531915,
+    "tally": {
+     "steps": 172,
+     "turns": 31,
+     "overlaps": 30,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.851063829787234,
+    "tally": {
+     "steps": 178,
+     "turns": 24,
+     "overlaps": 35,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.851063829787234,
+    "tally": {
+     "steps": 178,
+     "turns": 24,
+     "overlaps": 35,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.801418439716312,
+    "tally": {
+     "steps": 170,
+     "turns": 28,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 141,
+     "reachableGrass": 141,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000049,
+  "width": 24,
+  "height": 14,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.8697068403908794,
+    "tally": {
+     "steps": 376,
+     "turns": 65,
+     "overlaps": 68,
+     "chargeTrips": 0,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.3485342019543975,
+    "tally": {
+     "steps": 406,
+     "turns": 97,
+     "overlaps": 96,
+     "chargeTrips": 1,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.3713355048859937,
+    "tally": {
+     "steps": 418,
+     "turns": 88,
+     "overlaps": 109,
+     "chargeTrips": 1,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.47557003257329,
+    "tally": {
+     "steps": 434,
+     "turns": 88,
+     "overlaps": 125,
+     "chargeTrips": 1,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.8827361563517915,
+    "tally": {
+     "steps": 386,
+     "turns": 57,
+     "overlaps": 78,
+     "chargeTrips": 0,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.534201954397394,
+    "tally": {
+     "steps": 446,
+     "turns": 85,
+     "overlaps": 137,
+     "chargeTrips": 1,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.9315960912052117,
+    "tally": {
+     "steps": 386,
+     "turns": 65,
+     "overlaps": 77,
+     "chargeTrips": 0,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.8241042345276872,
+    "tally": {
+     "steps": 374,
+     "turns": 60,
+     "overlaps": 66,
+     "chargeTrips": 0,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.996742671009772,
+    "tally": {
+     "steps": 402,
+     "turns": 59,
+     "overlaps": 93,
+     "chargeTrips": 0,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.009771986970684,
+    "tally": {
+     "steps": 394,
+     "turns": 69,
+     "overlaps": 85,
+     "chargeTrips": 0,
+     "mowed": 307,
+     "reachableGrass": 307,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000050,
+  "width": 26,
+  "height": 16,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.248677248677249,
+    "tally": {
+     "steps": 512,
+     "turns": 91,
+     "overlaps": 131,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.431216931216931,
+    "tally": {
+     "steps": 506,
+     "turns": 131,
+     "overlaps": 126,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.4576719576719577,
+    "tally": {
+     "steps": 498,
+     "turns": 144,
+     "overlaps": 118,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.933862433862434,
+    "tally": {
+     "steps": 576,
+     "turns": 156,
+     "overlaps": 196,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.2777777777777777,
+    "tally": {
+     "steps": 498,
+     "turns": 110,
+     "overlaps": 118,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.939153439153439,
+    "tally": {
+     "steps": 580,
+     "turns": 153,
+     "overlaps": 200,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.3439153439153437,
+    "tally": {
+     "steps": 502,
+     "turns": 119,
+     "overlaps": 121,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.4153439153439153,
+    "tally": {
+     "steps": 522,
+     "turns": 112,
+     "overlaps": 142,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.4100529100529102,
+    "tally": {
+     "steps": 538,
+     "turns": 95,
+     "overlaps": 158,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.314814814814815,
+    "tally": {
+     "steps": 516,
+     "turns": 99,
+     "overlaps": 136,
+     "chargeTrips": 1,
+     "mowed": 378,
+     "reachableGrass": 378,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000051,
+  "width": 16,
+  "height": 11,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.066225165562914,
+    "tally": {
+     "steps": 192,
+     "turns": 40,
+     "overlaps": 40,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.185430463576159,
+    "tally": {
+     "steps": 194,
+     "turns": 47,
+     "overlaps": 42,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.4503311258278146,
+    "tally": {
+     "steps": 210,
+     "turns": 51,
+     "overlaps": 58,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.5033112582781456,
+    "tally": {
+     "steps": 208,
+     "turns": 57,
+     "overlaps": 56,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.013245033112583,
+    "tally": {
+     "steps": 186,
+     "turns": 42,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.119205298013245,
+    "tally": {
+     "steps": 192,
+     "turns": 44,
+     "overlaps": 40,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.0264900662251657,
+    "tally": {
+     "steps": 190,
+     "turns": 39,
+     "overlaps": 38,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.013245033112583,
+    "tally": {
+     "steps": 186,
+     "turns": 42,
+     "overlaps": 34,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.370860927152318,
+    "tally": {
+     "steps": 214,
+     "turns": 41,
+     "overlaps": 62,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.9735099337748345,
+    "tally": {
+     "steps": 188,
+     "turns": 37,
+     "overlaps": 36,
+     "chargeTrips": 0,
+     "mowed": 151,
+     "reachableGrass": 151,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000052,
+  "width": 21,
+  "height": 13,
+  "runs": {
+   "smart_ai": {
+    "cost": 3.3333333333333335,
+    "tally": {
+     "steps": 4,
+     "turns": 3,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 3.3333333333333335,
+    "tally": {
+     "steps": 4,
+     "turns": 3,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 3.3333333333333335,
+    "tally": {
+     "steps": 4,
+     "turns": 3,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 3.3333333333333335,
+    "tally": {
+     "steps": 4,
+     "turns": 3,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 4,
+    "tally": {
+     "steps": 4,
+     "turns": 4,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 3.3333333333333335,
+    "tally": {
+     "steps": 4,
+     "turns": 3,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 3.3333333333333335,
+    "tally": {
+     "steps": 4,
+     "turns": 3,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 4,
+    "tally": {
+     "steps": 4,
+     "turns": 4,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 4,
+    "tally": {
+     "steps": 4,
+     "turns": 4,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 3.3333333333333335,
+    "tally": {
+     "steps": 4,
+     "turns": 3,
+     "overlaps": 0,
+     "chargeTrips": 0,
+     "mowed": 3,
+     "reachableGrass": 3,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000053,
+  "width": 27,
+  "height": 20,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.601965601965602,
+    "tally": {
+     "steps": 580,
+     "turns": 142,
+     "overlaps": 170,
+     "chargeTrips": 1,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.9484029484029484,
+    "tally": {
+     "steps": 588,
+     "turns": 192,
+     "overlaps": 178,
+     "chargeTrips": 2,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 3.2997542997542997,
+    "tally": {
+     "steps": 648,
+     "turns": 204,
+     "overlaps": 237,
+     "chargeTrips": 2,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 4.14987714987715,
+    "tally": {
+     "steps": 810,
+     "turns": 215,
+     "overlaps": 399,
+     "chargeTrips": 2,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.56019656019656,
+    "tally": {
+     "steps": 542,
+     "turns": 171,
+     "overlaps": 133,
+     "chargeTrips": 1,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 3.407862407862408,
+    "tally": {
+     "steps": 642,
+     "turns": 232,
+     "overlaps": 231,
+     "chargeTrips": 2,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.6363636363636362,
+    "tally": {
+     "steps": 572,
+     "turns": 157,
+     "overlaps": 162,
+     "chargeTrips": 1,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.6437346437346436,
+    "tally": {
+     "steps": 562,
+     "turns": 168,
+     "overlaps": 153,
+     "chargeTrips": 1,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.461916461916462,
+    "tally": {
+     "steps": 552,
+     "turns": 141,
+     "overlaps": 143,
+     "chargeTrips": 1,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 2.501228501228501,
+    "tally": {
+     "steps": 556,
+     "turns": 145,
+     "overlaps": 147,
+     "chargeTrips": 1,
+     "mowed": 407,
+     "reachableGrass": 407,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000054,
+  "width": 28,
+  "height": 17,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.052516411378556,
+    "tally": {
+     "steps": 600,
+     "turns": 86,
+     "overlaps": 141,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.9693654266958425,
+    "tally": {
+     "steps": 544,
+     "turns": 123,
+     "overlaps": 85,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.8402625820568927,
+    "tally": {
+     "steps": 548,
+     "turns": 90,
+     "overlaps": 88,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.1706783369803064,
+    "tally": {
+     "steps": 596,
+     "turns": 117,
+     "overlaps": 137,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.8555798687089715,
+    "tally": {
+     "steps": 564,
+     "turns": 77,
+     "overlaps": 105,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.0656455142231946,
+    "tally": {
+     "steps": 568,
+     "turns": 121,
+     "overlaps": 109,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.105032822757112,
+    "tally": {
+     "steps": 592,
+     "turns": 106,
+     "overlaps": 133,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.8161925601750548,
+    "tally": {
+     "steps": 556,
+     "turns": 76,
+     "overlaps": 97,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.9978118161925602,
+    "tally": {
+     "steps": 598,
+     "turns": 76,
+     "overlaps": 138,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.9190371991247264,
+    "tally": {
+     "steps": 580,
+     "turns": 76,
+     "overlaps": 120,
+     "chargeTrips": 1,
+     "mowed": 457,
+     "reachableGrass": 457,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000055,
+  "width": 14,
+  "height": 11,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.852112676056338,
+    "tally": {
+     "steps": 174,
+     "turns": 29,
+     "overlaps": 31,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.119718309859155,
+    "tally": {
+     "steps": 184,
+     "turns": 38,
+     "overlaps": 41,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.8591549295774648,
+    "tally": {
+     "steps": 172,
+     "turns": 32,
+     "overlaps": 28,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 4.035211267605634,
+    "tally": {
+     "steps": 282,
+     "turns": 76,
+     "overlaps": 139,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.8661971830985915,
+    "tally": {
+     "steps": 176,
+     "turns": 28,
+     "overlaps": 33,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.8943661971830985,
+    "tally": {
+     "steps": 174,
+     "turns": 32,
+     "overlaps": 31,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.795774647887324,
+    "tally": {
+     "steps": 168,
+     "turns": 31,
+     "overlaps": 25,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.8661971830985915,
+    "tally": {
+     "steps": 176,
+     "turns": 28,
+     "overlaps": 33,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.8661971830985915,
+    "tally": {
+     "steps": 176,
+     "turns": 28,
+     "overlaps": 33,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8028169014084507,
+    "tally": {
+     "steps": 170,
+     "turns": 30,
+     "overlaps": 26,
+     "chargeTrips": 0,
+     "mowed": 142,
+     "reachableGrass": 142,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000056,
+  "width": 27,
+  "height": 19,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.8254620123203285,
+    "tally": {
+     "steps": 610,
+     "turns": 67,
+     "overlaps": 120,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.8767967145790554,
+    "tally": {
+     "steps": 618,
+     "turns": 71,
+     "overlaps": 129,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.7063655030800822,
+    "tally": {
+     "steps": 582,
+     "turns": 66,
+     "overlaps": 92,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.3655030800821355,
+    "tally": {
+     "steps": 718,
+     "turns": 94,
+     "overlaps": 221,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.8850102669404518,
+    "tally": {
+     "steps": 628,
+     "turns": 63,
+     "overlaps": 139,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.9609856262833676,
+    "tally": {
+     "steps": 622,
+     "turns": 88,
+     "overlaps": 132,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.8542094455852156,
+    "tally": {
+     "steps": 618,
+     "turns": 66,
+     "overlaps": 128,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.7946611909650925,
+    "tally": {
+     "steps": 618,
+     "turns": 51,
+     "overlaps": 129,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.8850102669404518,
+    "tally": {
+     "steps": 628,
+     "turns": 63,
+     "overlaps": 139,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8069815195071868,
+    "tally": {
+     "steps": 608,
+     "turns": 64,
+     "overlaps": 119,
+     "chargeTrips": 1,
+     "mowed": 487,
+     "reachableGrass": 487,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000057,
+  "width": 28,
+  "height": 20,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.5888030888030888,
+    "tally": {
+     "steps": 590,
+     "turns": 69,
+     "overlaps": 70,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.777992277992278,
+    "tally": {
+     "steps": 610,
+     "turns": 98,
+     "overlaps": 90,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.5386100386100385,
+    "tally": {
+     "steps": 580,
+     "turns": 66,
+     "overlaps": 60,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.0366795366795367,
+    "tally": {
+     "steps": 680,
+     "turns": 98,
+     "overlaps": 154,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.5521235521235521,
+    "tally": {
+     "steps": 592,
+     "turns": 58,
+     "overlaps": 71,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.5386100386100385,
+    "tally": {
+     "steps": 578,
+     "turns": 68,
+     "overlaps": 58,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.6332046332046333,
+    "tally": {
+     "steps": 598,
+     "turns": 73,
+     "overlaps": 77,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.5521235521235521,
+    "tally": {
+     "steps": 592,
+     "turns": 58,
+     "overlaps": 71,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.5772200772200773,
+    "tally": {
+     "steps": 594,
+     "turns": 62,
+     "overlaps": 74,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.4806949806949807,
+    "tally": {
+     "steps": 576,
+     "turns": 55,
+     "overlaps": 56,
+     "chargeTrips": 1,
+     "mowed": 518,
+     "reachableGrass": 518,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000058,
+  "width": 16,
+  "height": 16,
+  "runs": {
+   "smart_ai": {
+    "cost": 1.3647058823529412,
+    "tally": {
+     "steps": 270,
+     "turns": 32,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 1.396078431372549,
+    "tally": {
+     "steps": 272,
+     "turns": 34,
+     "overlaps": 16,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 1.3686274509803922,
+    "tally": {
+     "steps": 270,
+     "turns": 33,
+     "overlaps": 13,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 1.5686274509803921,
+    "tally": {
+     "steps": 282,
+     "turns": 46,
+     "overlaps": 26,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 1.3607843137254902,
+    "tally": {
+     "steps": 270,
+     "turns": 32,
+     "overlaps": 13,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 1.3647058823529412,
+    "tally": {
+     "steps": 270,
+     "turns": 32,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 1.3647058823529412,
+    "tally": {
+     "steps": 270,
+     "turns": 32,
+     "overlaps": 14,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 1.3607843137254902,
+    "tally": {
+     "steps": 270,
+     "turns": 32,
+     "overlaps": 13,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 1.3607843137254902,
+    "tally": {
+     "steps": 270,
+     "turns": 32,
+     "overlaps": 13,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.3411764705882352,
+    "tally": {
+     "steps": 266,
+     "turns": 33,
+     "overlaps": 10,
+     "chargeTrips": 0,
+     "mowed": 255,
+     "reachableGrass": 255,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ },
+ {
+  "seed": 2000059,
+  "width": 29,
+  "height": 22,
+  "runs": {
+   "smart_ai": {
+    "cost": 2.381666666666667,
+    "tally": {
+     "steps": 862,
+     "turns": 129,
+     "overlaps": 259,
+     "chargeTrips": 2,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "potential_field": {
+    "cost": 2.415,
+    "tally": {
+     "steps": 794,
+     "turns": 207,
+     "overlaps": 191,
+     "chargeTrips": 2,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "boustrophedon": {
+    "cost": 2.3966666666666665,
+    "tally": {
+     "steps": 800,
+     "turns": 196,
+     "overlaps": 196,
+     "chargeTrips": 2,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "spiral": {
+    "cost": 2.558333333333333,
+    "tally": {
+     "steps": 864,
+     "turns": 180,
+     "overlaps": 261,
+     "chargeTrips": 2,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "dfs_coverage": {
+    "cost": 2.115,
+    "tally": {
+     "steps": 774,
+     "turns": 137,
+     "overlaps": 171,
+     "chargeTrips": 2,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "rrt": {
+    "cost": 2.4383333333333335,
+    "tally": {
+     "steps": 834,
+     "turns": 174,
+     "overlaps": 231,
+     "chargeTrips": 2,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "a_star": {
+    "cost": 2.3183333333333334,
+    "tally": {
+     "steps": 822,
+     "turns": 150,
+     "overlaps": 219,
+     "chargeTrips": 2,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "energy_conservative_sweep": {
+    "cost": 2.105,
+    "tally": {
+     "steps": 778,
+     "turns": 130,
+     "overlaps": 175,
+     "chargeTrips": 2,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "cellular_decomposition": {
+    "cost": 2.26,
+    "tally": {
+     "steps": 834,
+     "turns": 121,
+     "overlaps": 230,
+     "chargeTrips": 2,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   },
+   "neural_network": {
+    "cost": 1.8166666666666667,
+    "tally": {
+     "steps": 726,
+     "turns": 108,
+     "overlaps": 123,
+     "chargeTrips": 1,
+     "mowed": 600,
+     "reachableGrass": 600,
+     "endedAtDock": true
+    },
+    "endReason": "completed"
+   }
+  }
+ }
+]

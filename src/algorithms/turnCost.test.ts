@@ -1,20 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { DEFAULT_FITNESS_CONFIG } from "../types";
-import { DEFAULT_TURN_COST, minTurnsTo, turnCostInSteps } from "./turnCost";
+import { SCORE_WEIGHTS } from "../simulation/score";
+import { DEFAULT_TURN_COST, minTurnsTo } from "./turnCost";
 
-describe("turnCostInSteps", () => {
-  it("prices a turn in revisit steps (default weights: 100 / 50 = 2)", () => {
-    expect(turnCostInSteps(DEFAULT_FITNESS_CONFIG)).toBe(2);
+describe("DEFAULT_TURN_COST", () => {
+  it("prices a turn like the benchmark score does (2 steps)", () => {
+    expect(DEFAULT_TURN_COST).toBe(SCORE_WEIGHTS.turn / SCORE_WEIGHTS.step);
     expect(DEFAULT_TURN_COST).toBe(2);
-    expect(turnCostInSteps({ turnPenalty: 300, mowedRevisitPenalty: 50 })).toBe(6);
-  });
-
-  it("treats a negative turn penalty as free turns", () => {
-    expect(turnCostInSteps({ turnPenalty: -100, mowedRevisitPenalty: 50 })).toBe(0);
-  });
-
-  it("falls back to the default when the revisit penalty gives no exchange rate", () => {
-    expect(turnCostInSteps({ turnPenalty: 100, mowedRevisitPenalty: 0 })).toBe(DEFAULT_TURN_COST);
   });
 });
 

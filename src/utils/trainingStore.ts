@@ -1,36 +1,25 @@
-import { NeuralNetwork } from '../NeuralNetwork';
-import type { FitnessConfig } from '../types';
-import { DEFAULT_FITNESS_CONFIG } from '../types';
-import type { Champion, Individual } from './evolution';
-
-/** The genetic algorithm state that the next generation is bred from. */
-export interface BreedingState {
-    population: Individual[];
-    mutationStrength: number;
-    stagnantGenerations: number;
-}
+import type { EsState } from '../simulation/evolutionStrategy';
+import type { LoadedModel } from '../simulation/modelFile';
+import { parameterCount } from '../simulation/policyNetwork';
 
 /** Everything needed to continue training after a page reload. */
 export interface TrainingProgress {
-    champion: Champion;
-    /** Null when there is no population yet (an imported model): training then seeds one from the champion. */
-    breeding: BreedingState | null;
-    generation: number;
-    idealFitness: number;
-    fitnessConfig: FitnessConfig;
+    /** The evolution strategy: current parameters and optimizer moments. */
+    es: EsState;
+    /** The network with the best validation score so far: the one the app drives with. */
+    best: LoadedModel;
 }
 
-/** What IndexedDB holds: plain data with typed arrays, so it is stored by structured clone without JSON. */
+/** What IndexedDB holds: plain data with typed arrays, stored by structured clone without JSON. */
 export interface TrainingSnapshot {
     layers: number[];
-    championWeights: Float64Array;
-    championFitness: number;
-    population: Float64Array[];
-    mutationStrength: number;
-    stagnantGenerations: number;
+    params: Float32Array;
+    m: Float32Array;
+    v: Float32Array;
     generation: number;
-    idealFitness: number;
-    fitnessConfig: FitnessConfig;
+    bestParams: Float32Array;
+    bestGeneration: number;
+    bestValidationCost: number | null;
 }
 
 const DB_NAME = 'mowerai';
@@ -38,51 +27,31 @@ const DB_VERSION = 1;
 const STORE_NAME = 'training';
 const SNAPSHOT_KEY = 'latest';
 
-/** Number of weights and biases in a network with these layers. */
-export const parameterCount = (layers: number[]): number =>
-    layers.slice(1).reduce((sum, outputs, i) => sum + outputs * layers[i] + outputs, 0);
-
-const networkFrom = (layers: number[], weights: ArrayLike<number>): NeuralNetwork => {
-    const nn = new NeuralNetwork(layers);
-    nn.setWeights(weights);
-    return nn;
-};
-
-const weightsOf = (nn: NeuralNetwork): Float64Array => Float64Array.from(nn.getWeights());
-
-export const toSnapshot = ({ champion, breeding, generation, idealFitness, fitnessConfig }: TrainingProgress): TrainingSnapshot => ({
-    layers: [...champion.nn.layers],
-    championWeights: weightsOf(champion.nn),
-    championFitness: champion.fitness,
-    population: breeding?.population.map(individual => weightsOf(individual.nn)) ?? [],
-    mutationStrength: breeding?.mutationStrength ?? 0,
-    stagnantGenerations: breeding?.stagnantGenerations ?? 0,
-    generation,
-    idealFitness,
-    fitnessConfig,
+/** Copies the arrays, so training can go on while the snapshot is written. */
+export const toSnapshot = ({ es, best }: TrainingProgress): TrainingSnapshot => ({
+    layers: [...es.layers],
+    params: es.params.slice(),
+    m: es.m.slice(),
+    v: es.v.slice(),
+    generation: es.generation,
+    bestParams: best.network.params.slice(),
+    bestGeneration: best.generation,
+    bestValidationCost: best.validationCost,
 });
 
-/** Returns null when the snapshot was saved for another network shape. */
-export const fromSnapshot = (snapshot: TrainingSnapshot, layers: number[], populationSize: number): TrainingProgress | null => {
-    const sameLayers = snapshot.layers.length === layers.length && snapshot.layers.every((size, i) => size === layers[i]);
+/** Returns null when the snapshot was saved for another network shape (or by an older app version). */
+export const fromSnapshot = (snapshot: TrainingSnapshot, layers: number[]): TrainingProgress | null => {
+    const sameLayers = snapshot.layers?.length === layers.length && snapshot.layers.every((size, i) => size === layers[i]);
     const expectedLength = parameterCount(layers);
-    const allWeightsFit = [snapshot.championWeights, ...snapshot.population].every(weights => weights.length === expectedLength);
-    if (!sameLayers || !allWeightsFit) return null;
-
-    const hasFullPopulation = snapshot.population.length === populationSize;
+    const arrays = [snapshot.params, snapshot.m, snapshot.v, snapshot.bestParams];
+    if (!sameLayers || !arrays.every(array => array instanceof Float32Array && array.length === expectedLength)) return null;
     return {
-        champion: { nn: networkFrom(layers, snapshot.championWeights), fitness: snapshot.championFitness },
-        breeding: hasFullPopulation
-            ? {
-                population: snapshot.population.map((weights, id) => ({ id, nn: networkFrom(layers, weights) })),
-                mutationStrength: snapshot.mutationStrength,
-                stagnantGenerations: snapshot.stagnantGenerations,
-            }
-            : null,
-        generation: snapshot.generation,
-        idealFitness: snapshot.idealFitness,
-        // Fields added to the config after the snapshot was saved get their defaults.
-        fitnessConfig: { ...DEFAULT_FITNESS_CONFIG, ...snapshot.fitnessConfig },
+        es: { layers, params: snapshot.params, m: snapshot.m, v: snapshot.v, generation: snapshot.generation },
+        best: {
+            network: { layers, params: snapshot.bestParams },
+            generation: snapshot.bestGeneration,
+            validationCost: snapshot.bestValidationCost,
+        },
     };
 };
 
@@ -112,13 +81,12 @@ const inStore = async <T>(mode: IDBTransactionMode, action: (store: IDBObjectSto
     return resultOf(action(db.transaction(STORE_NAME, mode).objectStore(STORE_NAME)));
 };
 
-export const loadTrainingProgress = async (layers: number[], populationSize: number): Promise<TrainingProgress | null> => {
+export const loadTrainingProgress = async (layers: number[]): Promise<TrainingProgress | null> => {
     const snapshot = await inStore<TrainingSnapshot | undefined>('readonly', store => store.get(SNAPSHOT_KEY));
-    return snapshot ? fromSnapshot(snapshot, layers, populationSize) : null;
+    return snapshot ? fromSnapshot(snapshot, layers) : null;
 };
 
 export const saveTrainingProgress = async (progress: TrainingProgress): Promise<void> => {
-    // Copy the weights now, before the caller moves on to the next generation.
     const snapshot = toSnapshot(progress);
     await inStore('readwrite', store => store.put(snapshot, SNAPSHOT_KEY));
 };

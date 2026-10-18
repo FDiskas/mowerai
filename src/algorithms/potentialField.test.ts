@@ -40,9 +40,8 @@ describe('getPotentialFieldMove', () => {
         const dock = { x: 0, y: 0 };
         const grid = buildLawn(10, 10, dock, false);
         const state = {
-            pos: { x: 0, y: 0 }, prevDir: { dx: 0, dy: 1 }, visitCounts: {},
-            orientation: 'horizontal', dockPos: dock, isCharging: false,
-            isReturningForCharge: false, battery: Infinity, grid,
+            pos: { x: 0, y: 0 }, prevDir: { dx: 0, dy: 1 },
+            orientation: 'horizontal', dockPos: dock, battery: Infinity, grid,
         } as unknown as State;
         const next = getPotentialFieldMove(state, grid, CELL_TYPES)!;
         expect(next).not.toBeNull();
@@ -53,18 +52,16 @@ describe('getPotentialFieldMove', () => {
         const dock = { x: 1, y: 1 };
         const grid = buildLawn(3, 3, dock, false);
         const stateHorizontal = {
-            pos: { x: 1, y: 1 }, prevDir: { dx: 0, dy: 0 }, visitCounts: {},
-            orientation: 'horizontal', dockPos: dock, isCharging: false,
-            isReturningForCharge: false, battery: Infinity, grid,
+            pos: { x: 1, y: 1 }, prevDir: { dx: 0, dy: 0 },
+            orientation: 'horizontal', dockPos: dock, battery: Infinity, grid,
         } as unknown as State;
         const nextH = getPotentialFieldMove(stateHorizontal, grid, CELL_TYPES)!;
         expect(nextH.x).not.toBe(1);
         expect(nextH.y).toBe(1);
 
         const stateVertical = {
-            pos: { x: 1, y: 1 }, prevDir: { dx: 0, dy: 0 }, visitCounts: {},
-            orientation: 'vertical', dockPos: dock, isCharging: false,
-            isReturningForCharge: false, battery: Infinity, grid,
+            pos: { x: 1, y: 1 }, prevDir: { dx: 0, dy: 0 },
+            orientation: 'vertical', dockPos: dock, battery: Infinity, grid,
         } as unknown as State;
         const nextV = getPotentialFieldMove(stateVertical, grid, CELL_TYPES)!;
         expect(nextV.x).toBe(1);

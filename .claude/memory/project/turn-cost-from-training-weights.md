@@ -1,26 +1,24 @@
 ---
 name: turn-cost-from-training-weights
-description: Decision (2026-10-18) — every algorithm's turn cost comes from the training weights (turnPenalty / mowedRevisitPenalty), set on State.turnCost in the live sim, NN preview and fitness; goal commitment prevents oscillation
-keywords: [turnCost, turnCostInSteps, turnCostOf, DEFAULT_TURN_COST, turnPenalty, mowedRevisitPenalty, minTurnsTo, committedGoal, State.goal, fitnessConfig, target choice, oscillation]
+description: Turn cost of every algorithm is fixed at 2 steps = SCORE_WEIGHTS.turn / step (the proof score), set by the Episode config; committedGoal prevents oscillation. Was turnPenalty / mowedRevisitPenalty until 2026-10-18
+keywords: [turnCost, turnCostOf, DEFAULT_TURN_COST, SCORE_WEIGHTS, minTurnsTo, committedGoal, State.goal, target choice, oscillation, EpisodeConfig]
 updated: 2026-10-18
 ---
 
 ### Rule / Fact
 
-- The user decided: one turn cost for all algorithms, taken from the training "Turn" weight. Path cost in steps = `turnPenalty / mowedRevisitPenalty` (`turnCostInSteps` in `src/algorithms/turnCost.ts`). Defaults 100 / 50 = **2** steps; the old fixed value was 5.
-- Negative `turnPenalty` → 0; `mowedRevisitPenalty` ≤ 0 → default. The Sidebar shows the result under the "Turn" field.
-- Algorithms read it with `turnCostOf(state)` (`State.turnCost`, optional, default 2). Energy Sweep uses 5x, Cell Decomposition 2x (local) / 3x (transit) — the user chose to keep these ratios.
-- Set in three places: `useAppSimulation` (at run start, from `config.turnCost` that `App.tsx` builds from `fitnessConfig`), `useNeuralNetwork` preview state and `startEpisode` (`src/utils/episode.ts`, used by fitness and warm start).
-- The cost also applies to target choice (`getClosestGrass` with heading, spiral ring choice) via `minTurnsTo`. Because that choice depends on the heading, re-choosing every step made the mower oscillate between two tiles. `committedGoal` keeps `State.goal` until it is cut; `a_star`, `rrt`, `spiral` use it.
+- `DEFAULT_TURN_COST` (`src/algorithms/turnCost.ts`) = `SCORE_WEIGHTS.turn / SCORE_WEIGHTS.step` = **2**, the same price the benchmark score puts on a turn. `EpisodeConfig.turnCost` sets `State.turnCost` from it. The old editable fitness weights (`FitnessConfig`, `turnCostInSteps`) were removed with the GA on 2026-10-18.
+- Algorithms read it with `turnCostOf(state)`. Energy Sweep uses 5x, Cell Decomposition 2x (local) / 3x (transit) — the user chose to keep these ratios earlier.
+- The cost also applies to target choice (`getClosestGrass` with heading, spiral ring choice) via `minTurnsTo`. Re-choosing every step made the mower oscillate, so `committedGoal` keeps `State.goal` until it is cut (`a_star`, `rrt`, `spiral`).
 
 ### Why
 
-The user wanted turn behaviour to be configurable in one place and consistent with how the NN is trained.
+The algorithms plan with the same turn price the proof score charges, so they are not handicapped in the comparison.
 
 ### How to apply
 
 - New algorithms: pass `turnCostOf(state)` to every path search; never hard-code a turn penalty.
-- Any heading-dependent target choice must go through `committedGoal`, or it can oscillate.
-- With Turn = 250 (cost 5), `smart_ai`, `potential_field` and `boustrophedon` reproduce the old results exactly.
+- Heading-dependent target choice must go through `committedGoal`.
+- Do not change `SCORE_WEIGHTS` to make the network look better ([[real-nn-vs-algorithms-plan]]).
 
 Related: [[algorithm-review-findings]], [[simulation-paths-and-nn]], [[add-mowing-algorithm]]

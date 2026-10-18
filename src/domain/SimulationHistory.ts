@@ -1,26 +1,29 @@
 import type { HistoryRecord } from '../types';
 
+/** Runs saved before the fixed score have no cost; they rank after every scored run. */
+const costOrLast = (record: HistoryRecord) => record.cost ?? Infinity;
+
 /**
- * Best run first: the highest coverage, then the lowest penalty, then the
- * shortest duration, then the newest.
+ * Best run first: the highest coverage, then the lowest benchmark cost, then
+ * the shortest duration, then the newest.
  */
 export const compareRuns = (a: HistoryRecord, b: HistoryRecord): number =>
     b.coverage - a.coverage
-    || a.penalty - b.penalty
+    || costOrLast(a) - costOrLast(b)
     || a.duration - b.duration
     || b.id - a.id;
 
-/** A record saved before runs stored `coverage`. */
-type SavedRecord = Omit<HistoryRecord, 'coverage'> & { coverage?: number };
+/** A record saved by an older version: without `coverage`, or with the old `penalty` points instead of `cost`. */
+type SavedRecord = Omit<HistoryRecord, 'coverage' | 'cost'> & { coverage?: number; cost?: number | null };
 
 export class SimulationHistory {
     constructor(
         private readonly _records: HistoryRecord[] = []
     ) {}
 
-    /** Old records have no coverage; they load as 0% so they rank below every newer run. */
+    /** Old records load with 0% coverage and no cost, so they rank below every newer run. */
     static fromSaved(saved: SavedRecord[]): SimulationHistory {
-        return new SimulationHistory(saved.map(record => ({ ...record, coverage: record.coverage ?? 0 })));
+        return new SimulationHistory(saved.map(record => ({ ...record, coverage: record.coverage ?? 0, cost: record.cost ?? null })));
     }
 
     get records(): HistoryRecord[] { return this._records; }

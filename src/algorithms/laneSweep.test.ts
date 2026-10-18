@@ -17,7 +17,7 @@ const mow = (g: Grid, cells: [number, number][]) => {
 const alignedShare = (move: MoveFn, orientation: "horizontal" | "vertical") => {
   const dock = { x: 0, y: 0 };
   const grid = buildLawn(20, 12, dock, false);
-  const state = { pos: dock, prevDir: { dx: 0, dy: 1 }, orientation, visitCounts: {} } as unknown as State;
+  const state = { pos: dock, prevDir: { dx: 0, dy: 1 }, orientation } as unknown as State;
   let pos = dock;
   let prevDir: Direction = { dx: 0, dy: 1 };
   let aligned = 0;

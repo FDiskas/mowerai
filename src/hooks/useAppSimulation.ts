@@ -1,80 +1,71 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import * as algos from '../algorithms';
-import { countGrass, resetLawn } from '../utils/simUtils';
 import { CELL_TYPES } from '../constants';
+import { Battery } from '../domain/Battery';
+import { Mower } from '../domain/Mower';
+import { NavigationState } from '../domain/NavigationState';
 import { Position } from '../domain/Position';
-import { SimulationService, type SimulationConfig } from '../services/SimulationService';
-import { EfficiencyMetrics, SimulationStats } from '../domain/SimulationStats';
-import type { SimulationEnvironment } from '../domain/SimulationEnvironment';
+import { SimulationEnvironment } from '../domain/SimulationEnvironment';
+import { SimulationGrid } from '../domain/SimulationGrid';
+import { EfficiencyMetrics, ImpactMetrics, MovementMetrics, SimulationStats } from '../domain/SimulationStats';
 import type { SimulationHistory } from '../domain/SimulationHistory';
-import type { NeuralNetwork } from '../NeuralNetwork';
-import type { Direction, Grid as GridType, HistoryRecord, Orientation, PositionType as Point, State } from '../types';
+import { algorithmPolicy } from '../simulation/algorithmPolicies';
+import { DEFAULT_EPISODE_CONFIG, Episode, type EndReason, type EpisodeNotice, type MovePolicy } from '../simulation/episode';
+import { networkPolicy } from '../simulation/networkPolicy';
+import type { NetworkData } from '../simulation/policyNetwork';
+import { costPerTile } from '../simulation/score';
+import { NETWORK_ID } from '../simulation/tasks';
+import type { Grid as GridType, HistoryRecord, Orientation, PositionType as Point } from '../types';
+import { resetLawn } from '../utils/simUtils';
 import { stepDelayMs } from '../utils/speed';
 
-type MoveFn = (state: State, grid: GridType, prevDir: Direction) => Point | null;
-
-/** Algorithm state plus the hook's own bookkeeping for the return to the dock. */
-interface SimState extends State {
-    hasNotifiedFinished: boolean;
-    returnPath: Point[];
+interface SimulationConfig {
+    algo: string;
+    orientation: Orientation;
+    speed: number;
+    maxBattery: number;
+    drainMove: number;
+    drainTurn: number;
 }
 
-interface SessionStartStats {
-    distance: number;
-    turns: number;
-    mowedCount: number;
-    chargeCycles: number;
-    damagedGrassSnapshot: number;
-}
+const END_MESSAGES: Record<EndReason, string> = {
+    'completed': 'Work finished successfully!',
+    'stranded': 'Battery ran out!',
+    'stalled': 'Stopped: no progress (stuck)',
+    'step-limit': 'Stopped: step limit reached',
+    'no-way-home': 'Error: Dock unreachable!',
+};
 
-/** Removed algorithm ids that can still come from saved history; they run as Boustrophedon. */
-const LEGACY_SWEEP_IDS = ['stc', 'zigzag', 'u_shape', 'slam_boustrophedon', 'cellular_boustrophedon'];
+const roundTo = (value: number, digits: number) => Math.round(value * 10 ** digits) / 10 ** digits;
 
-const roundToTenth = (value: number) => Math.round(value * 10) / 10;
+const policyFor = (algo: string, network: NetworkData): MovePolicy =>
+    algo === NETWORK_ID ? networkPolicy(network) : algorithmPolicy(algo);
 
-/** Per-run state, cleared so a new run does not resume the phases of an old one. */
-const freshRunState = () => ({
-    cellData: undefined,
-    spiralCenter: undefined,
-    goal: undefined,
-    activeCellId: undefined,
-    cellIdGrid: undefined,
-    hasNotifiedFinished: false,
-    isReturningForCharge: false,
-    returnPath: [],
-});
+const countDamaged = (grid: GridType) =>
+    grid.reduce((sum, row) => sum + row.filter(cell => cell.type === CELL_TYPES.MOWED && cell.damage > 0).length, 0);
 
+/** Drives the shared `Episode` engine one step per tick and shows its state in the UI. */
 export const useAppSimulation = (
     env: SimulationEnvironment,
     setEnv: React.Dispatch<React.SetStateAction<SimulationEnvironment>>,
-    domainStats: SimulationStats,
     setDomainStats: React.Dispatch<React.SetStateAction<SimulationStats>>,
     setWorkTimeMs: React.Dispatch<React.SetStateAction<number>>,
     setHistory: React.Dispatch<React.SetStateAction<SimulationHistory>>,
     resetSimulation: (grid: GridType, dockPos: Point, batteryVal: number) => void,
     setAlgo: (algo: string) => void,
-    config: {
-        algo: string;
-        orientation: Orientation;
-        speed: number;
-        maxBattery: number;
-        drainMove: number;
-        drainTurn: number;
-        /** Path turn cost in steps, from the training weights (see `turnCostInSteps`). */
-        turnCost: number;
-    },
-    nn: NeuralNetwork | null,
+    config: SimulationConfig,
+    network: NetworkData,
     showToast: (msg: string, type?: string) => void,
     setStatusMessage: (msg: string) => void
 ) => {
     const [isRunning, setIsRunning] = useState(false);
     const isRunningRef = useRef(false);
     const [isTesting, setIsTesting] = useState(false);
+    /** Tiles the mower's sensor has seen in the current job; null before a job starts. */
+    const [seenTiles, setSeenTiles] = useState<Uint8Array | null>(null);
 
     const simulationRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const sessionStartTime = useRef<number | null>(null);
     const lastTickAtRef = useRef(0);
-    const sessionStartStats = useRef<SessionStartStats | null>(null);
     const pendingAlgosRef = useRef<string[]>([]);
     const isTestingAllRef = useRef(false);
     // Pristine lawn captured at the start of a "Test All" run; each algorithm is
@@ -83,31 +74,17 @@ export const useAppSimulation = (
     // Handle for the delayed start of the next "Test All" model, so a manual
     // stop can cancel it instead of letting the next model fire anyway.
     const pendingRunTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // Watchdog: detect a run that stalls (robot spinning in place) or overruns.
-    const idleStepsRef = useRef(0);
-    const lastMowedRef = useRef(0);
-    const totalStepsRef = useRef(0);
-
-    const simState = useRef<SimState>({
-        pos: env.mower.pos.toObject(),
-        prevDir: { dx: 0, dy: 1 },
-        battery: config.maxBattery,
-        grid: env.grid.cells,
-        dockPos: env.dockPos.toObject(),
-        isCharging: false,
-        visitCounts: {},
-        orientation: config.orientation,
-        maxBattery: config.maxBattery,
-        turnCost: config.turnCost,
-        ...freshRunState(),
-    });
+    const episodeRef = useRef<Episode | null>(null);
+    const policyRef = useRef<MovePolicy | null>(null);
+    /** The grid the episode last showed; any other grid means the user edited the lawn. */
+    const shownGridRef = useRef<GridType | null>(null);
 
     const configRef = useRef(config);
-    const domainStatsRef = useRef(domainStats);
+    const networkRef = useRef(network);
     const envRef = useRef(env);
 
     useEffect(() => { configRef.current = config; }, [config]);
-    useEffect(() => { domainStatsRef.current = domainStats; }, [domainStats]);
+    useEffect(() => { networkRef.current = network; }, [network]);
     useEffect(() => { envRef.current = env; }, [env]);
 
     useEffect(() => () => {
@@ -118,28 +95,33 @@ export const useAppSimulation = (
     const prepareSimulationState = useCallback((sourceGrid: GridType, dockPosOverride?: Point) => {
         const dockPos = dockPosOverride ?? envRef.current.dockPos.toObject();
         const cleanGrid: GridType = resetLawn(sourceGrid);
-
         resetSimulation(cleanGrid, dockPos, configRef.current.maxBattery);
-
-        simState.current = {
-            ...simState.current,
-            pos: { ...dockPos },
-            prevDir: { dx: 0, dy: 1 },
-            battery: configRef.current.maxBattery,
-            grid: cleanGrid,
-            dockPos: { ...dockPos },
-            isCharging: false,
-            visitCounts: {},
-            orientation: configRef.current.orientation,
-            maxBattery: configRef.current.maxBattery,
-            ...freshRunState(),
-        };
+        episodeRef.current = null;
+        setSeenTiles(null);
         return cleanGrid;
     }, [resetSimulation]);
+
+    const showEpisode = useCallback((episode: Episode) => {
+        const { state, tally } = episode;
+        const grid = [...episode.lawn];
+        shownGridRef.current = grid;
+        const mower = new Mower(
+            new Battery(Math.max(0, state.battery), configRef.current.maxBattery),
+            new NavigationState(Position.fromObject(state.pos), state.prevDir),
+        );
+        setEnv(new SimulationEnvironment(mower, new SimulationGrid(grid), Position.fromObject(state.dockPos)));
+        setDomainStats(new SimulationStats(
+            new MovementMetrics(tally.steps, tally.turns),
+            new EfficiencyMetrics(tally.mowed, tally.reachableGrass),
+            new ImpactMetrics(tally.chargeTrips),
+        ));
+        setSeenTiles(new Uint8Array(episode.known.seen));
+    }, [setEnv, setDomainStats]);
 
     /** Latest `runSimulation`, so a "Test All" model started from `stopSimulation` uses current callbacks. */
     const runSimulationRef = useRef<() => void>(() => {});
 
+    /** Runs that ended on their own are logged; Test All then starts the next model. */
     const stopSimulation = useCallback((isManual = false) => {
         setIsRunning(false);
         isRunningRef.current = false;
@@ -158,32 +140,28 @@ export const useAppSimulation = (
             return;
         }
 
-        const duration = sessionStartTime.current ? Math.round((Date.now() - sessionStartTime.current) / 1000) : 0;
-        const start = sessionStartStats.current;
-        const { movement, efficiency, impact } = domainStatsRef.current;
-
-        const turns = movement.turns - (start?.turns ?? 0);
-        const mowedCount = efficiency.mowedCount - (start?.mowedCount ?? 0);
-        const damagedGrass = envRef.current.grid.countDamaged() - (start?.damagedGrassSnapshot ?? 0);
-        const chargeCycles = impact.chargeCycles - (start?.chargeCycles ?? 0);
-
-        const record: HistoryRecord = {
-            id: Date.now(),
-            algo: configRef.current.algo,
-            distance: movement.distance - (start?.distance ?? 0),
-            turns,
-            mowedCount,
-            coverage: roundToTenth(new EfficiencyMetrics(mowedCount, efficiency.totalGrass).coveragePercentage),
-            duration,
-            damagedGrass,
-            chargeCycles,
-            penalty: (damagedGrass * 100) + (chargeCycles * 5000) + (turns * 10),
-        };
-        setHistory(prev => prev.addRecord(record));
+        const episode = episodeRef.current;
+        if (episode) {
+            const { tally } = episode;
+            const record: HistoryRecord = {
+                id: Date.now(),
+                algo: configRef.current.algo,
+                distance: tally.steps,
+                turns: tally.turns,
+                mowedCount: tally.mowed,
+                coverage: roundTo(new EfficiencyMetrics(tally.mowed, tally.reachableGrass).coveragePercentage, 1),
+                duration: sessionStartTime.current ? Math.round((Date.now() - sessionStartTime.current) / 1000) : 0,
+                damagedGrass: countDamaged(episode.lawn),
+                chargeCycles: tally.chargeTrips,
+                cost: roundTo(costPerTile(tally), 3),
+            };
+            setHistory(prev => prev.addRecord(record));
+        }
 
         if (isTestingAllRef.current && pendingAlgosRef.current.length > 0) {
             const nextAlgo = pendingAlgosRef.current.shift()!;
             setAlgo(nextAlgo);
+            configRef.current = { ...configRef.current, algo: nextAlgo };
             // Regrow the lawn and reset stats before the next model runs.
             if (testGridRef.current) prepareSimulationState(testGridRef.current);
             pendingRunTimeoutRef.current = setTimeout(() => runSimulationRef.current(), 500);
@@ -194,92 +172,38 @@ export const useAppSimulation = (
         }
     }, [prepareSimulationState, setHistory, setAlgo]);
 
-    const getNextStep = useCallback((state: State) => {
-        const { pos, grid: curGrid, prevDir, dockPos: currentDock, battery, isReturningForCharge } = state;
-        const grassRemaining = countGrass(curGrid);
-        const { maxBattery, algo } = configRef.current;
-        const { turnCost } = simState.current;
+    const announce = useCallback((notice: EpisodeNotice | undefined) => {
+        if (notice === 'battery-low') showToast('Battery low - returning to charge', 'indigo');
+        else if (notice === 'lawn-done') showToast('Mowing finished - returning to dock', 'success');
+        else if (notice === 'charged') setStatusMessage('Battery charged. Continuing...');
+    }, [showToast, setStatusMessage]);
 
-        const isDock = (p: Point) => p.x === currentDock.x && p.y === currentDock.y;
-        const stepHome = () => algos.findPathToTarget(pos, curGrid, prevDir, isDock, turnCost);
-        const planRouteHome = () => {
-            simState.current.returnPath = algos.findFullPathToTarget(pos, curGrid, prevDir, isDock, turnCost) ?? [];
-        };
-        const followRouteHome = () => simState.current.returnPath.shift() ?? stepHome();
-
-        if (((battery / maxBattery) * 100 < 20 || isReturningForCharge) && grassRemaining > 0) {
-            if (isDock(pos)) return null;
-            if (!simState.current.isReturningForCharge) {
-                showToast("Battery low - returning to charge", 'indigo');
-                simState.current.isReturningForCharge = true;
-                planRouteHome();
-            }
-            return followRouteHome();
-        }
-
-        if (grassRemaining === 0) {
-            if (isDock(pos)) return null;
-            if (!simState.current.hasNotifiedFinished) {
-                showToast("Mowing finished - returning to dock", 'success');
-                simState.current.hasNotifiedFinished = true;
-                planRouteHome();
-            }
-            return followRouteHome();
-        }
-
-        setStatusMessage("Mowing grass...");
-
-        const fns: Record<string, MoveFn> = {
-            boustrophedon: (s, g, d) => algos.getBoustrophedonMove(s, g, d, CELL_TYPES),
-            potential_field: (s, g) => algos.getPotentialFieldMove(s, g, CELL_TYPES),
-            spiral: (s, g) => algos.getSpiralMove(s, g, CELL_TYPES),
-            dfs_coverage: (s, g, d) => algos.getDFSCoverageMove(s, g, d, CELL_TYPES),
-            rrt: (s, g, d) => algos.getRRTMove(s, g, d, CELL_TYPES),
-            a_star: (s, g, d) => algos.getAStarMove(s, g, d, CELL_TYPES),
-            smart_ai: (s, g, d) => algos.getSmartAIMove(s, g, d, CELL_TYPES),
-            neural_network: (s, g, d) => algos.getNeuralNetworkMove(s, g, d, CELL_TYPES, nn),
-            energy_conservative_sweep: (s, g, d) => algos.getEnergyConservativeSweepMove(s, g, d, CELL_TYPES),
-            cellular_decomposition: (s, g, d) => algos.getCellularDecompositionMove(s, g, d, CELL_TYPES)
-        };
-        // Legacy/removed algorithm ids (e.g. a persisted 'stc' or old sweep
-        // names) fall back to the closest surviving behaviour.
-        const algoMove = fns[algo] ?? (LEGACY_SWEEP_IDS.includes(algo) ? fns.boustrophedon : fns.smart_ai);
-
-        const move = algoMove(simState.current, curGrid, prevDir)
-            ?? (algo !== 'smart_ai' ? fns.smart_ai(simState.current, curGrid, prevDir) : null);
-        if (move) return move;
-
-        if (isDock(pos)) return null;
-        setStatusMessage("No grass found - returning home");
-        return stepHome();
-    }, [nn, showToast, setStatusMessage]);
+    /** The job to continue: the paused one, unless it ended or the lawn was edited since. */
+    const currentEpisode = useCallback((): Episode => {
+        const paused = episodeRef.current;
+        if (paused && !paused.isFinished && envRef.current.grid.cells === shownGridRef.current) return paused;
+        const { maxBattery, drainMove, drainTurn, orientation } = configRef.current;
+        const episode = new Episode(
+            { grid: envRef.current.grid.cells, dock: envRef.current.dockPos.toObject() },
+            { ...DEFAULT_EPISODE_CONFIG, maxBattery, drainMove, drainTurn, orientation },
+        );
+        setWorkTimeMs(0);
+        return episode;
+    }, [setWorkTimeMs]);
 
     const runSimulation = useCallback(() => {
         if (isRunningRef.current) { stopSimulation(true); return; }
 
+        const episode = currentEpisode();
+        episodeRef.current = episode;
+        policyRef.current = policyFor(configRef.current.algo, networkRef.current);
+        showEpisode(episode);
+
         setIsRunning(true);
         isRunningRef.current = true;
+        setStatusMessage('Mowing grass...');
         sessionStartTime.current = Date.now();
         lastTickAtRef.current = sessionStartTime.current;
-        sessionStartStats.current = {
-            distance: domainStatsRef.current.movement.distance,
-            turns: domainStatsRef.current.movement.turns,
-            mowedCount: domainStatsRef.current.efficiency.mowedCount,
-            chargeCycles: domainStatsRef.current.impact.chargeCycles,
-            damagedGrassSnapshot: envRef.current.grid.countDamaged()
-        };
-
-        // Start each session with a clean algorithm state so the contour/sweep
-        // and spiral phases restart instead of resuming a previous run.
-        Object.assign(simState.current, {
-            orientation: configRef.current.orientation,
-            turnCost: configRef.current.turnCost,
-            ...freshRunState(),
-        });
-
-        idleStepsRef.current = 0;
-        lastMowedRef.current = sessionStartStats.current.mowedCount;
-        totalStepsRef.current = 0;
 
         simulationRef.current = setInterval(() => {
             const now = Date.now();
@@ -287,91 +211,15 @@ export const useAppSimulation = (
             lastTickAtRef.current = now;
             setWorkTimeMs(t => t + sinceLastTick);
 
-            const prevEnv = envRef.current;
-            const mower = prevEnv.mower;
-            const domainGrid = prevEnv.grid;
-            const dPos = prevEnv.dockPos;
-            const { drainMove, drainTurn, algo, orientation } = configRef.current;
-
-            if (simState.current.isCharging) {
-                const updatedMower = mower.charge(drainMove * 4);
-                if (updatedMower.battery.percentage >= 80) {
-                    simState.current.isCharging = false;
-                    simState.current.isReturningForCharge = false;
-                    setStatusMessage("Battery charged. Continuing...");
-                }
-                setEnv(prevEnv.withMower(updatedMower));
-                return;
-            }
-
-            if (simState.current.isReturningForCharge && mower.pos.equals(dPos)) {
-                simState.current.isCharging = true;
-                setDomainStats(s => new SimulationStats(s.movement, s.efficiency, s.impact.addChargeCycle()));
-                return;
-            }
-
-            if (mower.battery.isEmpty) {
-                setStatusMessage("Battery ran out!");
+            announce(episode.step(policyRef.current!).notice);
+            showEpisode(episode);
+            if (episode.isFinished) {
+                const isTestingAll = isTestingAllRef.current;
+                setStatusMessage(isTestingAll && episode.endReason !== 'completed' ? 'Model stuck — skipping to next' : END_MESSAGES[episode.endReason!]);
                 stopSimulation();
-                return;
             }
-
-            const nextMoveObj = getNextStep({
-                ...simState.current,
-                pos: mower.pos.toObject(),
-                prevDir: mower.nav.dir,
-                battery: mower.battery.current,
-                grid: domainGrid.cells,
-                dockPos: dPos.toObject()
-            });
-
-            if (!nextMoveObj) {
-                const isAtDock = mower.pos.equals(dPos);
-                setStatusMessage(isAtDock ? (domainGrid.countGrass() === 0 ? "Work finished successfully!" : "Finished (some grass unreachable)") : "Error: Dock unreachable!");
-                stopSimulation();
-                return;
-            }
-
-            const nextPos = Position.fromObject(nextMoveObj);
-            const simConfig: SimulationConfig = { drainMove, drainTurn, algo, orientation };
-
-            const currentStats = domainStatsRef.current;
-            const result = SimulationService.calculateStep(prevEnv, currentStats, nextPos, simConfig);
-
-            // Update state and refs
-            setDomainStats(result.stats);
-            setEnv(result.env);
-
-            simState.current.pos = nextMoveObj;
-            simState.current.prevDir = result.env.mower.nav.dir;
-            simState.current.battery = result.env.mower.battery.current;
-            simState.current.grid = result.env.grid.cells;
-
-            // Track cell visits so coverage algorithms (NN, potential field) can
-            // penalise revisits exactly like they do during training.
-            const visitKey = `${nextMoveObj.x},${nextMoveObj.y}`;
-            simState.current.visitCounts[visitKey] = (simState.current.visitCounts[visitKey] ?? 0) + 1;
-
-            // Watchdog: abort a run that stops making progress (robot spinning in
-            // place) or overruns a sane step budget, so "Test All" moves on.
-            totalStepsRef.current++;
-            const mowedNow = result.stats.efficiency.mowedCount;
-            if (mowedNow > lastMowedRef.current) {
-                lastMowedRef.current = mowedNow;
-                idleStepsRef.current = 0;
-            } else {
-                idleStepsRef.current++;
-            }
-
-            const area = result.env.grid.cells.length * result.env.grid.cells[0].length;
-            if (idleStepsRef.current > Math.max(300, area) || totalStepsRef.current > area * 6) {
-                setStatusMessage(isTestingAllRef.current ? "Model stuck — skipping to next" : "Stopped: no progress (stuck)");
-                stopSimulation();
-                return;
-            }
-
         }, stepDelayMs(configRef.current.speed));
-    }, [stopSimulation, getNextStep, setEnv, setDomainStats, setWorkTimeMs, setStatusMessage]);
+    }, [stopSimulation, currentEpisode, showEpisode, announce, setWorkTimeMs, setStatusMessage]);
 
     useEffect(() => { runSimulationRef.current = runSimulation; }, [runSimulation]);
 
@@ -386,12 +234,14 @@ export const useAppSimulation = (
 
         const firstAlgo = pendingAlgosRef.current.shift()!;
         setAlgo(firstAlgo);
-        pendingRunTimeoutRef.current = setTimeout(() => runSimulation(), 500);
-    }, [prepareSimulationState, runSimulation, setAlgo, stopSimulation]);
+        configRef.current = { ...configRef.current, algo: firstAlgo };
+        pendingRunTimeoutRef.current = setTimeout(() => runSimulationRef.current(), 500);
+    }, [prepareSimulationState, setAlgo, stopSimulation]);
 
     return {
         isRunning,
         isTesting,
+        seenTiles,
         prepareSimulationState,
         runSimulation,
         stopSimulation,

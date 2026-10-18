@@ -1,32 +1,29 @@
 ---
 name: add-mowing-algorithm
-description: Every place to change when you add, rename or remove a mowing algorithm — constants, barrel export, dispatch map in useAppSimulation, legacy id fallback, coverage test
-keywords: [algorithm, add algorithm, ALGORITHMS_LIST, ALGORITHMS_NAMES, dispatch, fns map, useAppSimulation, legacy id, runCoverage, testSupport]
+description: Every place to change when you add, rename or remove a mowing algorithm — move function, barrel, ALGORITHM_MOVES in algorithmPolicies.ts, constants, legacy ids, tests; it then joins the benchmark automatically
+keywords: [algorithm, add algorithm, ALGORITHMS_LIST, ALGORITHMS_NAMES, ALGORITHM_MOVES, algorithmPolicy, ALGORITHM_IDS, legacy id, runCoverage, testSupport, benchmark]
 updated: 2026-10-18
 ---
 
 ### Rule / Fact
 
-An algorithm is a move function `(state: State, grid: Grid, prevDir: Direction, CELL_TYPES, ...) => Point | null` that returns the next tile for one step. To add one, change all of these:
+An algorithm is a move function `(state: State, grid: Grid, prevDir: Direction, CELL_TYPES, ...) => Point | null`. `grid` is the mower's **known** map (unseen tiles look like grass). To add one, change all of these:
 
-1. `src/algorithms/<name>.ts` — the move function. Keep per-run memory in optional fields of `State` (`src/types.ts`), for example `cellData`, `spiralCenter`, `goal`.
+1. `src/algorithms/<name>.ts` — the move function. Keep per-run memory in optional fields of `State` (`src/types.ts`), for example `cellData`, `spiralCenter`, `goal`. Each job gets a fresh `State` from `Episode`, so nothing has to be reset by hand.
 2. `src/algorithms/index.ts` — re-export it from the barrel.
-3. `src/constants.ts` — add the id to `ALGORITHMS_LIST` and a label to `ALGORITHMS_NAMES`.
-4. `src/hooks/useAppSimulation.ts` — add the id to the `fns` map in `getNextStep`.
-5. If you add a new per-run `State` field, add it to `freshRunState()` in `useAppSimulation.ts` (used by `runSimulation` and `prepareSimulationState`).
-6. `src/algorithms/<name>.test.ts` — use `buildLawn` and `runCoverage` from `src/algorithms/testSupport.ts`.
+3. `src/simulation/algorithmPolicies.ts` — add it to `ALGORITHM_MOVES`. `ALGORITHM_IDS` comes from this map, so the benchmark, training validation and "Proof Benchmark" include it at once.
+4. `src/constants.ts` — add the id to `ALGORITHMS_LIST` and a label to `ALGORITHMS_NAMES`.
+5. `src/algorithms/<name>.test.ts` — use `buildLawn` and `runCoverage` from `src/algorithms/testSupport.ts`.
 
 ### Why
 
-The registration is spread over four files and nothing type-checks that they agree. A missing `fns` entry does not fail: `getNextStep` silently falls back to `getSmartAIMove`.
+The registration is spread over several files and nothing type-checks that `ALGORITHMS_LIST` and `ALGORITHM_MOVES` agree. An unknown id silently runs Smart AI.
 
 ### How to apply
 
-- Removed or renamed ids can still come from old records in `localStorage` (`mowerai_history`). `getNextStep` maps old ids (`stc`, `zigzag`, `u_shape`, `slam_boustrophedon`, `cellular_boustrophedon`) to Boustrophedon. Add a removed id to that list.
-- If a move function returns `null` while grass remains, the hook falls back to Smart AI; when no grass remains, it paths back to the dock.
-- Below 20 % battery, the hook overrides every algorithm and returns to the dock.
-- Lane-based sweepers should reuse `nextLaneSweepStep` from `src/algorithms/laneSweep.ts`, so they follow the orientation setting.
-- Pass `turnCostOf(state)` to every path search, and use `committedGoal` for heading-dependent target choice ([[turn-cost-from-training-weights]]).
-- Per-run fields are cleared by `freshRunState()` in `useAppSimulation.ts`; add new per-run `State` fields there.
+- Removed ids can still come from `localStorage` history; `LEGACY_SWEEP_IDS` in `algorithmPolicies.ts` maps them to Boustrophedon.
+- A `null` move makes `algorithmPolicy` fall back to Smart AI; low battery and the trip home are the `Episode`'s job ([[simulation-paths-and-nn]]).
+- If the algorithm caches anything derived from the map, rebuild it when `state.mapVersion` changes (see `cellIdGridVersion`).
+- Lane sweepers reuse `nextLaneSweepStep` (`src/algorithms/laneSweep.ts`). Pass `turnCostOf(state)` to every path search; use `committedGoal` for heading-dependent targets ([[turn-cost-from-training-weights]]).
 
 Related: [[simulation-paths-and-nn]]

@@ -4,7 +4,6 @@ import { useNeuralNetwork } from './hooks/useNeuralNetwork';
 import { CELL_TYPES, ALGORITHMS_LIST, ALGORITHMS_NAMES } from './constants';
 import type { Cell, Grid as GridType, PositionType, Stats } from './types';
 import { resetLawn } from './utils/simUtils';
-import { turnCostInSteps } from './algorithms';
 import { speedLabel } from './utils/speed';
 
 // UI Components
@@ -13,6 +12,7 @@ import { SimulationGrid } from './components/Grid/SimulationGrid';
 import { MapToolbar } from './components/Grid/MapToolbar';
 import { SettingsModal } from './components/Sidebar/SettingsModal';
 import { StatsPanel } from './components/Stats/StatsPanel';
+import { BenchmarkModal } from './components/Stats/BenchmarkModal';
 import { TopBar } from './components/Layout/TopBar';
 import { Footer } from './components/Layout/Footer';
 import { TelemetryPanel } from './components/Stats/TelemetryPanel';
@@ -150,23 +150,29 @@ export const App: React.FC = () => {
     // Map Manager Modal State
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
     const [mapModalMode, setMapModalMode] = useState<'save' | 'load'>('save');
-    const { nn, trainingStatus, trainNN, stopTraining, downloadModel, uploadModel, clearModel, showVisualTraining, setShowVisualTraining, previewGrid, previewMowerPos, previewMowerDir, fitnessConfig, setFitnessConfig } = useNeuralNetwork(dockPos, showToast, orientation, speed);
+    const [isBenchmarkOpen, setIsBenchmarkOpen] = useState(false);
+    const { model, trainingStatus, trainNN, stopTraining, downloadModel, uploadModel, clearModel, showVisualTraining, setShowVisualTraining, previewGrid, previewMowerPos, previewMowerDir } = useNeuralNetwork(dockPos, showToast, speed);
 
+    const simulationConfig = useMemo(
+        () => ({ algo, orientation, speed, maxBattery, drainMove, drainTurn }),
+        [algo, orientation, speed, maxBattery, drainMove, drainTurn],
+    );
     const {
         isRunning,
         isTesting,
+        seenTiles,
         prepareSimulationState,
         runSimulation,
         stopSimulation,
         testAll,
     } = useAppSimulation(
         env, setEnv,
-        domainStats, setDomainStats,
+        setDomainStats,
         setWorkTimeMs,
         setHistory, resetSimulation,
         setAlgo,
-        { algo, orientation, speed, maxBattery, drainMove, drainTurn, turnCost: turnCostInSteps(fitnessConfig) },
-        nn, showToast, setStatusMessage
+        simulationConfig,
+        model.network, showToast, setStatusMessage
     );
 
     // Persist Grid Layout in localStorage
@@ -195,8 +201,6 @@ export const App: React.FC = () => {
     const maxBatteryRef = useRef(maxBattery);
     const isDrawingRef = useRef(isDrawing);
     const showVisualTrainingRef = useRef(showVisualTraining);
-    const drainMoveRef = useRef(drainMove);
-    const drainTurnRef = useRef(drainTurn);
 
     useEffect(() => {
         envRef.current = env;
@@ -206,9 +210,7 @@ export const App: React.FC = () => {
         maxBatteryRef.current = maxBattery;
         isDrawingRef.current = isDrawing;
         showVisualTrainingRef.current = showVisualTraining;
-        drainMoveRef.current = drainMove;
-        drainTurnRef.current = drainTurn;
-    }, [env, grid, brushType, isRunning, maxBattery, isDrawing, showVisualTraining, drainMove, drainTurn]);
+    }, [env, grid, brushType, isRunning, maxBattery, isDrawing, showVisualTraining]);
 
     const handleRandomizeMap = useCallback(() => {
         stopSimulation(true);
@@ -311,7 +313,7 @@ export const App: React.FC = () => {
     }, [setShowVisualTraining]);
 
     const handleTrainNN = useCallback(() => {
-        trainNN(gridRef.current, drainMoveRef.current, drainTurnRef.current);
+        trainNN(gridRef.current);
     }, [trainNN]);
 
     const handleStopSimulation = useCallback(() => {
@@ -329,6 +331,9 @@ export const App: React.FC = () => {
     const handleCloseSettings = useCallback(() => {
         setIsSettingsOpen(false);
     }, [setIsSettingsOpen]);
+
+    const handleOpenBenchmark = useCallback(() => setIsBenchmarkOpen(true), []);
+    const handleCloseBenchmark = useCallback(() => setIsBenchmarkOpen(false), []);
 
     const handleClearHistory = useCallback(() => {
         setHistory(new SimulationHistory());
@@ -371,8 +376,8 @@ export const App: React.FC = () => {
                         setBrushType={setBrushType}
                         cellTypes={CELL_TYPES}
                         trainingStatus={trainingStatus}
-                        fitnessConfig={fitnessConfig}
-                        setFitnessConfig={setFitnessConfig}
+                        model={model}
+                        onOpenBenchmark={handleOpenBenchmark}
                         showVisualTraining={showVisualTraining}
                         onToggleVisualTraining={handleToggleVisualTraining}
                         onTrainNN={handleTrainNN}
@@ -396,6 +401,7 @@ export const App: React.FC = () => {
                                 grid={showVisualTraining && previewGrid ? previewGrid : grid}
                                 mowerPos={showVisualTraining && previewMowerPos ? previewMowerPos : mowerPos}
                                 mowerDir={showVisualTraining && previewMowerDir ? previewMowerDir : env.mower.nav.dir}
+                                seenTiles={showVisualTraining ? null : seenTiles}
                                 onMouseDown={handleMouseDown}
                                 onCellClick={showVisualTraining ? undefined : handleCellClick}
                                 onCellMouseEnter={handleCellMouseEnter}
@@ -447,6 +453,12 @@ export const App: React.FC = () => {
 
                 <Footer />
             </div>
+
+            <BenchmarkModal
+                isOpen={isBenchmarkOpen}
+                onClose={handleCloseBenchmark}
+                network={model.network}
+            />
 
             <MapManagerModal
                 isOpen={isMapModalOpen}

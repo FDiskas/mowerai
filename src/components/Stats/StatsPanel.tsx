@@ -107,7 +107,7 @@ const HistoryList = memo<HistoryListProps>(({ history, winnerId, onClearHistory 
                                 <RunMetric label="Meters" value={`${record.distance}m`} />
                                 <RunMetric label="Turns" value={record.turns} />
                                 <RunMetric label="Damage" value={record.damagedGrass} labelClass="text-rose-500" valueClass="text-rose-400" />
-                                <div className="flex flex-col bg-slate-900/50 px-3 py-1 rounded-lg border border-slate-800"><span className="text-amber-500 text-[7px] font-black uppercase">Points</span><span className="text-amber-400 text-xs font-black font-mono">{record.penalty}</span></div>
+                                <div className="flex flex-col bg-slate-900/50 px-3 py-1 rounded-lg border border-slate-800"><span className="text-amber-500 text-[7px] font-black uppercase" title="Benchmark cost per reachable tile; lower is better">Cost / tile</span><span className="text-amber-400 text-xs font-black font-mono">{record.cost?.toFixed(3) ?? '—'}</span></div>
                             </div>
                         </div>
                     );
